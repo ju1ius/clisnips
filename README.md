@@ -14,14 +14,9 @@ your commands (or any code snippet for use in i.e. ipython or irb).
 ## Install
 
 ```sh
-# Clone the repo
-git clone https://github.com/ju1ius/clisnips.git /path/to/clisnips
-cd /path/to/clisnips
-# Create your plugins directory if it does'nt exist
-mkdir -p ~/.config/terminator/plugins
-# copy clisnips_plugin.py and the clisnips directory to your plugin directory
-cp -rt ~/.config/terminator/plugins clisnips_plugin.py clisnips
-# symlinks work to!
+git clone https://github.com/ju1ius/clisnips.git
+cd clisnips
+./install.sh
 ```
 
 Then in Terminator, go to Preferences > Plugins and enable CliSnipsMenu.
