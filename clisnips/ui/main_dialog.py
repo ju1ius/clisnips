@@ -12,16 +12,15 @@ from .. import config
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
-UI_FILE = os.path.join(__DIR__, 'main_dialog.ui')
 
 (
     COLUMN_ID,
     COLUMN_TITLE,
     COLUMN_CMD,
-    COLUMN_DOC,
     COLUMN_TAGS
-) = range(5)
-COLUMNS = (int, str, str, str, str)
+) = range(4)
+COLUMNS = (int, str, str, str)
+
 
 
 class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
@@ -88,11 +87,11 @@ class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
         self.snip_list.set_model(None)
         self.model.clear()
         for row in self.db:
+        for row in self.db.iter('rowid', 'title', 'cmd', 'tag'):
             self.model.append((
                 row['rowid'],
                 row['title'],
                 row['cmd'],
-                row['doc'],
                 row['tag']
             ))
         self.snip_list.set_model(self.model)
@@ -118,7 +117,6 @@ class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
             rowid,
             data['title'],
             data['cmd'],
-            data['doc'],
             data['tag'],
         ))
 
@@ -129,7 +127,6 @@ class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
             it,
             COLUMN_TITLE, data['title'],
             COLUMN_CMD, data['cmd'],
-            COLUMN_DOC, data['doc'],
             COLUMN_TAGS, data['tag'],
         )
 
@@ -173,14 +170,16 @@ class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
     def on_snip_list_row_activated(self, treeview, path, col):
         mdl = treeview.get_model()
         it = mdl.get_iter(path)
-        cmd, doc = mdl.get(it, COLUMN_CMD, COLUMN_DOC)
-        self.insert_command(cmd, doc)
+        rowid = mdl.get_value(it, COLUMN_ID)
+        row = self.db.get(rowid)
+        self.insert_command(row['title'], row['cmd'], row['doc'])
 
     def on_apply_btn_clicked(self, widget, data=None):
         selection = self.snip_list.get_selection()
         mdl, it = selection.get_selected()
-        cmd, doc = mdl.get(it, COLUMN_CMD, COLUMN_DOC)
-        self.insert_command(cmd, doc)
+        rowid = mdl.get_value(it, COLUMN_ID)
+        row = self.db.get(rowid)
+        self.insert_command(row['title'], row['cmd'], row['doc'])
 
     def on_cancel_btn_clicked(self, widget, data=None):
         self.destroy()
@@ -197,15 +196,8 @@ class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
         if not selection:
             return
         mdl, it = selection.get_selected()
-        values = mdl.get(it, COLUMN_ID, COLUMN_TITLE, COLUMN_CMD,
-                         COLUMN_DOC, COLUMN_TAGS)
-        data = {
-            'id': values[0],
-            'title': values[1],
-            'cmd': values[2],
-            'doc': values[3],
-            'tag': values[4],
-        }
+        rowid = mdl.get_value(it, COLUMN_ID)
+        data = self.db.get(rowid)
         response = self.edit_dialog.run(data)
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
@@ -228,9 +220,7 @@ class MainDialog(helpers.BuildableWidgetDecorator, gobject.GObject):
         rows = self.db.search(query)
         if not rows:
             return
-        self.search_results = set()
-        for row in rows:
-            self.search_results.add(row['docid'])
+        self.search_results = set(row['docid'] for row in rows)
         self.model_filter.refilter()
         self.snip_list.set_model(self.model_filter)
 

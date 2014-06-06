@@ -86,10 +86,10 @@ class SnippetsDatabase(object):
     COLUMN_TAGS = 'tag'
     COLUMN_DOC = 'doc'
 
-    def __init__(self):
+    def __init__(self, db_file=None):
+        self.db_file = db_file or DB_FILE
         self.connection = None
         self.cursor = None
-        self.db_file = DB_FILE
 
     def get_connection(self):
         return self.connection
@@ -116,6 +116,18 @@ class SnippetsDatabase(object):
             self.cursor = self.connection.cursor()
         return self
 
+    def rebuild_index(self):
+        query = ('INSERT INTO snippets_index(snippets_index) '
+                 'VALUES("rebuild")')
+        with self.connection:
+            self.cursor.execute(query)
+
+    def optimize_index(self):
+        query = ('INSERT INTO snippets_index(snippets_index) '
+                 'VALUES("optimize")')
+        with self.connection:
+            self.cursor.execute(query)
+
     def __iter__(self):
         return self.iter('rowid', '*')
 
@@ -129,13 +141,17 @@ class SnippetsDatabase(object):
                     yield row
                 rows = self.cursor.fetchmany()
 
+    def get(self, rowid):
+        query = ('SELECT rowid AS id, * FROM snippets WHERE rowid = :id')
+        return self.cursor.execute(query, {'id': rowid}).fetchone()
+
     def search(self, term):
         query = ('SELECT docid '
                  'FROM snippets_index '
                  'WHERE snippets_index MATCH :term')
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
-        except sqlite3.OperationalError:
+        except sqlite3.OperationalError as err:
             return []
         return rows
 
