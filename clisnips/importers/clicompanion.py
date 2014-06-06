@@ -85,10 +85,10 @@ class Importer(object):
             result['doc'] = '\n'.join(doc)
             return result
         # try to find a space separated list
-        by_space = [i.strip() for i in ui.split(' ')]
+        by_space = [i.strip() for i in ui.split()]
         if len(by_space) == nargs:
             doc = []
-            for i, arg in enumerate(by_comma):
+            for i, arg in enumerate(by_space):
                 doc.append('{%s} (string) %s' % (i, arg))
             result['doc'] = '\n'.join(doc)
             return result
