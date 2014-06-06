@@ -1,3 +1,6 @@
+*~
+*.ui#
+*.bak
 *.sqlite
 *.pyc
 __pycache__
