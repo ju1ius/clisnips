@@ -30,12 +30,19 @@ class EditDialog(BuildableWidgetDecorator):
 
         self.connect_signals()
 
+        self._editable = True
         self._item_id = None
+
     def run(self, data=None):
         self.reset_fields()
         if data:
             self.populate_fields(data)
         return self.widget.run()
+
+    def set_editable(self, editable):
+        self._editable = editable
+        for field in self.WIDGET_IDS:
+            getattr(self, field).set_editable(editable)
 
     def populate_fields(self, data):
         self._item_id = data['id']
