@@ -113,6 +113,21 @@ class MainDialog(BuildableWidgetDecorator):
         self.db.close()
         self.widget.destroy()
 
+    def get_selection(self):
+        selection = self.snip_list.get_selection()
+        model, it = selection.get_selected()
+        if model is self.model_filter:
+            it = model.convert_iter_to_child_iter(it)
+        return self.model, it
+
+    def get_selected_row(self):
+        model, it = self.get_selection()
+        if not model or not it:
+            return
+        rowid = model.get_value(it, COLUMN_ID)
+        row = self.db.get(rowid)
+        return row
+
     def append_row(self, data):
         rowid = self.db.insert(data)
         self.db.save()
@@ -173,6 +188,9 @@ class MainDialog(BuildableWidgetDecorator):
         Handler for self.snip_list 'button-release-event' signal
         """
         if event.button == 3:  # right click
+            model, it = self.get_selection()
+            if not model or not it:
+                return
             self.show_row_context_menu()
 
     def on_snip_list_row_activated(self, treeview, path, col):
@@ -195,11 +213,9 @@ class MainDialog(BuildableWidgetDecorator):
         Handler for self.apply_btn 'clicked' and
         row context menu apply item 'activate' signals
         """
-        selection = self.snip_list.get_selection()
-        mdl, it = selection.get_selected()
-        rowid = mdl.get_value(it, COLUMN_ID)
-        row = self.db.get(rowid)
-        self.insert_command(row['title'], row['cmd'], row['doc'])
+        row = self.get_selected_row()
+        if row:
+            self.insert_command(row['title'], row['cmd'], row['doc'])
 
     def on_cancel_btn_clicked(self, widget, data=None):
         """
@@ -211,6 +227,7 @@ class MainDialog(BuildableWidgetDecorator):
         """
         Handler for self.add_btn 'clicked' signal
         """
+        self.edit_dialog.set_editable(True)
         response = self.edit_dialog.run()
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
@@ -221,17 +238,14 @@ class MainDialog(BuildableWidgetDecorator):
         Handler for self.edit_btn 'clicked' and
         row context menu edit item 'activate' signals
         """
-        selection = self.snip_list.get_selection()
-        if not selection:
+        model, it = self.get_selection()
+        if not model or not it:
             return
-        mdl, it = selection.get_selected()
-        rowid = mdl.get_value(it, COLUMN_ID)
-        data = self.db.get(rowid)
-        response = self.edit_dialog.run(data)
+        row = self.db.get(model.get_value(it, COLUMN_ID))
+        self.edit_dialog.set_editable(True)
+        response = self.edit_dialog.run(row)
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
-            if mdl is self.model_filter:
-                it = mdl.convert_iter_to_child_iter(it)
             self.update_row(it, data)
 
     def on_delete_btn_clicked(self, widget, data=None):
@@ -239,10 +253,7 @@ class MainDialog(BuildableWidgetDecorator):
         Handler for self.delete_btn 'clicked' and
         row context menu delete item 'activate' signals
         """
-        selection = self.snip_list.get_selection()
-        mdl, it = selection.get_selected()
-        if mdl is self.model_filter:
-            it = mdl.convert_iter_to_child_iter(it)
+        model, it = self.get_selection()
         self.remove_row(it)
 
     def on_search_entry_icon_press(self, widget, icon_pos, event):

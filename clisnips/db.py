@@ -154,6 +154,18 @@ class SnippetsDatabase(object):
             return []
         return rows
 
+    def search2(self, term):
+        query = '''SELECT rowid AS id, title, cmd, tag
+                    FROM snippets WHERE rowid IN (
+                        SELECT docid FROM snippets_index
+                        WHERE snippets_index MATCH :term
+                  )'''
+        try:
+            rows = self.cursor.execute(query, {'term': term}).fetchall()
+        except sqlite3.OperationalError as err:
+            return []
+        return rows
+
     def insert(self, data):
         query = ('INSERT INTO snippets(title, cmd, doc, tag) '
                  'VALUES(:title, :cmd, :doc, :tag)')
