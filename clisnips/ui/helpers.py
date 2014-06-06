@@ -35,6 +35,15 @@ def set_text_color(widget, color, state=gtk.STATE_NORMAL):
     widget.modify_text(state, color)
 
 
+def set_cursor_color(widget, primary, secondary=None):
+    primary = parse_color(primary)
+    if secondary:
+        secondary = parse_color(secondary)
+    else:
+        secondary = primary
+    widget.modify_cursor(primary, secondary)
+
+
 # ========== Widgets helpers
 
 
@@ -127,6 +136,9 @@ class SimpleTextView(WidgetDecorator):
 
     def set_text_color(self, spec):
         set_text_color(self.widget, spec)
+
+    def set_cursor_color(self, primary, secondary=None):
+        set_cursor_color(self.widget, primary, secondary)
 
     def _update_background(self, color=None):
         if not color:

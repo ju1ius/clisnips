@@ -20,16 +20,15 @@ class EditDialog(helpers.BuildableWidgetDecorator):
         #self.ui.set_translation_domain(config.PKG_NAME)
 
         self.cmd_textview = helpers.SimpleTextView(self.cmd_textview)
-        self.cmd_textview.set_font(config.font)
-        self.cmd_textview.set_background_color(config.bgcolor)
-        self.cmd_textview.set_text_color(config.fgcolor)
-        self.cmd_textview.set_padding(6)
-
         self.doc_textview = helpers.SimpleTextView(self.doc_textview)
-        self.doc_textview.set_font(config.font)
-        self.doc_textview.set_background_color(config.bgcolor)
-        self.doc_textview.set_text_color(config.fgcolor)
-        self.doc_textview.set_padding(6)
+
+        for textview in ('cmd_textview', 'doc_textview'):
+            textview = getattr(self, textview)
+            textview.set_font(config.font)
+            textview.set_background_color(config.bgcolor)
+            textview.set_text_color(config.fgcolor)
+            textview.set_cursor_color(config.cursor_color)
+            textview.set_padding(6)
 
         self.connect_signals()
 

@@ -34,6 +34,7 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.output_textview.set_font(config.font)
         self.output_textview.set_background_color(config.bgcolor)
         self.output_textview.set_text_color(config.fgcolor)
+        self.output_textview.set_cursor_color(config.cursor_color)
         self.output_textview.set_padding(6)
 
         self.connect_signals()

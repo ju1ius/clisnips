@@ -73,6 +73,7 @@ class CliSnipsMenu(plugin.MenuItem):
             clisnips.config.font = font
             clisnips.config.bgcolor = self.config['background_color']
             clisnips.config.fgcolor = self.config['foreground_color']
+            clisnips.config.cursor_color = self.config['cursor_color']
         except:
             pass
 
