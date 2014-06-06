@@ -2,6 +2,7 @@ import os
 import string
 
 import gtk
+import glib
 
 from .. import config
 import helpers 
@@ -19,6 +20,7 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
     MAIN_WIDGET = 'main_dialog'
     WIDGET_IDS = ('title_lbl', 'format_string_lbl', 'doc_lbl',
                   'fields_vbox', 'output_edit_cb', 'output_textview')
+    UPDATE_TIMEOUT = 200
 
     def __init__(self):
         super(StringFormatterDialog, self).__init__()
@@ -33,7 +35,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.output_textview.set_background_color(config.bgcolor)
         self.output_textview.set_text_color(config.fgcolor)
         self.output_textview.set_padding(6)
+
         self.connect_signals()
+        self._update_timeout = 0
 
     def set_cwd(self, cwd):
         self.cwd = cwd
@@ -122,6 +126,7 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         return self.format_string.format(*args, **kwargs)
 
     def update_preview(self):
+        self._update_timeout = 0
         self.output_textview.set_text(self.get_output())
 
     def _parse_docstring(self, docstring):
@@ -201,7 +206,10 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.update_preview()
 
     def on_field_change(self, widget):
-        self.update_preview()
+        if self._update_timeout:
+            glib.source_remove(self._update_timeout)
+        self._update_timeout = glib.timeout_add(self.UPDATE_TIMEOUT,
+                                                self.update_preview)
 
     def on_main_dialog_response(self, widget, response_id):
         if response_id == gtk.RESPONSE_ACCEPT:
