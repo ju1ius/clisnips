@@ -45,8 +45,9 @@ class CliSnipsMenu(plugin.MenuItem):
         self.reconnect_signals()
         self.set_styles()
         self.dialog = MainDialog()
-        self.dialog.connect('insert_command', self.on_insert_command)
-        self.dialog.connect('insert_command_dialog', self.on_insert_command_dialog)
+        self.dialog.connect('insert-command', self.on_insert_command)
+        self.dialog.connect('insert-command-dialog',
+                            self.on_insert_command_dialog)
         self.dialog.run()
 
     def reconnect_signals(self):
@@ -54,11 +55,14 @@ class CliSnipsMenu(plugin.MenuItem):
         self.connect_signals()
 
     def connect_signals(self):
-        self.focus_handler = gobject.add_emission_hook(Terminal, 'focus-in', self.on_terminal_focus_in)
+        self.focus_handler = gobject.add_emission_hook(
+            Terminal, 'focus-in',
+            self.on_terminal_focus_in)
 
     def disconnect_signals(self):
         if self.focus_handler:
-            gobject.remove_emission_hook(Terminal, 'focus-in', self.focus_handler)
+            gobject.remove_emission_hook(Terminal, 'focus-in',
+                                         self.focus_handler)
 
     def set_styles(self):
         try:

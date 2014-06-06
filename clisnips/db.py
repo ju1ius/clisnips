@@ -146,8 +146,7 @@ class SnippetsDatabase(object):
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
     def search(self, term):
-        query = ('SELECT docid '
-                 'FROM snippets_index '
+        query = ('SELECT docid FROM snippets_index '
                  'WHERE snippets_index MATCH :term')
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()

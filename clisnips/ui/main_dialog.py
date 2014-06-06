@@ -96,10 +96,10 @@ class MainDialog(BuildableWidgetDecorator):
         self.model_filter = self.model.filter_new()
         self.model_filter.set_visible_func(self._search_callback)
 
-    def _search_callback(self, mdl, it, data=None):
-        rowid = mdl.get_value(it, COLUMN_ID)
-        if rowid:
-            return rowid in self.search_results
+    def _search_callback(self, model, it, data=None):
+        rowid = model.get_value(it, COLUMN_ID)
+        if rowid is not None:
+            return rowid in self._search_results
 
     def run(self):
         self.widget.show_all()
@@ -143,15 +143,15 @@ class MainDialog(BuildableWidgetDecorator):
         menu = gtk.Menu()
         for sid, cb in ((gtk.STOCK_APPLY, self.on_apply_btn_clicked),
                         (gtk.STOCK_PROPERTIES, self.on_show_btn_clicked)):
-            self.add_context_menu_item(menu, sid, cb)
+            self._add_context_menu_item(menu, sid, cb)
         menu.append(gtk.SeparatorMenuItem())
         for sid, cb in ((gtk.STOCK_EDIT, self.on_edit_btn_clicked),
                         (gtk.STOCK_DELETE, self.on_delete_btn_clicked)):
-            self.add_context_menu_item(menu, sid, cb)
+            self._add_context_menu_item(menu, sid, cb)
         menu.show_all()
         menu.popup(None, None, None, 3, 0)
 
-    def add_context_menu_item(self, menu, stock_id, cb):
+    def _add_context_menu_item(self, menu, stock_id, cb):
         item = gtk.ImageMenuItem(stock_id)
         item.connect('activate', cb)
         menu.append(item)
@@ -174,9 +174,9 @@ class MainDialog(BuildableWidgetDecorator):
         """
         Handler for self.snip_list 'row-activated' signal
         """
-        mdl = treeview.get_model()
-        it = mdl.get_iter(path)
-        rowid = mdl.get_value(it, COLUMN_ID)
+        model = treeview.get_model()
+        it = model.get_iter(path)
+        rowid = model.get_value(it, COLUMN_ID)
         row = self.db.get(rowid)
         self.insert_command(row['title'], row['cmd'], row['doc'])
 
@@ -207,7 +207,6 @@ class MainDialog(BuildableWidgetDecorator):
         Handler for self.add_btn 'clicked' signal
         """
         response = self.edit_dialog.run()
-        #print "response %s from result of run()" % response
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
             self.append_row(data)
