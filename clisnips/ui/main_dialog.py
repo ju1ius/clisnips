@@ -63,9 +63,8 @@ class MainDialog(BuildableWidgetDecorator):
             col.add_attribute(cell, 'text', i)
 
         self.db = SnippetsDatabase().open()
-        self.load_snippets()
 
-        self.search_results = set()
+        self._search_results = set()
         self._search_timeout = 0
 
         self.edit_dialog = EditDialog()
@@ -83,6 +82,10 @@ class MainDialog(BuildableWidgetDecorator):
         glib.idle_add(gobject.GObject.emit, self, *args)
 
     def load_snippets(self):
+        # load snippets in idle callback to avoid UI blocking
+        glib.idle_add(self._do_load_snippets)
+
+    def _do_load_snippets(self):
         self.snip_list.set_model(None)
         self.model.clear()
         for row in self.db.iter('rowid', 'title', 'cmd', 'tag'):
@@ -95,6 +98,7 @@ class MainDialog(BuildableWidgetDecorator):
         self.snip_list.set_model(self.model)
         self.model_filter = self.model.filter_new()
         self.model_filter.set_visible_func(self._search_callback)
+        return False
 
     def _search_callback(self, model, it, data=None):
         rowid = model.get_value(it, COLUMN_ID)
@@ -103,6 +107,7 @@ class MainDialog(BuildableWidgetDecorator):
 
     def run(self):
         self.widget.show_all()
+        self.load_snippets()
 
     def destroy(self):
         self.db.close()
