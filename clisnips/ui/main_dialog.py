@@ -48,7 +48,6 @@ class MainDialog(BuildableWidgetDecorator):
     def __init__(self):
         super(MainDialog, self).__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
-        #self.widget.set_icon_name("gnome-main-menu")
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 

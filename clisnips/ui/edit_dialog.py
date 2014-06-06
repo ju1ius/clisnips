@@ -18,9 +18,7 @@ class EditDialog(BuildableWidgetDecorator):
 
     def __init__(self):
         super(EditDialog, self).__init__()
-        #self.ui.set_translation_domain (config.PKG_NAME)
-        #self.widget.connect("destroy-event", self.on_destroy)
-        #self.widget.set_icon_name("gnome-main-menu")
+        #self.ui.set_translation_domain(config.PKG_NAME)
         monospace_font_desc = pango.FontDescription(config.font)
         self.cmd_textview.modify_font(monospace_font_desc)
         self.doc_textview.modify_font(monospace_font_desc)
