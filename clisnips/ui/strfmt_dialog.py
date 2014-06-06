@@ -38,7 +38,6 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.cwd = cwd
 
         def _cb(widget):
-            print widget
             if isinstance(widget, strfmt_widgets.PathEntry):
                 widget.set_cwd(cwd)
         self.fields_vbox.foreach(_cb)
@@ -199,6 +198,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.output_textview.set_text(self.format_string_lbl.get_text())
         # then update with fields contents
         self.update_preview()
+
     def on_field_change(self, widget):
         self.update_preview()
 
