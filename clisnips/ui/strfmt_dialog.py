@@ -5,35 +5,33 @@ import gtk
 import pango
 
 from .. import config
-from . import helpers
+from .helpers import BuildableWidgetDecorator, SimpleTextView 
 from ..strfmt.doc_lexer import Lexer
 from ..strfmt.doc_parser import Parser
 from . import strfmt_widgets
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
-UI_FILE = os.path.join(__DIR__, 'strfmt_dialog.ui')
 
 
-class StringFormatterDialog(helpers.BuildableWidgetDecorator):
+class StringFormatterDialog(BuildableWidgetDecorator):
+
+    UI_FILE = os.path.join(__DIR__, 'strfmt_dialog.ui')
+    MAIN_WIDGET = 'main_dialog'
+    WIDGET_IDS = ('title_lbl', 'format_string_lbl', 'doc_lbl',
+                  'fields_vbox', 'output_edit_cb', 'output_textview')
 
     def __init__(self):
+        super(StringFormatterDialog, self).__init__()
         self.formatter = string.Formatter()
         self.format_string = ''
         self.fields = []
         self.cwd = os.path.expanduser('~')
 
-        super(StringFormatterDialog, self).__init__(UI_FILE, 'main_dialog')
-        self.add_ui_widgets(
-            'format_string_lbl',
-            'doc_lbl',
-            'fields_vbox',
-            'output_textview'
-        )
         font_desc = pango.FontDescription(config.font)
         self.output_textview.modify_font(font_desc)
         self.format_string_lbl.modify_font(font_desc)
-        self.output_textview = helpers.SimpleTextView(self.output_textview)
+        self.output_textview = SimpleTextView(self.output_textview)
         self.connect_signals()
 
     def set_cwd(self, cwd):
@@ -45,14 +43,19 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
                 widget.set_cwd(cwd)
         self.fields_vbox.foreach(_cb)
 
-    def run(self, format_string, docstring=''):
+    def run(self, title, format_string, docstring=''):
         self.format_string = format_string
         self.reset_fields()
+        self.title_lbl.set_text(title)
         field_names = self._parse_format_string(format_string)
         if not field_names:
+            # no arguments, return command as is
             return gtk.RESPONSE_ACCEPT
         if not docstring:
-            doc = {'text': '', 'parameters': []}
+            doc = {
+                'text': '',
+                'parameters': {}
+            }
         else:
             doc = self._parse_docstring(docstring)
             self.doc_lbl.set_markup(doc['text'])
@@ -61,7 +64,7 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.set_fields(field_names, doc['parameters'])
         return self.widget.run()
 
-    def set_fields(self, field_names, parameters=[]):
+    def set_fields(self, field_names, parameters):
         for name in field_names:
             param_doc = parameters.get(name)
             self.add_field(name, param_doc)
@@ -70,6 +73,7 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
 
     def reset_fields(self):
         self.format_string_lbl.set_text(self.format_string)
+        self.title_lbl.set_text('')
         self.doc_lbl.set_text('')
         self.output_textview.set_text('')
         self.fields = []
@@ -129,7 +133,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         for param in tree.parameters:
             if param.name == '':
                 if has_numeric_field:
-                    raise ValueError("Cannot mix manual and automatic field numbering")
+                    raise ValueError(
+                        "Cannot mix manual and automatic field numbering"
+                    )
                 auto_count += 1
                 param.name = auto_count
             else:
@@ -140,7 +146,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
                 except ValueError:
                     is_numeric = False
                 if is_numeric and auto_count > -1:
-                    raise ValueError("Cannot mix manual and automatic field numbering")
+                    raise ValueError(
+                        "Cannot mix manual and automatic field numbering"
+                    )
             params_dict[param.name] = param
         return {
             'text': tree.text.strip(),
@@ -148,7 +156,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         }
 
     def _parse_format_string(self, format_string):
-        fields = [f for f in self.formatter.parse(format_string) if f[1] is not None]
+        fields = [
+            f for f in self.formatter.parse(format_string) if f[1] is not None
+        ]
         if not fields:
             return None
         field_names = []
@@ -158,7 +168,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
             literal_text, field_name, format_spec, conversion = field
             if field_name == '':
                 if has_numeric_field:
-                    raise ValueError("Cannot mix manual and automatic field numbering")
+                    raise ValueError(
+                        "Cannot mix manual and automatic field numbering"
+                    )
                 auto_count += 1
                 field_name = auto_count
             else:
@@ -169,7 +181,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
                 except ValueError:
                     is_numeric = False
                 if is_numeric and auto_count > -1:
-                    raise ValueError("Cannot mix manual and automatic field numbering")
+                    raise ValueError(
+                        "Cannot mix manual and automatic field numbering"
+                    )
             field_names.append(field_name)
         return field_names
 
@@ -177,6 +191,14 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
     # ------------------------------ SIGNALS
     ###########################################################################
 
+    def on_output_edit_cb_toggled(self, widget):
+        self.output_textview.set_editable(widget.get_active())
+
+    def on_reset_btn_clicked(self, widget):
+        # reset output to format string
+        self.output_textview.set_text(self.format_string_lbl.get_text())
+        # then update with fields contents
+        self.update_preview()
     def on_field_change(self, widget):
         self.update_preview()
 

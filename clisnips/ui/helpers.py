@@ -1,12 +1,20 @@
+import gobject
 import gtk
 
 
-class BuildableWidgetDecorator(object):
+class BuildableWidgetDecorator(gobject.GObject):
 
-    def __init__(self, ui_file, name):
+    WIDGET_IDS = ()
+    UI_FILE = None
+    MAIN_WIDGET = None
+
+    def __init__(self):
+        gobject.GObject.__init__(self)
         self.ui = gtk.Builder()
-        self.ui.add_from_file(ui_file)
-        self.widget = self.ui.get_object(name)
+        self.ui.add_from_file(self.UI_FILE)
+        self.widget = self.ui.get_object(self.MAIN_WIDGET)
+        if self.WIDGET_IDS:
+            self.add_ui_widgets(*self.WIDGET_IDS)
 
     def add_ui_widget(self, name):
         setattr(self, name, self.ui.get_object(name))
@@ -22,9 +30,10 @@ class BuildableWidgetDecorator(object):
         return getattr(self.widget, name)
 
 
-class WidgetDecorator(object):
+class WidgetDecorator(gobject.GObject):
 
     def __init__(self, widget):
+        gobject.GObject.__init__(self)
         self.widget = widget
 
     def __getattr__(self, name):
