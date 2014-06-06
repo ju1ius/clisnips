@@ -37,7 +37,10 @@ class EditDialog(BuildableWidgetDecorator):
         self.reset_fields()
         if data:
             self.populate_fields(data)
-        return self.widget.run()
+        response = self.widget.run()
+        if not self._editable:
+            return gtk.RESPONSE_REJECT
+        return response
 
     def set_editable(self, editable):
         self._editable = editable
@@ -52,6 +55,10 @@ class EditDialog(BuildableWidgetDecorator):
         self.tags_entry.set_text(data['tag'])
 
     def reset_fields(self):
+        if self._editable:
+            self.widget.set_title('Edit snippet')
+        else:
+            self.widget.set_title('Snippet properties')
         self._item_id = None
         for field in self.WIDGET_IDS:
             getattr(self, field).set_text('')
@@ -70,6 +77,9 @@ class EditDialog(BuildableWidgetDecorator):
     ###########################################################################
 
     def on_edit_dialog_response(self, widget, response_id):
+        if not self._editable:
+            self.widget.hide()
+            return False
         if response_id == gtk.RESPONSE_ACCEPT:
             self.widget.hide()
         elif response_id == gtk.RESPONSE_REJECT:

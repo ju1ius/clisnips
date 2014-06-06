@@ -142,18 +142,20 @@ class MainDialog(BuildableWidgetDecorator):
 
     def show_row_context_menu(self):
         menu = gtk.Menu()
-        edit_item = gtk.ImageMenuItem(gtk.STOCK_EDIT)
-        edit_item.connect('activate', self.on_edit_btn_clicked)
-        menu.append(edit_item)
-        delete_item = gtk.ImageMenuItem(gtk.STOCK_DELETE)
-        delete_item.connect('activate', self.on_delete_btn_clicked)
-        menu.append(delete_item)
+        for sid, cb in ((gtk.STOCK_APPLY, self.on_apply_btn_clicked),
+                        (gtk.STOCK_PROPERTIES, self.on_show_btn_clicked)):
+            self.add_context_menu_item(menu, sid, cb)
         menu.append(gtk.SeparatorMenuItem())
-        apply_item = gtk.ImageMenuItem(gtk.STOCK_APPLY)
-        apply_item.connect('activate', self.on_apply_btn_clicked)
-        menu.append(apply_item)
+        for sid, cb in ((gtk.STOCK_EDIT, self.on_edit_btn_clicked),
+                        (gtk.STOCK_DELETE, self.on_delete_btn_clicked)):
+            self.add_context_menu_item(menu, sid, cb)
         menu.show_all()
         menu.popup(None, None, None, 3, 0)
+
+    def add_context_menu_item(self, menu, stock_id, cb):
+        item = gtk.ImageMenuItem(stock_id)
+        item.connect('activate', cb)
+        menu.append(item)
 
     ###########################################################################
     # ------------------------------ SIGNALS
@@ -178,6 +180,11 @@ class MainDialog(BuildableWidgetDecorator):
         rowid = mdl.get_value(it, COLUMN_ID)
         row = self.db.get(rowid)
         self.insert_command(row['title'], row['cmd'], row['doc'])
+
+    def on_show_btn_clicked(self, widget, data=None):
+        self.edit_dialog.set_editable(False)
+        self.on_edit_btn_clicked(widget, data)
+        self.edit_dialog.set_editable(True)
 
     def on_apply_btn_clicked(self, widget, data=None):
         """
