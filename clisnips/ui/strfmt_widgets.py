@@ -2,6 +2,7 @@ import os
 import locale
 
 import gtk
+import glib
 import gio
 import gobject
 
@@ -126,8 +127,8 @@ class PathEntry(gtk.HBox):
 
     def _on_entry_changed(self, entry):
         if self._completion_timeout:
-            gobject.source_remove(self._completion_timeout)
-        self._completion_timeout = gobject.timeout_add(
+            glib.source_remove(self._completion_timeout)
+        self._completion_timeout = glib.timeout_add(
             self.COMPLETION_TIMEOUT,
             self._on_completion_timeout
         )
@@ -160,6 +161,8 @@ class PathEntry(gtk.HBox):
             realpath = dirname
         else:
             realpath = os.path.join(self._cwd, dirname)
+        if not os.path.exists(realpath):
+            return
         for fn, ft in self._listdir(realpath):
             if fn.startswith(basename):
                 yield (os.path.join(dirname, fn), ft)
