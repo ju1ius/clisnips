@@ -125,9 +125,12 @@ class PathEntry(gtk.HBox):
             self.pack_start(self._filechooser, False, True, 0)
 
     def _on_entry_changed(self, entry):
-        timeout = gobject.timeout_add(self.COMPLETION_TIMEOUT,
-                                      self._on_completion_timeout)
-        self._completion_timeout = timeout
+        if self._completion_timeout:
+            gobject.source_remove(self._completion_timeout)
+        self._completion_timeout = gobject.timeout_add(
+            self.COMPLETION_TIMEOUT,
+            self._on_completion_timeout
+        )
 
     def _on_filechooser_file_set(self, btn):
         selected = self._filechooser.get_filename()
@@ -135,19 +138,19 @@ class PathEntry(gtk.HBox):
             self._entry.set_text(selected)
 
     def _on_completion_timeout(self):
+        self._completion_timeout = 0
         self.emit('changed')
-        if self._completion_timeout:
-            gobject.source_remove(self._completion_timeout)
-            self._completion_timeout = 0
+
         text = self._entry.get_text()
         if not text:
-            return
+            return False
         self._completion.set_model(None)
         self._model.clear()
         for filepath, filetype in self._get_completions(text):
             gicon = gio.content_type_get_icon(filetype)
             self._model.append((gicon, filepath))
         self._completion.set_model(self._model)
+        return False
 
     def _get_completions(self, text):
         dirname, basename = os.path.split(text)

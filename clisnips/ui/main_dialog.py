@@ -251,22 +251,25 @@ class MainDialog(BuildableWidgetDecorator):
         """
         Handler for self.search_entry 'changed' signal
         """
-        timeout = gobject.timeout_add(self.SEARCH_TIMEOUT,
-                                      self._on_search_timeout)
-        self._search_timeout = timeout
+        if self._search_timeout:
+            glib.source_remove(self._search_timeout)
+        self._search_timeout = glib.timeout_add(self.SEARCH_TIMEOUT,
+                                                self._on_search_timeout)
 
     def _on_search_timeout(self):
-        if self._search_timeout:
-            gobject.source_remove(self._search_timeout)
-            self._search_timeout = 0
-        query = self.search_entry.get_text()
+        self._search_timeout = 0
+        query = self.search_entry.get_text().strip()
         if not query:
             self.snip_list.set_model(self.model)
+            self._search_results = set()
             return
         rows = self.db.search(query)
         if not rows:
-            self.snip_list.set_model(self.model)
+            self._search_results = set()
             return
-        self.search_results = set(row['docid'] for row in rows)
+        self._search_results = set(row['docid'] for row in rows)
+        self.snip_list.set_model(None)
         self.model_filter.refilter()
         self.snip_list.set_model(self.model_filter)
+
+        return False
