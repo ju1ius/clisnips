@@ -93,17 +93,22 @@ class WidgetDecorator(gobject.GObject):
 
 class SimpleTextView(WidgetDecorator):
 
+    WINDOWS = {
+        'widget': gtk.TEXT_WINDOW_WIDGET,
+        'text': gtk.TEXT_WINDOW_TEXT,
+        'left': gtk.TEXT_WINDOW_LEFT,
+        'right': gtk.TEXT_WINDOW_RIGHT,
+        'top': gtk.TEXT_WINDOW_TOP,
+        'bottom': gtk.TEXT_WINDOW_BOTTOM
+    }
+
     def __init__(self, widget):
         super(SimpleTextView, self).__init__(widget)
-        self._alignment = gtk.Alignment(0, 0, 1.0, 1.0)
-        replace_widget(widget, self._alignment)
-        self._alignment.add(widget)
-        self._event_box = gtk.EventBox()
-        replace_widget(self._alignment, self._event_box)
-        self._event_box.add(self._alignment)
 
     def set_padding(self, padding):
-        self._alignment.set_padding(padding, padding, padding, padding)
+        for win in ('left', 'right', 'top', 'bottom'):
+            self.widget.set_border_window_size(self.WINDOWS[win], padding)
+        self._update_background()
 
     def set_text(self, text):
         return self.widget.get_buffer().set_text(text)
@@ -118,7 +123,16 @@ class SimpleTextView(WidgetDecorator):
 
     def set_background_color(self, spec):
         set_background_color(self.widget, spec)
-        set_background_color(self._event_box, spec)
+        self._update_background(spec)
 
     def set_text_color(self, spec):
         set_text_color(self.widget, spec)
+
+    def _update_background(self, color=None):
+        if not color:
+            style = self.widget.get_style()
+            color = style.bg[gtk.STATE_NORMAL]
+        for win in ('left', 'right', 'top', 'bottom'):
+            win = self.widget.get_window(self.WINDOWS[win])
+            if win:
+                set_background_color(win, color)
