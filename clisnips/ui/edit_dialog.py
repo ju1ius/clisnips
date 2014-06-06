@@ -1,16 +1,15 @@
 import os
 
 import gtk
-import pango
 
 from .. import config
-from .helpers import BuildableWidgetDecorator, SimpleTextView 
+import helpers
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 
-class EditDialog(BuildableWidgetDecorator):
+class EditDialog(helpers.BuildableWidgetDecorator):
 
     UI_FILE = os.path.join(__DIR__, 'edit_dialog.ui')
     MAIN_WIDGET = 'edit_dialog'
@@ -19,12 +18,18 @@ class EditDialog(BuildableWidgetDecorator):
     def __init__(self):
         super(EditDialog, self).__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
-        monospace_font_desc = pango.FontDescription(config.font)
-        self.cmd_textview.modify_font(monospace_font_desc)
-        self.doc_textview.modify_font(monospace_font_desc)
 
-        self.cmd_textview = SimpleTextView(self.cmd_textview)
-        self.doc_textview = SimpleTextView(self.doc_textview)
+        self.cmd_textview = helpers.SimpleTextView(self.cmd_textview)
+        self.cmd_textview.set_font(config.font)
+        self.cmd_textview.set_background_color(config.bgcolor)
+        self.cmd_textview.set_text_color(config.fgcolor)
+        self.cmd_textview.set_padding(6)
+
+        self.doc_textview = helpers.SimpleTextView(self.doc_textview)
+        self.doc_textview.set_font(config.font)
+        self.doc_textview.set_background_color(config.bgcolor)
+        self.doc_textview.set_text_color(config.fgcolor)
+        self.doc_textview.set_padding(6)
 
         self.connect_signals()
 

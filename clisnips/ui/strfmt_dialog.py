@@ -2,10 +2,9 @@ import os
 import string
 
 import gtk
-import pango
 
 from .. import config
-from .helpers import BuildableWidgetDecorator, SimpleTextView 
+import helpers 
 from ..strfmt.doc_lexer import Lexer
 from ..strfmt.doc_parser import Parser
 from . import strfmt_widgets
@@ -14,7 +13,7 @@ from . import strfmt_widgets
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 
-class StringFormatterDialog(BuildableWidgetDecorator):
+class StringFormatterDialog(helpers.BuildableWidgetDecorator):
 
     UI_FILE = os.path.join(__DIR__, 'strfmt_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
@@ -28,10 +27,12 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.fields = []
         self.cwd = os.path.expanduser('~')
 
-        font_desc = pango.FontDescription(config.font)
-        self.output_textview.modify_font(font_desc)
-        self.format_string_lbl.modify_font(font_desc)
-        self.output_textview = SimpleTextView(self.output_textview)
+        helpers.set_font(self.format_string_lbl, config.font)
+        self.output_textview = helpers.SimpleTextView(self.output_textview)
+        self.output_textview.set_font(config.font)
+        self.output_textview.set_background_color(config.bgcolor)
+        self.output_textview.set_text_color(config.fgcolor)
+        self.output_textview.set_padding(6)
         self.connect_signals()
 
     def set_cwd(self, cwd):
@@ -82,14 +83,14 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     def add_field(self, field_name, field_doc):
         if field_doc is not None:
             doc = field_doc.text.strip()
-            field_label = '<b>{name}</b> ({type})\n{doc}'.format(
+            field_label = '<b>{name}</b> <i>({type})</i> {doc}'.format(
                 name=field_name,
                 type=field_doc.typehint if field_doc.typehint else '',
                 doc=doc
             )
         else:
             field_label = field_name
-        vbox = gtk.VBox()
+        vbox = gtk.VBox(spacing=6)
         label = gtk.Label()
         label.set_alignment(0, 0.5)
         label.set_markup(field_label)

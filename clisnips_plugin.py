@@ -71,6 +71,8 @@ class CliSnipsMenu(plugin.MenuItem):
             else:
                 font = self.config['font']
             clisnips.config.font = font
+            clisnips.config.bgcolor = self.config['background_color']
+            clisnips.config.fgcolor = self.config['foreground_color']
         except:
             pass
 

@@ -4,7 +4,7 @@ import gobject
 import glib
 import gtk
 
-from .helpers import BuildableWidgetDecorator  
+import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
 from ..db import SnippetsDatabase
@@ -22,7 +22,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 COLUMNS = (int, str, str, str)
 
 
-class MainDialog(BuildableWidgetDecorator):
+class MainDialog(helpers.BuildableWidgetDecorator):
 
     SEARCH_TIMEOUT = 300
 
@@ -51,14 +51,22 @@ class MainDialog(BuildableWidgetDecorator):
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
+        helpers.set_font(self.snip_list, config.font)
+        helpers.set_background_color(self.snip_list, config.bgcolor)
+        helpers.set_text_color(self.snip_list, config.fgcolor)
+
         self.model = gtk.ListStore(*COLUMNS)
         for i in (COLUMN_TITLE, COLUMN_TAGS, COLUMN_CMD):
             col = gtk.TreeViewColumn()
             self.snip_list.append_column(col)
             cell = gtk.CellRendererText()
+            #cell.set_property('font', config.font)
+            #cell.set_property('background', config.bgcolor)
+            #cell.set_property('foreground', config.fgcolor)
             if i == COLUMN_CMD:
-                cell.set_property('font', config.font)
                 col.set_property('expand', True)
+            elif i == COLUMN_TITLE:
+                cell.set_property('wrap-width', 300)
             col.pack_start(cell, False)
             col.add_attribute(cell, 'text', i)
 
