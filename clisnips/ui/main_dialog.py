@@ -235,7 +235,6 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         Handler for self.add_btn 'clicked' signal
         """
-        self.edit_dialog.set_editable(True)
         response = self.edit_dialog.run()
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
@@ -250,7 +249,6 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         if not model or not it:
             return
         row = self.db.get(model.get_value(it, COLUMN_ID))
-        self.edit_dialog.set_editable(True)
         response = self.edit_dialog.run(row)
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
