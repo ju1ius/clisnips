@@ -1,9 +1,11 @@
-- [ ] Documentation
+- [ ] Menus
+  - [ ] Help menu
+  - [ ] Import menu
+  - [ ] Export menu
+
+- [ ] Preferences
 
 - [ ] Command Prompt:
-  - [*] display free form documentation !
   - [ ] Editing
-    - [*] a checkbox to view original template ?
-    - [*] a checkbox to toggle output editing
-    - [*] a button to revert changes in output field
-    - [ ] use text tags/marks ?
+    - [ ] disable fields editing when manual editing ?
+    - [ ] find what to do with diff colors.
