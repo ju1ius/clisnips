@@ -5,9 +5,10 @@ import gtk
 import glib
 
 from .. import config
-import helpers 
+import helpers
 from ..strfmt.doc_lexer import Lexer
 from ..strfmt.doc_parser import Parser
+from ..diff import InlineMyersSequenceMatcher
 from . import strfmt_widgets
 
 
@@ -18,8 +19,9 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
 
     UI_FILE = os.path.join(__DIR__, 'strfmt_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
-    WIDGET_IDS = ('title_lbl', 'format_string_lbl', 'doc_lbl',
-                  'fields_vbox', 'output_edit_cb', 'output_textview')
+    WIDGET_IDS = ('title_lbl', 'doc_lbl', 'fields_vbox',
+                  'fmtstr_lbl', 'fmtstr_textview',
+                  'output_edit_cb', 'output_textview')
     UPDATE_TIMEOUT = 200
 
     def __init__(self):
@@ -28,8 +30,7 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.format_string = ''
         self.fields = []
         self.cwd = os.path.expanduser('~')
-
-        helpers.set_font(self.format_string_lbl, config.font)
+        # output textview
         self.output_textview = helpers.SimpleTextView(self.output_textview)
         self.output_textview.set_font(config.font)
         self.output_textview.set_background_color(config.bgcolor)
@@ -37,8 +38,31 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.output_textview.set_cursor_color(config.cursor_color)
         self.output_textview.set_padding(6)
 
+        # format string textview
+        self.fmtstr_textview = helpers.SimpleTextView(
+            self.fmtstr_textview)
+        self.fmtstr_textview.set_font(config.font)
+        self.fmtstr_textview.set_background_color('white')
+        self.fmtstr_textview.set_text_color('black')
+        self.fmtstr_textview.set_padding(6)
+
+        # diff tags
+        for tv in ('output_textview', 'fmtstr_textview'):
+            textview = getattr(self, tv)
+            textview.create_tag('diff_insert', background='green', weight=700)
+            textview.create_tag('diff_delete', background='red', weight=700)
+
+        # signals
         self.connect_signals()
-        self._update_timeout = 0
+        self.handlers = {'update_timeout': 0}
+        self.handlers['output_changed'] = self.output_textview.connect(
+            'changed',
+            self.on_output_changed
+        )
+        self.output_textview.handler_block(
+            self.handlers['output_changed'])
+        # diff
+        self.differ = InlineMyersSequenceMatcher()
 
     def set_cwd(self, cwd):
         self.cwd = cwd
@@ -77,9 +101,11 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         self.update_preview()
 
     def reset_fields(self):
-        self.format_string_lbl.set_text(self.format_string)
         self.title_lbl.set_text('')
         self.doc_lbl.set_text('')
+        self.fmtstr_textview.set_text(
+            ''.join(f[0] for f in self.formatter.parse(self.format_string))
+        )
         self.output_textview.set_text('')
         self.fields = []
         for child in self.fields_vbox.get_children():
@@ -127,8 +153,10 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
         return self.format_string.format(*args, **kwargs)
 
     def update_preview(self):
-        self._update_timeout = 0
-        self.output_textview.set_text(self.get_output())
+        self.handlers['update_timeout'] = 0
+        output = self.get_output()
+        self.output_textview.set_text(output)
+        self._update_diffs(output)
 
     def _parse_docstring(self, docstring):
         parser = Parser(Lexer(docstring))
@@ -193,24 +221,54 @@ class StringFormatterDialog(helpers.BuildableWidgetDecorator):
             field_names.append(field_name)
         return field_names
 
+    def _update_diffs(self, output):
+        # clear all text tags
+        ot, fst = self.output_textview, self.fmtstr_textview
+        ot.remove_all_tags()
+        fst.remove_all_tags()
+        # compute diff
+        self.differ.set_seqs(fst.get_text(), output)
+        for op, start1, end1, start2, end2 in self.differ.get_opcodes():
+            if op == 'equal':
+                continue
+            if op == 'insert':
+                ot.apply_tag('diff_insert', start2, end2)
+            elif op == 'delete':
+                fst.apply_tag('diff_delete', start1, end1)
+            elif op == 'replace':
+                fst.apply_tag('diff_delete', start1, end1)
+                ot.apply_tag('diff_insert', start2, end2)
+
     ###########################################################################
     # ------------------------------ SIGNALS
     ###########################################################################
 
     def on_output_edit_cb_toggled(self, widget):
-        self.output_textview.set_editable(widget.get_active())
+        editable = widget.get_active()
+        self.output_textview.set_editable(editable)
+        if editable:
+            self.output_textview.handler_unblock(
+                self.handlers['output_changed'])
+        else:
+            self.output_textview.handler_block(
+                self.handlers['output_changed'])
+
+    def on_output_changed(self, widget):
+        self._update_diffs(widget.get_text())
 
     def on_reset_btn_clicked(self, widget):
         # reset output to format string
-        self.output_textview.set_text(self.format_string_lbl.get_text())
+        self.output_textview.set_text(self.fmtstr_lbl.get_text())
         # then update with fields contents
         self.update_preview()
 
     def on_field_change(self, widget):
-        if self._update_timeout:
-            glib.source_remove(self._update_timeout)
-        self._update_timeout = glib.timeout_add(self.UPDATE_TIMEOUT,
-                                                self.update_preview)
+        if self.handlers['update_timeout']:
+            glib.source_remove(self.handlers['update_timeout'])
+        self.handlers['update_timeout'] = glib.timeout_add(
+            self.UPDATE_TIMEOUT,
+            self.update_preview
+        )
 
     def on_main_dialog_response(self, widget, response_id):
         if response_id == gtk.RESPONSE_ACCEPT:
