@@ -111,13 +111,41 @@ class SimpleTextView(WidgetDecorator):
         'bottom': gtk.TEXT_WINDOW_BOTTOM
     }
 
+    __gsignals__ = {
+        'changed': gobject.signal_query('changed', gtk.TextBuffer)[3:]
+    }
+
     def __init__(self, widget):
         super(SimpleTextView, self).__init__(widget)
+        self.buffer.connect('changed', self._on_buffer_changed)
 
-    def set_padding(self, padding):
-        for win in ('left', 'right', 'top', 'bottom'):
-            self.widget.set_border_window_size(self.WINDOWS[win], padding)
-        self._update_background()
+    @property
+    def buffer(self):
+        return self.widget.get_buffer()
+
+    def _on_buffer_changed(self, buf):
+        self.emit('changed')
+
+    def create_tag(self, name=None, **props):
+        return self.buffer.create_tag(name, **props)
+
+    def apply_tag(self, tag, start, end):
+        # convert offsets to iter
+        if not isinstance(start, gtk.TextIter):
+            start = self.buffer.get_iter_at_offset(start)
+        if not isinstance(end, gtk.TextIter):
+            end = self.buffer.get_iter_at_offset(end)
+        if isinstance(tag, gtk.TextTag):
+            self.buffer.apply_tag(tag, start, end)
+        else:
+            self.buffer.apply_tag_by_name(str(tag), start, end)
+
+    def remove_all_tags(self, start=None, end=None):
+        if not start:
+            start = self.buffer.get_start_iter()
+        if not end:
+            end = self.buffer.get_end_iter()
+        self.buffer.remove_all_tags(start, end)
 
     def set_text(self, text):
         return self.widget.get_buffer().set_text(text)
@@ -139,6 +167,11 @@ class SimpleTextView(WidgetDecorator):
 
     def set_cursor_color(self, primary, secondary=None):
         set_cursor_color(self.widget, primary, secondary)
+
+    def set_padding(self, padding):
+        for win in ('left', 'right', 'top', 'bottom'):
+            self.widget.set_border_window_size(self.WINDOWS[win], padding)
+        self._update_background()
 
     def _update_background(self, color=None):
         if not color:
