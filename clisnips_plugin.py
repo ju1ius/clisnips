@@ -1,8 +1,6 @@
-#!/usr/bin/python
-
-# Terminator by Chris Jones <cmsj@tenshu.net>
-# GPL v2 only
-"""clisnips_plugin.py - Terminator Plugin to add a snippet library"""
+"""
+clisnips_plugin.py - Terminator Plugin to add a snippet library
+"""
 
 import gtk
 import gobject
@@ -11,7 +9,7 @@ from terminatorlib import plugin
 from terminatorlib.config import Config
 from terminatorlib.terminal import Terminal
 
-from clisnips.ui.main_dialog import MainDialog
+from clisnips.gui.main_dialog import MainDialog
 import clisnips.config
 
 
@@ -56,7 +54,8 @@ class CliSnipsMenu(plugin.MenuItem):
 
     def connect_signals(self):
         self.focus_handler = gobject.add_emission_hook(
-            Terminal, 'focus-in',
+            Terminal,
+            'focus-in',
             self.on_terminal_focus_in)
 
     def disconnect_signals(self):
@@ -70,12 +69,13 @@ class CliSnipsMenu(plugin.MenuItem):
                 font = self.config.get_system_font()
             else:
                 font = self.config['font']
-            clisnips.config.font = font
-            clisnips.config.bgcolor = self.config['background_color']
-            clisnips.config.fgcolor = self.config['foreground_color']
-            clisnips.config.cursor_color = self.config['cursor_color']
         except:
             pass
+        styles = clisnips.config.styles
+        styles.font = font
+        styles.bgcolor = self.terminal.bgcolor
+        styles.fgcolor = self.terminal.fgcolor_active
+        styles.cursor_color = self.config['cursor_color']
 
     # ---------- Signals ---------- #
 
