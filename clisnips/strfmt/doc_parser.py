@@ -11,8 +11,10 @@ value_range:    T_DIGIT T_RANGE_SEP T_DIGIT (T_COLON T_DIGIT)? (T_STAR T_DIGIT)?
 value:          T_STAR? (T_STRING | T_DIGIT)
 """
 
-from doc_tokens import *
-from doc_nodes import *
+from ..exceptions import ParsingError
+from .doc_tokens import *
+from .doc_nodes import *
+from .doc_lexer import Lexer
 
 
 class LLkParser(object):
@@ -29,20 +31,16 @@ class LLkParser(object):
         for i in xrange(self._K):
             self._consume()
 
-    def _match(self, types):
-        token = self._ensure(types)
+    def _match(self, *types):
+        token = self._ensure(*types)
         self._consume()
         return token
 
-    def _ensure(self, types):
+    def _ensure(self, *types):
         token = self._lookahead()
         matches = False
-        if isinstance(types, (tuple, list)):
-            matches = token.type in types
-        else:
-            matches = token.type == types
-        if not matches:
-            self._unexpected_token(token, types)
+        if token.type not in types:
+            self._unexpected_token(token, *types)
         return token
 
     def _consume(self):
@@ -70,8 +68,11 @@ class LLkParser(object):
     def _lookahead_type(self, offset=1):
         return self._lookahead(offset).type
 
-    def _unexpected_token(self, token, expected):
-        raise Exception('Unexpected token: %s' % token)
+    def _unexpected_token(self, token, *expected):
+        expected = ', '.join(token_name(t) for t in expected)
+        raise ParsingError(
+            'Unexpected token: {} (expected {})'.format(token, expected)
+        )
 #}}}
 
 
@@ -247,7 +248,42 @@ def _to_number(string):
     return int(string)
 
 
+def parse(docstring):
+    parser = Parser(Lexer(docstring))
+    tree = parser.parse()
+    params_dict = {}
+    auto_count = -1
+    has_numeric_field = False
+    for param in tree.parameters:
+        if param.name == '':
+            if has_numeric_field:
+                raise ParsingError(
+                    'cannot switch from automatic field numbering '
+                    'to manual field specification'
+                )
+            auto_count += 1
+            param.name = auto_count
+        else:
+            try:
+                param.name = int(param.name)
+                is_numeric = True
+                has_numeric_field = True
+            except ValueError:
+                is_numeric = False
+            if is_numeric and auto_count > -1:
+                raise ParsingError(
+                    'cannot switch from automatic field numbering '
+                    'to manual field specification'
+                )
+        params_dict[param.name] = param
+    return {
+        'text': tree.text.strip(),
+        'parameters': params_dict
+    }
+
+
 if __name__ == "__main__":
+
     from doc_lexer import Lexer
     doc = """
 

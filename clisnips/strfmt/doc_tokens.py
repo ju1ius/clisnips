@@ -17,6 +17,7 @@ __TOKEN_NAMES = {}
 for k, v in dict(vars()).iteritems():
     if k.startswith('T_'):
         __TOKEN_NAMES[v] = k
+del k, v
 
 
 def token_name(token_type):
@@ -27,9 +28,11 @@ def token_name(token_type):
 
 
 class Token(object):
-#{{{
+
     __slots__ = (
-        'type', 'name', 'value', 'startline', 'startcol', 'endline', 'endcol'
+        'type', 'name', 'value',
+        'startline', 'startcol', 'endline', 'endcol',
+        'startpos', 'endpos'
     )
 
     def __init__(self, type, startline, startcol, value=''):
@@ -40,8 +43,12 @@ class Token(object):
         self.value = value
         self.endline = startline
         self.endcol = startcol
+        self.startpos = self.endpos = None
 
     def __str__(self):
-        return '<Token {s.name}@({s.startline},{s.startcol})->({s.endline},{s.endcol}): "{s.value}"'.format(s=self)
-
-#}}}
+        return ('<Token {s.name}@{pos}'
+                '({s.startline},{s.startcol})->({s.endline},'
+                '{s.endcol}): "{s.value}">').format(
+                    s=self,
+                    pos=('%s->%s' % (self.startpos, self.endpos)
+                         if self.startpos is not None else ''))

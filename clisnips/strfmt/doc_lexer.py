@@ -18,7 +18,9 @@ STRING_RX = re.compile(r'"((?:[^"]|\\.)*)"')
 
 
 class StringLexer(object):
-    """Simple String lexer"""
+    """
+    A simple String lexer
+    """
 
     def __init__(self, text=None):
         if text is not None:
@@ -72,8 +74,8 @@ class StringLexer(object):
         old_pos = self.pos
         new_pos = old_pos + n
         # count newlines between:
-        # oldpos +1 since it should have been handled by self.newline_pending
-        # and newpos (not -1) since we will set the last to be pending
+        # oldpos (+1 since it should have been handled by self.newline_pending)
+        # and newpos (not -1 since we will set the last to be pending)
         line_count = text.count("\n", old_pos, new_pos + 1)
         #print text[old_pos:new_pos+1], line_count
         if line_count > 0:
@@ -140,7 +142,9 @@ class StringLexer(object):
         self.recede(len(string))
 
     def read_until(self, pattern, negate=True, accumulate=True):
-        """Consumes the input string until we find a match for pattern"""
+        """
+        Consumes the input string until we find a match for pattern
+        """
 #{{{
         if not isinstance(pattern, _PATTERN_TYPE):
             cache_key = (pattern, negate)
@@ -174,7 +178,14 @@ class Lexer(StringLexer):
                 yield token
 #}}}
 
-    def finalize_token(self, token, line=None, col=None):
+    def init_token(self, type, value=None):
+# {{{
+        token = Token(type, self.line, self.col, value)
+        token.startpos = self.pos
+        return token
+# }}}
+
+    def finalize_token(self, token, line=None, col=None, pos=None, value=None):
 #{{{
         #caller = inspect.stack()[1][2:4]
         #if caller[1] in ('flush_attr_stack', 'emit_tokens'):
@@ -182,8 +193,11 @@ class Lexer(StringLexer):
         #print "Finalize(from %s:%s)-> %s (char: %s, line: %s, col: %s)" % (
             #caller[1],caller[0],token,self.char,self.line,self.col
         #)
-        token.endline = line if line else self.line
-        token.endcol = col if col else self.col
+        if value is not None:
+            token.value = value
+        token.endpos = pos if pos is not None else self.pos
+        token.endline = line if line is not None else self.line
+        token.endcol = col if col is not None else self.col
 #}}}
 
     def freetext_state(self):
@@ -193,17 +207,16 @@ class Lexer(StringLexer):
         if char is None:
             return False
         elif char == '{':
-            t = Token(T_LBRACE, self.line, self.col, '{')
+            t = self.init_token(T_LBRACE, '{')
             self.finalize_token(t)
             self.token_queue.append(t)
             self.state = self.param_state
         else:
-            t = Token(T_TEXT, self.line, self.col)
+            t = self.init_token(T_TEXT)
             text = self._skip_until_param()
             if not text:
                 text = self.read_until('$')
-            t.value = text
-            self.finalize_token(t)
+            self.finalize_token(t, value=text)
             self.token_queue.append(t)
         return True
 # }}}
@@ -214,17 +227,15 @@ class Lexer(StringLexer):
         while True:
             char = self._skip_whitespace()
             if char.isalpha():
-                t = Token(T_IDENT, self.line, self.col,
-                          self.read_until(IDENT_RX))
+                t = self.init_token(T_IDENT, self.read_until(IDENT_RX))
                 self.finalize_token(t)
                 self.token_queue.append(t)
             elif char.isdigit():
-                t = Token(T_IDENT, self.line, self.col,
-                          self.read_until(DIGIT_RX))
+                t = self.init_token(T_IDENT, self.read_until(DIGIT_RX))
                 self.finalize_token(t)
                 self.token_queue.append(t)
             elif char == '}':
-                t = Token(T_RBRACE, self.line, self.col, '}')
+                t = self.init_token(T_RBRACE, '}')
                 self.finalize_token(t)
                 self.token_queue.append(t)
                 self.state = self.after_param_state
@@ -242,7 +253,7 @@ class Lexer(StringLexer):
         if char == '(':
             m = TYPEHINT_RX.match(self.text, self.pos)
             if m:
-                t = Token(T_TYPEHINT, self.line, self.col, m.group(1))
+                t = self.init_token(T_TYPEHINT, m.group(1))
                 self.consume(m.group(0))
                 self.finalize_token(t)
                 self.token_queue.append(t)
@@ -250,9 +261,8 @@ class Lexer(StringLexer):
                 self.recede()
                 self.state = self.freetext_state
         elif char == '[':
-            self.token_queue.append(
-                Token(T_LBRACK, self.line, self.col, '[')
-            )
+            t = self.init_token(T_LBRACK, '[')
+            self.token_queue.append(t)
             self.state = self.valuehint_state
         else:
             self.recede()
@@ -266,7 +276,7 @@ class Lexer(StringLexer):
         while True:
             char = self._skip_whitespace()
             if char == ']':
-                t = Token(T_RBRACK, self.line, self.col, ']')
+                t = self.init_token(T_RBRACK, ']')
                 self.finalize_token(t)
                 self.token_queue.append(t)
                 self.state = self.freetext_state
@@ -279,13 +289,13 @@ class Lexer(StringLexer):
                     self.state = self.freetext_state
                     break
             elif char == ',':
-                t = Token(T_COMMA, self.line, self.col, ',')
+                t = self.init_token(T_COMMA, ',')
                 self.finalize_token(t)
                 self.token_queue.append(t)
             elif char == '.':
                 la = self.lookahead()
                 if la == '.':
-                    t = Token(T_RANGE_SEP, self.line, self.col, '..')
+                    t = self.init_token(T_RANGE_SEP, '..')
                     self.advance()
                     self.finalize_token(t)
                     self.token_queue.append(t)
@@ -297,12 +307,10 @@ class Lexer(StringLexer):
                     self.state = self.freetext_state
                     break
             elif char == ':':
-                t = Token(T_COLON, self.line, self.col, ':')
-                self.finalize_token(t)
+                t = self.init_token(T_COLON, ':')
                 self.token_queue.append(t)
             elif char == '*':
-                t = Token(T_STAR, self.line, self.col, '*')
-                self.finalize_token(t)
+                t = self.init_token(T_STAR, '*')
                 self.token_queue.append(t)
             else:
                 token = self._handle_digit()
@@ -319,7 +327,7 @@ class Lexer(StringLexer):
         m = STRING_RX.match(self.text, self.pos)
         if not m:
             return
-        t = Token(T_STRING, self.line, self.col, m.group(1))
+        t = self.init_token(T_STRING, m.group(1))
         self.advance(m.end() - 1 - m.start())
         self.finalize_token(t)
         return t
@@ -330,7 +338,7 @@ class Lexer(StringLexer):
         m = DIGIT_RX.match(self.text, self.pos)
         if not m:
             return
-        t = Token(T_DIGIT, self.line, self.col, m.group(0))
+        t = self.init_token(T_DIGIT, m.group(0))
         self.advance(m.end() - 1 - m.start())
         self.finalize_token(t)
         return t
@@ -354,7 +362,7 @@ class Lexer(StringLexer):
             char = self.advance()
         return char
 # }}}
-
+        
 
 if __name__ == "__main__":
 
