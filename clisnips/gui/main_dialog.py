@@ -13,13 +13,20 @@ from ..db import SnippetsDatabase
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
-(
-    COLUMN_ID,
-    COLUMN_TITLE,
-    COLUMN_CMD,
-    COLUMN_TAGS
-) = range(4)
-COLUMNS = (int, str, str, str)
+
+class Model(gtk.ListStore):
+
+    (
+        COLUMN_ID,
+        COLUMN_TITLE,
+        COLUMN_CMD,
+        COLUMN_TAGS
+    ) = range(4)
+
+    COLUMNS = (int, str, str, str)
+
+    def __init__(self):
+        super(Model, self).__init__(*self.COLUMNS)
 
 
 class MainDialog(helpers.BuildableWidgetDecorator):
@@ -55,20 +62,20 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         helpers.set_background_color(self.snip_list, styles.bgcolor)
         helpers.set_text_color(self.snip_list, styles.fgcolor)
 
-        self.model = gtk.ListStore(*COLUMNS)
-        for i in (COLUMN_TITLE, COLUMN_TAGS, COLUMN_CMD):
+        self.model = Model()
+        for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
             col = gtk.TreeViewColumn()
-            self.snip_list.append_column(col)
             cell = gtk.CellRendererText()
             #cell.set_property('font', styles.font)
             #cell.set_property('background', styles.bgcolor)
             #cell.set_property('foreground', styles.fgcolor)
-            if i == COLUMN_CMD:
+            if i == Model.COLUMN_CMD:
                 col.set_property('expand', True)
-            elif i == COLUMN_TITLE:
+            elif i == Model.COLUMN_TITLE:
                 cell.set_property('wrap-width', 300)
             col.pack_start(cell, False)
             col.add_attribute(cell, 'text', i)
+            self.snip_list.append_column(col)
 
         self.db = SnippetsDatabase().open()
 
@@ -96,9 +103,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     def _do_load_snippets(self):
         self.snip_list.set_model(None)
         self.model.clear()
-        for row in self.db.iter('rowid', 'title', 'cmd', 'tag'):
+        for row in self.db.iter('title', 'cmd', 'tag'):
             self.model.append((
-                row['rowid'],
+                row['id'],
                 row['title'],
                 row['cmd'],
                 row['tag']
@@ -109,7 +116,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         return False
 
     def _search_callback(self, model, it, data=None):
-        rowid = model.get_value(it, COLUMN_ID)
+        rowid = model.get_value(it, Model.COLUMN_ID)
         if rowid is not None:
             return rowid in self._search_results
 
@@ -132,7 +139,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         model, it = self.get_selection()
         if not model or not it:
             return
-        rowid = model.get_value(it, COLUMN_ID)
+        rowid = model.get_value(it, Model.COLUMN_ID)
         row = self.db.get(rowid)
         return row
 
@@ -151,13 +158,13 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.db.save()
         self.model.set(
             it,
-            COLUMN_TITLE, data['title'],
-            COLUMN_CMD, data['cmd'],
-            COLUMN_TAGS, data['tag'],
+            Model.COLUMN_TITLE, data['title'],
+            Model.COLUMN_CMD, data['cmd'],
+            Model.COLUMN_TAGS, data['tag'],
         )
 
     def remove_row(self, it):
-        self.db.delete(self.model.get_value(it, COLUMN_ID))
+        self.db.delete(self.model.get_value(it, Model.COLUMN_ID))
         self.model.remove(it)
 
     def insert_command(self, title, command, docstring):
@@ -207,7 +214,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         model = treeview.get_model()
         it = model.get_iter(path)
-        rowid = model.get_value(it, COLUMN_ID)
+        rowid = model.get_value(it, Model.COLUMN_ID)
         row = self.db.get(rowid)
         self.insert_command(row['title'], row['cmd'], row['doc'])
 
@@ -248,7 +255,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         model, it = self.get_selection()
         if not model or not it:
             return
-        row = self.db.get(model.get_value(it, COLUMN_ID))
+        row = self.db.get(model.get_value(it, Model.COLUMN_ID))
         response = self.edit_dialog.run(row)
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
@@ -288,7 +295,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         if not rows:
             self._search_results = set()
             return
-        self._search_results = set(row['docid'] for row in rows)
+        self._search_results = set(row['id'] for row in rows)
         self.snip_list.set_model(None)
         self.model_filter.refilter()
         self.snip_list.set_model(self.model_filter)

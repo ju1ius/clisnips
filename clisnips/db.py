@@ -37,44 +37,6 @@ CREATE TRIGGER IF NOT EXISTS snippets_ai AFTER INSERT ON snippets BEGIN
         NEW.rowid, NEW.title, NEW.tag
     );
 END;
-
-INSERT OR REPLACE INTO snippets(rowid,title,cmd,doc,tag) VALUES(
-    1,
-    'List files in zip archive',
-    'unzip -Z -1 {archive}',
-    '{archive} (file) The path of the archive to extract',
-    'zip,archive'
-);
-INSERT OR REPLACE INTO snippets(rowid,title,cmd,doc,tag) VALUES(
-    2,
-    'Untar',
-    'tar -cxf {archive}',
-    '{archive} (file) The path of the archive to extract',
-    'tar,archive'
-);
-INSERT OR REPLACE INTO snippets(rowid,title,cmd,doc,tag) VALUES(
-    3,
-    'Compress PDF',
-    'ghostscript -dSAFER -dNOPAUSE -dBATCH -sDEVICE=pdfwrite \\
-        -dCompatibilityLevel=1.4 \\
-        -dUseCIEColor -dColorConversionStrategy=/sRGB \\
-        -dPDFSETTINGS=/{quality} \\
-        -sOUTPUTFILE="{outfile}" -f "{infile}"',
-    '{quality} (string) ["screen", "ebook", *"printer", "prepress"] Controls the quality of the output file
-     {outfile} (string) The path to the compressed file
-     {infile} (file) The path to the PDF to compress',
-    'pdf,compression'
-);
-INSERT OR REPLACE INTO snippets(rowid,title,cmd,doc,tag) VALUES(
-    4,
-    'Convert to mp3 VBR',
-    'sox {infile} -C {quality}.2 {outfile}',
-    '
-    {quality} (integer) [-9..0:1*-4] Quality of the compressed file from -9 (lowest) to 0 (highest)
-    {infile} (file) The path to the file to convert
-    {outfile} (file) The path to the converted file',
-    'sox,mp3,vbr'
-);
 """
 
 
@@ -85,6 +47,7 @@ class SnippetsDatabase(object):
     COLUMN_CMD = 'cmd'
     COLUMN_TAGS = 'tag'
     COLUMN_DOC = 'doc'
+    COLUMN_INDEX = 'docid'
 
     def __init__(self, db_file=None):
         self.db_file = db_file or DB_FILE
@@ -129,10 +92,10 @@ class SnippetsDatabase(object):
             self.cursor.execute(query)
 
     def __iter__(self):
-        return self.iter('rowid', '*')
+        return self.iter('*')
 
     def iter(self, *columns):
-        query = 'SELECT %s from snippets' % ','.join(columns)
+        query = 'SELECT rowid AS id, %s from snippets' % ','.join(columns)
         with self.connection:
             self.cursor.execute(query)
             rows = self.cursor.fetchmany()
@@ -146,7 +109,7 @@ class SnippetsDatabase(object):
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
     def search(self, term):
-        query = ('SELECT docid FROM snippets_index '
+        query = ('SELECT docid AS id FROM snippets_index '
                  'WHERE snippets_index MATCH :term')
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
