@@ -4,11 +4,11 @@ import gobject
 import glib
 import gtk
 
-import helpers
+from ..config import styles
+from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
 from ..db import SnippetsDatabase
-from .. import config
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -51,18 +51,18 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
-        helpers.set_font(self.snip_list, config.font)
-        helpers.set_background_color(self.snip_list, config.bgcolor)
-        helpers.set_text_color(self.snip_list, config.fgcolor)
+        helpers.set_font(self.snip_list, styles.font)
+        helpers.set_background_color(self.snip_list, styles.bgcolor)
+        helpers.set_text_color(self.snip_list, styles.fgcolor)
 
         self.model = gtk.ListStore(*COLUMNS)
         for i in (COLUMN_TITLE, COLUMN_TAGS, COLUMN_CMD):
             col = gtk.TreeViewColumn()
             self.snip_list.append_column(col)
             cell = gtk.CellRendererText()
-            #cell.set_property('font', config.font)
-            #cell.set_property('background', config.bgcolor)
-            #cell.set_property('foreground', config.fgcolor)
+            #cell.set_property('font', styles.font)
+            #cell.set_property('background', styles.bgcolor)
+            #cell.set_property('foreground', styles.fgcolor)
             if i == COLUMN_CMD:
                 col.set_property('expand', True)
             elif i == COLUMN_TITLE:

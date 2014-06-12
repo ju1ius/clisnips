@@ -2,14 +2,14 @@ import os
 
 import gtk
 
-from .. import config
-import helpers
+from ..config import styles
+from .helpers import BuildableWidgetDecorator, SimpleTextView
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 
-class EditDialog(helpers.BuildableWidgetDecorator):
+class EditDialog(BuildableWidgetDecorator):
 
     UI_FILE = os.path.join(__DIR__, 'edit_dialog.ui')
     MAIN_WIDGET = 'edit_dialog'
@@ -19,15 +19,15 @@ class EditDialog(helpers.BuildableWidgetDecorator):
         super(EditDialog, self).__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
 
-        self.cmd_textview = helpers.SimpleTextView(self.cmd_textview)
-        self.doc_textview = helpers.SimpleTextView(self.doc_textview)
+        self.cmd_textview = SimpleTextView(self.cmd_textview)
+        self.doc_textview = SimpleTextView(self.doc_textview)
 
         for textview in ('cmd_textview', 'doc_textview'):
             textview = getattr(self, textview)
-            textview.set_font(config.font)
-            textview.set_background_color(config.bgcolor)
-            textview.set_text_color(config.fgcolor)
-            textview.set_cursor_color(config.cursor_color)
+            textview.set_font(styles.font)
+            textview.set_background_color(styles.bgcolor)
+            textview.set_text_color(styles.fgcolor)
+            textview.set_cursor_color(styles.cursor_color)
             textview.set_padding(6)
 
         self.connect_signals()

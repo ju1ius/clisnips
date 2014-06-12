@@ -1,21 +1,10 @@
 import gobject
 import gtk
-import pango
+
+from ..utils import parse_font, parse_color
 
 
 # ========== Fonts & Colors helpers
-
-
-def parse_color(spec):
-    if isinstance(spec, gtk.gdk.Color):
-        return spec
-    return gtk.gdk.color_parse(spec)
-
-
-def parse_font(spec):
-    if isinstance(spec, pango.FontDescription):
-        return spec
-    return pango.FontDescription(spec)
 
 
 def set_font(widget, font):

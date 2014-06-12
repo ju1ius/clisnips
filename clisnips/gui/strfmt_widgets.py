@@ -10,9 +10,9 @@ from ..strfmt.doc_nodes import ValueRange, ValueList
 from ..utils import get_num_decimals
 
 
-def from_doc_parameter(parameter):
-    typehint = parameter.typehint
-    valuehint = parameter.valuehint
+def _entry_from_doc(doc):
+    typehint = doc.typehint
+    valuehint = doc.valuehint
     if isinstance(valuehint, ValueRange):
         return Range(
             valuehint.start,
@@ -25,6 +25,54 @@ def from_doc_parameter(parameter):
     if typehint in ('path', 'file', 'dir'):
         return PathEntry(mode=typehint)
     return Entry()
+
+
+class Field(gtk.VBox):
+
+    __gsignals__ = {
+        'changed': (gobject.SIGNAL_RUN_LAST,
+                    gobject.TYPE_NONE,
+                    ())
+    }
+
+    def __init__(self, label, entry):
+        super(Field, self).__init__(spacing=6)
+        self.label = gtk.Label()
+        self.label.set_alignment(0, 0.5)
+        self.label.set_markup(label)
+        self.entry = entry
+        self.entry.connect('changed', self._on_entry_changed)
+        self.pack_start(self.label, False)
+        self.pack_start(self.entry, False)
+
+    @classmethod
+    def from_documentation(klass, name, doc):
+        """
+        Builds a field instance from a strfmt.doc_nodes.Parameter object.
+        """
+        if doc is None:
+            label = name 
+        else:
+            label = '<b>{name}</b> <i>({type})</i> {text}'.format(
+                name=doc.name,
+                type=doc.typehint if doc.typehint else '',
+                text=doc.text.strip()
+            )
+        entry = _entry_from_doc(doc)
+        return klass(label, entry)
+
+    def set_sensitive(self, sensitive):
+        self.entry.set_sensitive(sensitive)
+
+    def set_editable(self, editable):
+        if 'editable' in self.entry.props:
+            self.entry.set_sensitive(editable)
+
+    def get_value(self):
+        return self.entry.get_value()
+
+    def _on_entry_changed(self, entry):
+        self.emit('changed')
 
 
 class Entry(gtk.Entry):
