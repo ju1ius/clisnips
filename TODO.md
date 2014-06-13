@@ -1,11 +1,9 @@
 - [ ] Menus
-  - [ ] Help menu
-  - [ ] Import menu
-  - [ ] Export menu
+  - [ ] Import
+  - [ ] Export
+  - [ ] Help
+  - [ ] About
 
 - [ ] Preferences
 
-- [ ] Command Prompt:
-  - [ ] Editing
-    - [ ] disable fields editing when manual editing ?
-    - [ ] find what to do with diff colors.
+- [ ] Provide a default xml file to import on install.
