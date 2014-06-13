@@ -66,7 +66,10 @@ class BuildableWidgetDecorator(gobject.GObject):
             self.add_ui_widgets(*self.WIDGET_IDS)
 
     def add_ui_widget(self, name):
-        setattr(self, name, self.ui.get_object(name))
+        widget = self.ui.get_object(name)
+        if not widget:
+            raise RuntimeError('No widget found with name "%s"' % name)
+        setattr(self, name, widget)
 
     def add_ui_widgets(self, *names):
         for name in names:
