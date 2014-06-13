@@ -11,6 +11,8 @@ from ..utils import get_num_decimals
 
 
 def _entry_from_doc(doc):
+    if not doc:
+        return Entry()
     typehint = doc.typehint
     valuehint = doc.valuehint
     if isinstance(valuehint, ValueRange):
