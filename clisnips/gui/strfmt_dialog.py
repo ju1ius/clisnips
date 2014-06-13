@@ -147,7 +147,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         for child in self.fields_vbox.get_children():
             self.fields_vbox.remove(child)
 
-    def add_field(self, name, doc=None):
+    def add_field(self, name, doc):
         field = Field.from_documentation(name, doc)
         field.connect('changed', self.on_field_change)
         self.fields_vbox.pack_start(field)
@@ -156,11 +156,17 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     # ==================== Output handling ==================== #
 
     def get_output(self):
-        kwargs = {}
+        args, kwargs = [], {}
         for name, field in self.fields.items():
             value = field.get_value()
-            kwargs[name] = value
-        return self.format_string.format(**kwargs)
+            try:
+                # we need to convert integer keys
+                # because they won't work if used in kwargs...
+                name = int(name)
+                args.insert(name, value)
+            except ValueError:
+                kwargs[name] = value
+        return self.format_string.format(*args, **kwargs)
 
     def update_preview(self):
         self.handlers['update_timeout'] = 0
