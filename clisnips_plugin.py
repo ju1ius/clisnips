@@ -10,6 +10,7 @@ from terminatorlib.config import Config
 from terminatorlib.terminal import Terminal
 
 from clisnips.gui.main_dialog import MainDialog
+from clisnips.gui.error_dialog import ErrorDialog
 import clisnips.config
 
 
@@ -46,7 +47,10 @@ class CliSnipsMenu(plugin.MenuItem):
         self.dialog.connect('insert-command', self.on_insert_command)
         self.dialog.connect('insert-command-dialog',
                             self.on_insert_command_dialog)
-        self.dialog.run()
+        try:
+            self.dialog.run()
+        except Exception as error:
+            ErrorDialog().run(error)
 
     def reconnect_signals(self):
         self.disconnect_signals()
