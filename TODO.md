@@ -1,6 +1,4 @@
 - [ ] Menus
-  - [ ] Import
-  - [ ] Export
   - [ ] Help
   - [ ] About
 
