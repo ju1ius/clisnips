@@ -2,6 +2,27 @@ from .utils import (parse_font, parse_color,
                     get_contrast_fgcolor, interpolate_colors)
 
 
+VERSION = "0.1"
+AUTHORS = ['Jules Bernable (ju1ius)']
+HELP_URI = 'http://github.com/ju1ius/clisnips/wiki'
+LICENSE = """\
+Copyright (C) 2014 {authors}
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+""".format(authors=', '.join(AUTHORS))
+
+
 _DIFF_INS_BG_BASE = '#00FF00'  # green
 _DIFF_DEL_BG_BASE = '#FF0000'  # red
 

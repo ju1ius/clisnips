@@ -1,15 +1,17 @@
 import os
+import time
 
 import gobject
 import glib
 import gtk
 
-from ..config import styles
+from ..config import styles, HELP_URI
 from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
 from .import_export import ImportDialog, ExportDialog
 from .error_dialog import ErrorDialog
+from .about_dialog import AboutDialog
 from ..db import SnippetsDatabase
 
 
@@ -318,5 +320,12 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         except Exception as err:
             ErrorDialog().run(err)
 
+    def on_helplink_menuitem_activate(self, menuitem):
+        gtk.show_uri(gtk.gdk.screen_get_default(),
+                     HELP_URI,
+                     int(glib.get_current_time()))
+
     def on_about_menuitem_activate(self, menuitem):
-        pass
+        dlg = AboutDialog()
+        dlg.run()
+        dlg.destroy()
