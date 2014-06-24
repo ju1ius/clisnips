@@ -8,6 +8,8 @@ from ..config import styles
 from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
+from .import_export import ImportDialog, ExportDialog
+from .error_dialog import ErrorDialog
 from ..db import SnippetsDatabase
 
 
@@ -35,7 +37,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     UI_FILE = os.path.join(__DIR__, 'main_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
-    WIDGET_IDS = ('search_entry', 'snip_list',
+    WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
                   'cancel_btn', 'apply_btn',
                   'add_btn', 'edit_btn', 'delete_btn')
 
@@ -301,3 +303,20 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.snip_list.set_model(self.model_filter)
 
         return False
+
+    def on_import_menuitem_activate(self, menuitem):
+        try:
+            ImportDialog().run(self.db)
+        except Exception as err:
+            ErrorDialog().run(err)
+        else:
+            self.load_snippets()
+
+    def on_export_menuitem_activate(self, menuitem):
+        try:
+            ExportDialog().run(self.db)
+        except Exception as err:
+            ErrorDialog().run(err)
+
+    def on_about_menuitem_activate(self, menuitem):
+        pass

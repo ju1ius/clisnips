@@ -19,8 +19,12 @@ class Importer(object):
         self.db = db
 
     def import_file(self, filepath):
-        self.db.insertmany(self.get_snippets(filepath))
-        self.db.save()
+        try:
+            self.db.insertmany(self.get_snippets(filepath))
+        except Exception as err:
+            raise err
+        else:
+            self.db.save()
 
     def get_snippets(self, filepath):
         for row in self.parse(filepath):
