@@ -12,8 +12,12 @@ class Importer(object):
         self.db = db
 
     def process(self, filepath):
-        self.db.insertmany(self.get_snippets(filepath))
-        self.db.save()
+        try:
+            self.db.insertmany(self.get_snippets(filepath))
+        except Exception:
+            raise
+        else:
+            self.db.save()
 
     def get_snippets(self, filepath):
         for event, el in etree.iterparse(filepath):

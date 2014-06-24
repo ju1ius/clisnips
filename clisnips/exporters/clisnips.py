@@ -3,6 +3,8 @@ from xml.dom.minidom import Document
 
 class Exporter(object):
 
+    name = 'clisnips'
+
     def __init__(self, db):
         self.db = db
 
