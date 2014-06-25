@@ -15,6 +15,7 @@ def _entry_from_doc(doc):
         return Entry()
     typehint = doc.typehint
     valuehint = doc.valuehint
+    default = ''
     if isinstance(valuehint, ValueRange):
         return Range(
             valuehint.start,
@@ -23,10 +24,12 @@ def _entry_from_doc(doc):
             valuehint.default
         )
     if isinstance(valuehint, ValueList):
-        return Select(valuehint.values, valuehint.default)
+        if len(valuehint) > 1:
+            return Select(valuehint.values, valuehint.default)
+        default = str(valuehint.values[0])
     if typehint in ('path', 'file', 'dir'):
-        return PathEntry(mode=typehint)
-    return Entry()
+        return PathEntry(mode=typehint, default=default)
+    return Entry(default=default)
 
 
 class Field(gtk.VBox):
@@ -78,6 +81,11 @@ class Field(gtk.VBox):
 
 
 class Entry(gtk.Entry):
+
+    def __init__(self, default=''):
+        super(Entry, self).__init__()
+        if default:
+            self.set_text(default)
 
     def get_value(self):
         return self.get_text()
@@ -132,10 +140,13 @@ class PathEntry(gtk.HBox):
     MODE_FILE = 'file'
     MODE_DIR = 'dir'
 
-    def __init__(self, cwd=None, mode=None):
+    def __init__(self, cwd=None, mode=None, default=''):
         super(PathEntry, self).__init__(spacing=6)
         self._mode = mode or self.MODE_FILE
         self.show_files = self._mode in (self.MODE_PATH, self.MODE_FILE)
+        self._entry = gtk.Entry()
+        if default:
+            self._entry.set_text(default)
         self._setup_completion()
         self._completion_timeout = 0
         self.set_cwd(cwd)
@@ -149,7 +160,6 @@ class PathEntry(gtk.HBox):
 
     def _setup_completion(self):
         # setup text entry
-        self._entry = gtk.Entry()
         self._entry.connect("changed", self._on_entry_changed)
         self.pack_start(self._entry, True, True, 0)
         # setup completion

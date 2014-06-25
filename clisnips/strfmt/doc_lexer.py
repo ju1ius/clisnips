@@ -282,7 +282,7 @@ class Lexer(StringLexer):
                 self.state = self.freetext_state
                 break
             elif char == '"':
-                token = self._handle_string()
+                token = self._handle_quoted_string()
                 if token:
                     self.token_queue.append(token)
                 else:
@@ -322,7 +322,7 @@ class Lexer(StringLexer):
         return True
 # }}}
 
-    def _handle_string(self):
+    def _handle_quoted_string(self):
 # {{{
         m = STRING_RX.match(self.text, self.pos)
         if not m:

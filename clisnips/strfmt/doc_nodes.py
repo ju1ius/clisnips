@@ -53,3 +53,6 @@ class ValueList(object):
 
     def get_default_value(self):
         return self.values[self.default]
+
+    def __len__(self):
+        return len(self.values)
