@@ -24,13 +24,18 @@ class Model(gtk.ListStore):
         COLUMN_ID,
         COLUMN_TITLE,
         COLUMN_CMD,
-        COLUMN_TAGS
-    ) = range(4)
+        COLUMN_TAGS,
+        COLUMN_CREATED,
+        COLUMN_LASTUSED,
+        COLUMN_USAGE,
+        COLUMN_RANKING
+    ) = range(8)
 
-    COLUMNS = (int, str, str, str)
+    COLUMNS = (int, str, str, str, int, int, int, float)
 
     def __init__(self):
         super(Model, self).__init__(*self.COLUMNS)
+        self.set_sort_column_id(Model.COLUMN_RANKING, gtk.SORT_DESCENDING)
 
 
 class MainDialog(helpers.BuildableWidgetDecorator):
@@ -101,23 +106,79 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         glib.idle_add(gobject.GObject.emit, self, *args)
 
     def load_snippets(self):
+        #self.snip_list.set_model(None)
+        #self.model.clear()
+        it = self._iter_load_snippets()
+        # run once now, remaining iterations on idle
+        glib.idle_add(it.next)
+        #if it.next():
+            #glib.idle_add(it.next)
         # load snippets in idle callback to avoid UI blocking
-        glib.idle_add(self._do_load_snippets)
+        #glib.idle_add(self._do_load_snippets)
 
     def _do_load_snippets(self):
+        start = time.time()
+        self.snip_list.freeze_child_notify()
         self.snip_list.set_model(None)
         self.model.clear()
-        for row in self.db.iter('title', 'cmd', 'tag'):
+        sort_settings = self.model.get_sort_column_id()
+        self.model.set_default_sort_func(lambda *unused: 0)
+        self.model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
+
+        for row in self.db.iter('title', 'cmd', 'tag', 'created_at',
+                                'last_used_at', 'usage_count', 'ranking'):
             self.model.append((
                 row['id'],
                 row['title'],
                 row['cmd'],
-                row['tag']
+                row['tag'],
+                row['created_at'],
+                row['last_used_at'],
+                row['usage_count'],
+                row['ranking']
             ))
+        self.model.set_sort_column_id(*sort_settings)
         self.snip_list.set_model(self.model)
         self.model_filter = self.model.filter_new()
         self.model_filter.set_visible_func(self._search_callback)
+        self.snip_list.thaw_child_notify()
+        print "Loaded in ", time.time() - start, " seconds"
         return False
+
+    def _iter_load_snippets(self):
+        start = time.time()
+        self.snip_list.freeze_child_notify()
+        #self.snip_list.set_model(None)
+        self.model.clear()
+        sort_settings = self.model.get_sort_column_id()
+        self.model.set_default_sort_func(lambda *unused: 0)
+        self.model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
+
+        count = 0
+        for row in self.db.iter('title', 'cmd', 'tag', 'created_at',
+                                'last_used_at', 'usage_count', 'ranking'):
+            self.model.append((
+                row['id'],
+                row['title'],
+                row['cmd'],
+                row['tag'],
+                row['created_at'],
+                row['last_used_at'],
+                row['usage_count'],
+                row['ranking']
+            ))
+            count += 1
+            if count % 200 == 0:
+                self.snip_list.thaw_child_notify()
+                yield True
+                self.snip_list.freeze_child_notify()
+        self.model.set_sort_column_id(*sort_settings)
+        self.model_filter = self.model.filter_new()
+        self.model_filter.set_visible_func(self._search_callback)
+        #self.snip_list.set_model(self.model)
+        self.snip_list.thaw_child_notify()
+        print "Loaded in ", time.time() - start, " seconds"
+        yield False
 
     def _search_callback(self, model, it, data=None):
         rowid = model.get_value(it, Model.COLUMN_ID)
@@ -147,35 +208,46 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         row = self.db.get(rowid)
         return row
 
-    def append_row(self, data):
+    def insert_row(self, data):
         rowid = self.db.insert(data)
         self.db.save()
+        row = self.db.get(rowid)
         self.model.append((
             rowid,
-            data['title'],
-            data['cmd'],
-            data['tag'],
+            row['title'],
+            row['cmd'],
+            row['tag'],
+            row['created_at'],
+            row['last_used_at'],
+            row['usage_count'],
+            row['ranking']
         ))
 
     def update_row(self, it, data):
         self.db.update(data)
         self.db.save()
+        row = self.db.get(data['id'])
         self.model.set(
             it,
-            Model.COLUMN_TITLE, data['title'],
-            Model.COLUMN_CMD, data['cmd'],
-            Model.COLUMN_TAGS, data['tag'],
+            Model.COLUMN_TITLE, row['title'],
+            Model.COLUMN_CMD, row['cmd'],
+            Model.COLUMN_TAGS, row['tag'],
+            Model.COLUMN_CREATED, row['created_at'],
+            Model.COLUMN_LASTUSED, row['last_used_at'],
+            Model.COLUMN_USAGE, row['usage_count'],
+            Model.COLUMN_RANKING, row['ranking']
         )
 
     def remove_row(self, it):
         self.db.delete(self.model.get_value(it, Model.COLUMN_ID))
         self.model.remove(it)
 
-    def insert_command(self, title, command, docstring):
+    def insert_command(self, row):
         self.emit('insert-command-dialog')
-        response = self.strfmt_dialog.run(title, command, docstring)
+        response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
         if response == gtk.RESPONSE_ACCEPT:
             output = self.strfmt_dialog.get_output()
+            self.db.use_snippet(row['id'])
             self.emit('insert-command', output)
 
     def show_row_context_menu(self):
@@ -220,7 +292,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         it = model.get_iter(path)
         rowid = model.get_value(it, Model.COLUMN_ID)
         row = self.db.get(rowid)
-        self.insert_command(row['title'], row['cmd'], row['doc'])
+        self.insert_command(row)
 
     def on_show_btn_clicked(self, widget, data=None):
         self.edit_dialog.set_editable(False)
@@ -234,7 +306,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         row = self.get_selected_row()
         if row:
-            self.insert_command(row['title'], row['cmd'], row['doc'])
+            self.insert_command(row)
 
     def on_cancel_btn_clicked(self, widget, data=None):
         """
@@ -249,7 +321,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         response = self.edit_dialog.run()
         if response == gtk.RESPONSE_ACCEPT:
             data = self.edit_dialog.get_data()
-            self.append_row(data)
+            self.insert_row(data)
 
     def on_edit_btn_clicked(self, widget, data=None):
         """
@@ -300,10 +372,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self._search_results = set()
             return
         self._search_results = set(row['id'] for row in rows)
-        self.snip_list.set_model(None)
+        #self.snip_list.set_model(None)
         self.model_filter.refilter()
         self.snip_list.set_model(self.model_filter)
-
         return False
 
     def on_import_menuitem_activate(self, menuitem):

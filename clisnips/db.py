@@ -1,43 +1,28 @@
 import os
 import stat
+import time
 import sqlite3
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
+
 DB_FILE = os.path.join(__DIR__, 'snippets.sqlite')
 
-CREATE_TABLES_QUERY = """
-CREATE TABLE IF NOT EXISTS snippets(
-    title TEXT NOT NULL,
-    cmd TEXT NOT NULL,
-    doc TEXT,
-    tag TEXT
-);
-CREATE VIRTUAL TABLE IF NOT EXISTS snippets_index USING fts4(
-    content="snippets",
-    title,
-    tag
-);
+SCHEMA_FILE = os.path.join(__DIR__, 'schema.sql')
+with open(SCHEMA_FILE, 'r') as fp:
+    SCHEMA_QUERY = fp.read()
 
--- Triggers to keep snippets table and index in sync
-CREATE TRIGGER IF NOT EXISTS snippets_bu BEFORE UPDATE ON snippets BEGIN
-    DELETE FROM snippets_index WHERE docid=OLD.rowid;
-END;
-CREATE TRIGGER IF NOT EXISTS snippets_bd BEFORE DELETE ON snippets BEGIN
-    DELETE FROM snippets_index WHERE docid=OLD.rowid;
-END;
+SECONDS_TO_DAYS = float(60 * 60 * 24)
+# ranking decreases much faster for older items
+# when gravity is increased
+GRAVITY = 1.2
 
-CREATE TRIGGER IF NOT EXISTS snippets_au AFTER UPDATE ON snippets BEGIN
-    INSERT INTO snippets_index(docid, title, tag) VALUES(
-        NEW.rowid, NEW.title, NEW.tag
-    );
-END;
-CREATE TRIGGER IF NOT EXISTS snippets_ai AFTER INSERT ON snippets BEGIN
-    INSERT INTO snippets_index(docid, title, tag) VALUES(
-        NEW.rowid, NEW.title, NEW.tag
-    );
-END;
-"""
+
+def ranking_function(created, last_used, num_used):
+    now = time.time()
+    age = (now - created) / SECONDS_TO_DAYS
+    last_used = (now - last_used) / SECONDS_TO_DAYS
+    return num_used / pow(last_used / age, GRAVITY)
 
 
 class SnippetsDatabase(object):
@@ -74,7 +59,8 @@ class SnippetsDatabase(object):
             os.mknod(self.db_file, 0o755 | stat.S_IFREG)
         if not isinstance(self.connection, sqlite3.Connection):
             self.connection = sqlite3.connect(self.db_file)
-            self.connection.executescript(CREATE_TABLES_QUERY)
+            self.connection.create_function('rank', 3, ranking_function)
+            self.connection.executescript(SCHEMA_QUERY)
             self.connection.row_factory = sqlite3.Row
             self.cursor = self.connection.cursor()
         return self
@@ -118,11 +104,10 @@ class SnippetsDatabase(object):
         return rows
 
     def search2(self, term):
-        query = '''SELECT rowid AS id, title, cmd, tag
-                    FROM snippets WHERE rowid IN (
-                        SELECT docid FROM snippets_index
-                        WHERE snippets_index MATCH :term
-                  )'''
+        query = ('SELECT rowid AS id, title, cmd, tag '
+                 'FROM snippets WHERE rowid IN ('
+                 '    SELECT docid FROM snippets_index '
+                 '    WHERE snippets_index MATCH :term)')
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
         except sqlite3.OperationalError as err:
@@ -154,3 +139,11 @@ class SnippetsDatabase(object):
         query = 'DELETE FROM snippets WHERE rowid = :id'
         with self.connection:
             self.cursor.execute(query, {'id': rowid})
+
+    def use_snippet(self, rowid):
+        query = ('UPDATE snippets '
+                 'SET last_used_at = strftime("%s", "now"), '
+                 'usage_count = usage_count + 1 '
+                 'WHERE rowid = ?')
+        with self.connection:
+            self.cursor.execute(query, (rowid,))
