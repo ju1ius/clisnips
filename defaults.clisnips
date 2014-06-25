@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<snippets>
+
+    <!-- TAR SNIPPETS -->
+    <snippet>
+        <title>Create a tarball.</title>
+        <command>tar -cvf {destination} {source}</command>
+        <tag>archive,tar</tag>
+        <doc>{destination} (path) Path of the tarball to create
+{source} (path) The source to compress</doc>
+    </snippet>
+    <snippet>
+        <title>Extract a tarball.</title>
+        <command>tar xvf {source}</command>
+        <tag>archive,tar</tag>
+        <doc>{source} (path) The tarball to extract</doc>
+    </snippet>
+    <snippet>
+        <title>Create a gzipped tarball.</title>
+        <command>tar -cvzf {destination} {source}</command>
+        <tag>archive,tar,gzip</tag>
+        <doc>{destination} (path) Path of the tarball to create
+{source} (path) The source to compress</doc>
+    </snippet>
+    <snippet>
+        <title>Extract a gzipped tarball.</title>
+        <command>tar xvzf {source}</command>
+        <tag>archive,tar,gzip</tag>
+        <doc>{source} (path) The tarball to extract.</doc>
+    </snippet>
+    <snippet>
+        <title>Create a bz2 compressed tarball.</title>
+        <command>tar -cjvf {destination} {source}</command>
+        <tag>archive,tar,bz2</tag>
+        <doc>{destination} (path) Path of the tarball to create
+{source} (path) The source to compress</doc>
+    </snippet>
+    <snippet>
+        <title>Extract a bz2 compressed tarball.</title>
+        <command>tar xjvf {source}</command>
+        <tag>archive,tar,bz2</tag>
+        <doc>{source} (path) The tarball to extract</doc>
+    </snippet>
+
+    <!-- GIT SNIPPETS -->
+    <snippet>
+        <title>Revert last (not pushed) commit</title>
+        <command>git revert {commit_sha}</command>
+        <tag>git</tag>
+        <doc>{commit_sha} (string) [HEAD] The commit id to revert to.</doc>
+    </snippet>
+    <snippet>
+        <title>Undo last commit, leaving files and index untouched</title>
+        <command>git reset --soft HEAD~1</command>
+        <tag>git,reset</tag>
+        <doc></doc>
+    </snippet>
+    <snippet>
+        <title>Temporarily backup (stash) uncommited changes</title>
+        <command>git stash save "{message}"</command>
+        <tag>git,stash</tag>
+        <doc>{message} (string) A descriptive message to reference your backup later.</doc>
+    </snippet>
+
+</snippets>
