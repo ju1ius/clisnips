@@ -13,9 +13,15 @@ from .import_export import ImportDialog, ExportDialog
 from .error_dialog import ErrorDialog
 from .about_dialog import AboutDialog
 from ..db import SnippetsDatabase
+from .state import State as BaseState
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
+
+
+class State(BaseState):
+    LOADING = 1 << 0
+    SEARCHING = 1 << 1
 
 
 class Model(gtk.ListStore):
@@ -40,14 +46,14 @@ class Model(gtk.ListStore):
 
 class MainDialog(helpers.BuildableWidgetDecorator):
 
-    SEARCH_TIMEOUT = 300
-
+    # Constants needed for BuildableWidgetDecorator
     UI_FILE = os.path.join(__DIR__, 'main_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
     WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
                   'cancel_btn', 'apply_btn',
                   'add_btn', 'edit_btn', 'delete_btn')
 
+    # Signals emited by this dialog
     __gsignals__ = {
         'insert-command': (
             gobject.SIGNAL_RUN_LAST,
@@ -61,8 +67,12 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         )
     }
 
+    # Delay before a search operation is fired.
+    SEARCH_TIMEOUT = 300
+
     def __init__(self):
         super(MainDialog, self).__init__()
+        self.state = State()
         #self.ui.set_translation_domain(config.PKG_NAME)
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
@@ -98,26 +108,49 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
         self.connect_signals()
 
+    def run(self):
+        """
+        Main application entry point
+        """
+        self.state.reset()
+        self.widget.show_all()
+        self.load_snippets()
+
+    def destroy(self):
+        """
+        Main application exit point
+        """
+        self.db.close()
+        self.widget.destroy()
+
     def set_cwd(self, cwd):
+        """
+        Sets the current working directory for path completion widgets.
+        """
         self.strfmt_dialog.set_cwd(cwd)
 
     def emit(self, *args):
-        """Ensures signals are emitted in the main thread"""
+        """
+        Ensures signals are emitted in the main thread
+        """
         glib.idle_add(gobject.GObject.emit, self, *args)
 
     def load_snippets(self):
-        #self.snip_list.set_model(None)
-        #self.model.clear()
-        it = self._iter_load_snippets()
-        # run once now, remaining iterations on idle
-        glib.idle_add(it.next)
-        #if it.next():
-            #glib.idle_add(it.next)
-        # load snippets in idle callback to avoid UI blocking
-        #glib.idle_add(self._do_load_snippets)
+        """
+        Loads the whole snippets database in the main treeview.
 
-    def _do_load_snippets(self):
+        Since loading is asynchronous, other methods MUST avoid
+        operating on the model while state is in State.LOADING.
+        """
+        it = self._iter_load_snippets()
+        if it.next():
+            # run once now, remaining iterations on idle
+            glib.idle_add(it.next)
+
+    def _iter_load_snippets(self):
         start = time.time()
+        self.state += State.LOADING
+        # Disconnect treeview from the model for performance
         self.snip_list.freeze_child_notify()
         self.snip_list.set_model(None)
         self.model.clear()
@@ -125,8 +158,11 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.model.set_default_sort_func(lambda *unused: 0)
         self.model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
 
-        for row in self.db.iter('title', 'cmd', 'tag', 'created_at',
-                                'last_used_at', 'usage_count', 'ranking'):
+        num_rows = len(self.db)
+        block_size = self.db.block_size
+        for i, row in enumerate(self.db.iter('title', 'cmd', 'tag',
+                                             'created_at', 'last_used_at',
+                                             'usage_count', 'ranking')):
             self.model.append((
                 row['id'],
                 row['title'],
@@ -137,76 +173,23 @@ class MainDialog(helpers.BuildableWidgetDecorator):
                 row['usage_count'],
                 row['ranking']
             ))
-        self.model.set_sort_column_id(*sort_settings)
-        self.snip_list.set_model(self.model)
-        self.model_filter = self.model.filter_new()
-        self.model_filter.set_visible_func(self._search_callback)
-        self.snip_list.thaw_child_notify()
-        print "Loaded in ", time.time() - start, " seconds"
-        return False
-
-    def _iter_load_snippets(self):
-        start = time.time()
-        self.snip_list.freeze_child_notify()
-        #self.snip_list.set_model(None)
-        self.model.clear()
-        sort_settings = self.model.get_sort_column_id()
-        self.model.set_default_sort_func(lambda *unused: 0)
-        self.model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
-
-        count = 0
-        for row in self.db.iter('title', 'cmd', 'tag', 'created_at',
-                                'last_used_at', 'usage_count', 'ranking'):
-            self.model.append((
-                row['id'],
-                row['title'],
-                row['cmd'],
-                row['tag'],
-                row['created_at'],
-                row['last_used_at'],
-                row['usage_count'],
-                row['ranking']
-            ))
-            count += 1
-            if count % 200 == 0:
+            if i % block_size == 0:
+                # Yield to the main loop to avoid UI freezing.
                 self.snip_list.thaw_child_notify()
                 yield True
                 self.snip_list.freeze_child_notify()
+
+        # Reconnect treeview to the model 
         self.model.set_sort_column_id(*sort_settings)
         self.model_filter = self.model.filter_new()
         self.model_filter.set_visible_func(self._search_callback)
-        #self.snip_list.set_model(self.model)
+        self.snip_list.set_model(self.model)
         self.snip_list.thaw_child_notify()
         print "Loaded in ", time.time() - start, " seconds"
+        self.state -= State.LOADING
         yield False
 
-    def _search_callback(self, model, it, data=None):
-        rowid = model.get_value(it, Model.COLUMN_ID)
-        if rowid is not None:
-            return rowid in self._search_results
-
-    def run(self):
-        self.widget.show_all()
-        self.load_snippets()
-
-    def destroy(self):
-        self.db.close()
-        self.widget.destroy()
-
-    def get_selection(self):
-        selection = self.snip_list.get_selection()
-        model, it = selection.get_selected()
-        if model is self.model_filter:
-            it = model.convert_iter_to_child_iter(it)
-        return self.model, it
-
-    def get_selected_row(self):
-        model, it = self.get_selection()
-        if not model or not it:
-            return
-        rowid = model.get_value(it, Model.COLUMN_ID)
-        row = self.db.get(rowid)
-        return row
+    # ========== Methods for acting on data rows ========== #
 
     def insert_row(self, data):
         rowid = self.db.insert(data)
@@ -250,6 +233,28 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self.db.use_snippet(row['id'])
             self.emit('insert-command', output)
 
+    # ========== Methods for working with the treeview ========== #
+
+    def _search_callback(self, model, it, data=None):
+        rowid = model.get_value(it, Model.COLUMN_ID)
+        if rowid is not None:
+            return rowid in self._search_results
+
+    def get_selection(self):
+        selection = self.snip_list.get_selection()
+        model, it = selection.get_selected()
+        if model is self.model_filter:
+            it = model.convert_iter_to_child_iter(it)
+        return self.model, it
+
+    def get_selected_row(self):
+        model, it = self.get_selection()
+        if not model or not it:
+            return
+        rowid = model.get_value(it, Model.COLUMN_ID)
+        row = self.db.get(rowid)
+        return row
+
     def show_row_context_menu(self):
         menu = gtk.Menu()
         for sid, cb in ((gtk.STOCK_APPLY, self.on_apply_btn_clicked),
@@ -276,7 +281,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def on_snip_list_button_release_event(self, treeview, event):
         """
-        Handler for self.snip_list 'button-release-event' signal
+        Handler for self.snip_list 'button-release-event' signal.
+
+        Shows a row's contextmenu on right-click.
         """
         if event.button == 3:  # right click
             model, it = self.get_selection()
@@ -286,7 +293,10 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def on_snip_list_row_activated(self, treeview, path, col):
         """
-        Handler for self.snip_list 'row-activated' signal
+        Handler for self.snip_list 'row-activated' signal.
+
+        Inserts a command on row double-click.
+        Opens the command dialog if needed.
         """
         model = treeview.get_model()
         it = model.get_iter(path)
@@ -302,7 +312,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     def on_apply_btn_clicked(self, widget, data=None):
         """
         Handler for self.apply_btn 'clicked' and
-        row context menu apply item 'activate' signals
+        row context menu apply item 'activate' signals.
+
+        See `self.on_snip_list_row_activated`.
         """
         row = self.get_selected_row()
         if row:
@@ -310,13 +322,18 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def on_cancel_btn_clicked(self, widget, data=None):
         """
-        Handler for self.cancel_btn 'clicked' signal
+        Handler for self.cancel_btn 'clicked' signal.
+
+        Closes this dialog without doing nothing.
         """
         self.destroy()
 
     def on_add_btn_clicked(self, widget, data=None):
         """
-        Handler for self.add_btn 'clicked' signal
+        Handler for self.add_btn 'clicked' signal.
+
+        Opens an empty command editing dialog
+        and inserts the new row into the treeview.
         """
         response = self.edit_dialog.run()
         if response == gtk.RESPONSE_ACCEPT:
@@ -326,7 +343,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     def on_edit_btn_clicked(self, widget, data=None):
         """
         Handler for self.edit_btn 'clicked' and
-        row context menu edit item 'activate' signals
+        row context menu edit item 'activate' signals.
+
+        Opens the edit dialog with the selected command.
         """
         model, it = self.get_selection()
         if not model or not it:
@@ -340,20 +359,26 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     def on_delete_btn_clicked(self, widget, data=None):
         """
         Handler for self.delete_btn 'clicked' and
-        row context menu delete item 'activate' signals
+        row context menu delete item 'activate' signals.
+
+        Deletes the selected row.
         """
         model, it = self.get_selection()
         self.remove_row(it)
 
     def on_search_entry_icon_press(self, widget, icon_pos, event):
         """
-        Handler for self.search_entry 'icon-press' signal
+        Handler for self.search_entry 'icon-press' signal.
+
+        Resets the search entry.
         """
         widget.set_text('')
 
     def on_search_entry_changed(self, widget):
         """
-        Handler for self.search_entry 'changed' signal
+        Handler for self.search_entry 'changed' signal.
+
+        Queues a request for a search operation. 
         """
         if self._search_timeout:
             glib.source_remove(self._search_timeout)
@@ -361,6 +386,13 @@ class MainDialog(helpers.BuildableWidgetDecorator):
                                                 self._on_search_timeout)
 
     def _on_search_timeout(self):
+        """
+        The actual search method.
+        """
+        if State.LOADING in self.state:
+            # Defer filtering if we are loading rows
+            return True
+        self.state += State.SEARCHING
         self._search_timeout = 0
         query = self.search_entry.get_text().strip()
         if not query:
@@ -375,7 +407,10 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         #self.snip_list.set_model(None)
         self.model_filter.refilter()
         self.snip_list.set_model(self.model_filter)
+        self.state -= State.SEARCHING
         return False
+
+    # ========== MenuBar items event handlers ========== #
 
     def on_import_menuitem_activate(self, menuitem):
         try:
@@ -390,6 +425,42 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             ExportDialog().run(self.db)
         except Exception as err:
             ErrorDialog().run(err)
+
+    def on_sort_ranking_menuitem_activate(self, menuitem):
+        self.snip_list.freeze_child_notify()
+        model = self.model
+        self.snip_list.set_model(None)
+        self.model.set_sort_column_id(Model.COLUMN_RANKING,
+                                      gtk.SORT_DESCENDING)
+        self.snip_list.set_model(model)
+        self.snip_list.thaw_child_notify()
+
+    def on_sort_created_menuitem_activate(self, menuitem):
+        self.snip_list.freeze_child_notify()
+        model = self.model
+        self.snip_list.set_model(None)
+        self.model.set_sort_column_id(Model.COLUMN_CREATED,
+                                      gtk.SORT_DESCENDING)
+        self.snip_list.set_model(model)
+        self.snip_list.thaw_child_notify()
+
+    def on_sort_last_used_menuitem_activate(self, menuitem):
+        self.snip_list.freeze_child_notify()
+        model = self.model
+        self.snip_list.set_model(None)
+        self.model.set_sort_column_id(Model.COLUMN_LASTUSED,
+                                      gtk.SORT_DESCENDING)
+        self.snip_list.set_model(model)
+        self.snip_list.thaw_child_notify()
+
+    def on_sort_usage_count_menuitem_activate(self, menuitem):
+        self.snip_list.freeze_child_notify()
+        model = self.model
+        self.snip_list.set_model(None)
+        self.model.set_sort_column_id(Model.COLUMN_USAGE,
+                                      gtk.SORT_DESCENDING)
+        self.snip_list.set_model(model)
+        self.snip_list.thaw_child_notify()
 
     def on_helplink_menuitem_activate(self, menuitem):
         gtk.show_uri(gtk.gdk.screen_get_default(),

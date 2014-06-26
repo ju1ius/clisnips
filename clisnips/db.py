@@ -38,6 +38,7 @@ class SnippetsDatabase(object):
         self.db_file = db_file or DB_FILE
         self.connection = None
         self.cursor = None
+        self.block_size = 1024
 
     def get_connection(self):
         return self.connection
@@ -65,6 +66,10 @@ class SnippetsDatabase(object):
             self.cursor = self.connection.cursor()
         return self
 
+    def __len__(self):
+        self.cursor.execute('SELECT COUNT(rowid) AS count FROM snippets')
+        return self.cursor.fetchone()['count']
+
     def rebuild_index(self):
         query = ('INSERT INTO snippets_index(snippets_index) '
                  'VALUES("rebuild")')
@@ -84,11 +89,12 @@ class SnippetsDatabase(object):
         query = 'SELECT rowid AS id, %s from snippets' % ','.join(columns)
         with self.connection:
             self.cursor.execute(query)
-            rows = self.cursor.fetchmany()
-            while rows:
+            while True:
+                rows = self.cursor.fetchmany(self.block_size)
+                if not rows:
+                    return
                 for row in rows:
                     yield row
-                rows = self.cursor.fetchmany()
 
     def get(self, rowid):
         query = ('SELECT rowid AS id, * FROM snippets WHERE rowid = :id')

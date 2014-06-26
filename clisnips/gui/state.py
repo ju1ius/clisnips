@@ -45,6 +45,9 @@ class State(gobject.GObject):
             setattr(self, name.upper(), 1 << i)
         return self
 
+    def reset(self):
+        self._mask = self.INITIAL
+
     def get(self):
         """
         Gets the current state's bitmask.
