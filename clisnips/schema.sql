@@ -20,6 +20,14 @@ CREATE VIRTUAL TABLE IF NOT EXISTS snippets_index USING fts4(
     tag
 );
 
+
+-- Indexes for fast sorting
+
+CREATE INDEX IF NOT EXISTS snip_created_idx ON snippets(created_at DESC);
+CREATE INDEX IF NOT EXISTS snip_last_used_idx ON snippets(last_used_at DESC);
+CREATE INDEX IF NOT EXISTS snip_usage_idx ON snippets(usage_count DESC);
+CREATE INDEX IF NOT EXISTS snip_ranking_idx ON snippets(ranking DESC);
+
 --
 -- Triggers to keep snippets table and index in sync,
 -- and to keep track of command usage and ranking.
@@ -68,3 +76,7 @@ BEGIN
         NEW.rowid, NEW.title, NEW.tag
     );
 END;
+
+
+-- Analyze the whole stuff
+ANALYZE;
