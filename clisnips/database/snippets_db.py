@@ -39,6 +39,7 @@ class SnippetsDatabase(object):
         self.connection = None
         self.cursor = None
         self.block_size = 1024
+        self._num_rows = None
 
     def get_connection(self):
         return self.connection
@@ -67,8 +68,10 @@ class SnippetsDatabase(object):
         return self
 
     def __len__(self):
-        self.cursor.execute('SELECT COUNT(rowid) AS count FROM snippets')
-        return self.cursor.fetchone()['count']
+        if self._num_rows is None:
+            self.cursor.execute('SELECT COUNT(rowid) AS count FROM snippets')
+            self._num_rows = self.cursor.fetchone()['count']
+        return self._num_rows
 
     def rebuild_index(self):
         query = ('INSERT INTO snippets_index(snippets_index) '
@@ -100,20 +103,28 @@ class SnippetsDatabase(object):
         query = ('SELECT rowid AS id, * FROM snippets WHERE rowid = :id')
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
+    def get_listing_query(self):
+        return ('SELECT rowid AS id, title, cmd, tag, '
+                'created_at, last_used_at, usage_count, ranking '
+                'FROM snippets')
+
+    def get_listing_count_query(self):
+        return 'SELECT rowid FROM snippets'
+
+    def get_search_query(self):
+        return ('SELECT i.docid, s.rowid AS id, '
+                's.title, s.cmd, s.tag, '
+                's.created_at, s.last_used_at, s.usage_count, s.ranking '
+                'FROM snippets s JOIN snippets_index i ON i.docid = s.rowid '
+                'WHERE snippets_index MATCH :term')
+
+    def get_search_count_query(self):
+        return ('SELECT docid FROM snippets_index '
+                'WHERE snippets_index MATCH :term')
+
     def search(self, term):
         query = ('SELECT docid AS id FROM snippets_index '
                  'WHERE snippets_index MATCH :term')
-        try:
-            rows = self.cursor.execute(query, {'term': term}).fetchall()
-        except sqlite3.OperationalError as err:
-            return []
-        return rows
-
-    def search2(self, term):
-        query = ('SELECT rowid AS id, title, cmd, tag '
-                 'FROM snippets WHERE rowid IN ('
-                 '    SELECT docid FROM snippets_index '
-                 '    WHERE snippets_index MATCH :term)')
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
         except sqlite3.OperationalError as err:
@@ -125,6 +136,8 @@ class SnippetsDatabase(object):
                  'VALUES(:title, :cmd, :doc, :tag)')
         with self.connection:
             self.cursor.execute(query, data)
+            if self.cursor.rowcount > 0:
+                self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid
 
     def insertmany(self, data):
@@ -132,6 +145,8 @@ class SnippetsDatabase(object):
                  'VALUES(:title, :cmd, :doc, :tag)')
         with self.connection:
             self.cursor.executemany(query, data)
+            if self.cursor.rowcount > 0:
+                self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid
 
     def update(self, data):
@@ -140,16 +155,19 @@ class SnippetsDatabase(object):
                  'WHERE rowid = :id')
         with self.connection:
             self.cursor.execute(query, data)
+            return self.cursor.rowcount
 
     def delete(self, rowid):
         query = 'DELETE FROM snippets WHERE rowid = :id'
         with self.connection:
             self.cursor.execute(query, {'id': rowid})
+            if self.cursor.rowcount > 0:
+                self._num_rows -= self.cursor.rowcount
 
     def use_snippet(self, rowid):
         query = ('UPDATE snippets '
                  'SET last_used_at = strftime("%s", "now"), '
                  'usage_count = usage_count + 1 '
-                 'WHERE rowid = ?')
+                 'WHERE rowid = :id')
         with self.connection:
-            self.cursor.execute(query, (rowid,))
+            self.cursor.execute(query, {'id': rowid})
