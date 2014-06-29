@@ -12,7 +12,8 @@ from .strfmt_dialog import StringFormatterDialog
 from .import_export import ImportDialog, ExportDialog
 from .error_dialog import ErrorDialog
 from .about_dialog import AboutDialog
-from ..db import SnippetsDatabase
+from ..database.snippets_db import SnippetsDatabase
+from .pager import Pager
 from .state import State as BaseState
 
 
@@ -41,7 +42,6 @@ class Model(gtk.ListStore):
 
     def __init__(self):
         super(Model, self).__init__(*self.COLUMNS)
-        self.set_sort_column_id(Model.COLUMN_RANKING, gtk.SORT_DESCENDING)
 
 
 class MainDialog(helpers.BuildableWidgetDecorator):
@@ -50,6 +50,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     UI_FILE = os.path.join(__DIR__, 'main_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
     WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
+                  'pager_first_btn', 'pager_prev_btn',
+                  'pager_next_btn', 'pager_last_btn',
+                  'pager_curpage_lbl',
                   'cancel_btn', 'apply_btn',
                   'add_btn', 'edit_btn', 'delete_btn')
 
@@ -97,8 +100,12 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self.snip_list.append_column(col)
 
         self.db = SnippetsDatabase().open()
+        self.pager = Pager(self.ui, self.db, page_size=128)
+        self.pager.set_sort_columns([
+            ('ranking', 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
-        self._search_results = set()
         self._search_timeout = 0
 
         self.edit_dialog = EditDialog()
@@ -142,27 +149,17 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         Since loading is asynchronous, other methods MUST avoid
         operating on the model while state is in State.LOADING.
         """
-        it = self._iter_load_snippets()
-        if it.next():
-            # run once now, remaining iterations on idle
-            glib.idle_add(it.next)
-
-    def _iter_load_snippets(self):
-        start = time.time()
         self.state += State.LOADING
-        # Disconnect treeview from the model for performance
-        self.snip_list.freeze_child_notify()
+        self.pager.mode = Pager.MODE_LIST
+        rows = self.pager.execute().first()
+        self._load_rows(rows)
+        self.state -= State.LOADING
+
+    def _load_rows(self, rows):
+        self.state += State.LOADING
         self.snip_list.set_model(None)
         self.model.clear()
-        sort_settings = self.model.get_sort_column_id()
-        self.model.set_default_sort_func(lambda *unused: 0)
-        self.model.set_sort_column_id(-1, gtk.SORT_ASCENDING)
-
-        num_rows = len(self.db)
-        block_size = self.db.block_size
-        for i, row in enumerate(self.db.iter('title', 'cmd', 'tag',
-                                             'created_at', 'last_used_at',
-                                             'usage_count', 'ranking')):
+        for row in rows:
             self.model.append((
                 row['id'],
                 row['title'],
@@ -173,21 +170,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
                 row['usage_count'],
                 row['ranking']
             ))
-            if i % block_size == 0:
-                # Yield to the main loop to avoid UI freezing.
-                self.snip_list.thaw_child_notify()
-                yield True
-                self.snip_list.freeze_child_notify()
-
-        # Reconnect treeview to the model 
-        self.model.set_sort_column_id(*sort_settings)
-        self.model_filter = self.model.filter_new()
-        self.model_filter.set_visible_func(self._search_callback)
         self.snip_list.set_model(self.model)
-        self.snip_list.thaw_child_notify()
-        print "Loaded in ", time.time() - start, " seconds"
         self.state -= State.LOADING
-        yield False
 
     # ========== Methods for acting on data rows ========== #
 
@@ -233,6 +217,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self.db.use_snippet(row['id'])
             self.emit('insert-command', output)
 
+    def get_search_text(self):
+        return self.search_entry.get_text().strip()
+
     # ========== Methods for working with the treeview ========== #
 
     def _search_callback(self, model, it, data=None):
@@ -243,9 +230,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     def get_selection(self):
         selection = self.snip_list.get_selection()
         model, it = selection.get_selected()
-        if model is self.model_filter:
-            it = model.convert_iter_to_child_iter(it)
-        return self.model, it
+        return model, it
 
     def get_selected_row(self):
         model, it = self.get_selection()
@@ -275,6 +260,26 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     ###########################################################################
     # ------------------------------ SIGNALS
     ###########################################################################
+
+    # ===== Pager navigation
+
+    def on_pager_first_btn_clicked(self, btn):
+        rows = self.pager.first()
+        self._load_rows(rows)
+
+    def on_pager_prev_btn_clicked(self, btn):
+        rows = self.pager.previous()
+        self._load_rows(rows)
+
+    def on_pager_next_btn_clicked(self, btn):
+        rows = self.pager.next()
+        self._load_rows(rows)
+
+    def on_pager_last_btn_clicked(self, btn):
+        rows = self.pager.last()
+        self._load_rows(rows)
+
+    # ===== Snippets list actions
 
     def on_destroy(self, dialog, event, data=None):
         self.destroy()
@@ -366,6 +371,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         model, it = self.get_selection()
         self.remove_row(it)
 
+    # ===== Handle Search
+
     def on_search_entry_icon_press(self, widget, icon_pos, event):
         """
         Handler for self.search_entry 'icon-press' signal.
@@ -394,23 +401,22 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             return True
         self.state += State.SEARCHING
         self._search_timeout = 0
-        query = self.search_entry.get_text().strip()
+        query = self.get_search_text()
         if not query:
-            self.snip_list.set_model(self.model)
-            self._search_results = set()
-            return
-        rows = self.db.search(query)
+            self.load_snippets()
+            return False
+        params = {'term': query}
+        self.pager.mode = Pager.MODE_SEARCH
+        rows = self.pager.execute(params, params).first()
         if not rows:
-            self._search_results = set()
-            return
-        self._search_results = set(row['id'] for row in rows)
-        #self.snip_list.set_model(None)
-        self.model_filter.refilter()
-        self.snip_list.set_model(self.model_filter)
+            return False
+        self._load_rows(rows)
         self.state -= State.SEARCHING
         return False
 
     # ========== MenuBar items event handlers ========== #
+
+    # ===== File Menu
 
     def on_import_menuitem_activate(self, menuitem):
         try:
@@ -426,41 +432,43 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         except Exception as err:
             ErrorDialog().run(err)
 
+    # ===== Display Menu
+
     def on_sort_ranking_menuitem_activate(self, menuitem):
-        self.snip_list.freeze_child_notify()
-        model = self.model
-        self.snip_list.set_model(None)
-        self.model.set_sort_column_id(Model.COLUMN_RANKING,
-                                      gtk.SORT_DESCENDING)
-        self.snip_list.set_model(model)
-        self.snip_list.thaw_child_notify()
+        self._change_sort_columns([
+            ('ranking', 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
     def on_sort_created_menuitem_activate(self, menuitem):
-        self.snip_list.freeze_child_notify()
-        model = self.model
-        self.snip_list.set_model(None)
-        self.model.set_sort_column_id(Model.COLUMN_CREATED,
-                                      gtk.SORT_DESCENDING)
-        self.snip_list.set_model(model)
-        self.snip_list.thaw_child_notify()
+        self._change_sort_columns([
+            ('created_at', 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
     def on_sort_last_used_menuitem_activate(self, menuitem):
-        self.snip_list.freeze_child_notify()
-        model = self.model
-        self.snip_list.set_model(None)
-        self.model.set_sort_column_id(Model.COLUMN_LASTUSED,
-                                      gtk.SORT_DESCENDING)
-        self.snip_list.set_model(model)
-        self.snip_list.thaw_child_notify()
+        self._change_sort_columns([
+            ('last_used_at', 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
     def on_sort_usage_count_menuitem_activate(self, menuitem):
-        self.snip_list.freeze_child_notify()
-        model = self.model
-        self.snip_list.set_model(None)
-        self.model.set_sort_column_id(Model.COLUMN_USAGE,
-                                      gtk.SORT_DESCENDING)
-        self.snip_list.set_model(model)
-        self.snip_list.thaw_child_notify()
+        self._change_sort_columns([
+            ('usage_count', 'DESC'),
+            ('id', 'ASC', True)
+        ])
+
+    def _change_sort_columns(self, columns):
+        self.pager.set_sort_columns(columns)
+        if self.pager.mode == Pager.MODE_SEARCH:
+            search = self.get_search_text()
+            params = {'term': search} if search else ()
+        else:
+            params = ()
+        rows = self.pager.execute(params, params).first()
+        self._load_rows(rows)
+
+    # ===== Help Menu
 
     def on_helplink_menuitem_activate(self, menuitem):
         gtk.show_uri(gtk.gdk.screen_get_default(),
