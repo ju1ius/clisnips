@@ -7,6 +7,7 @@ class Pager(object):
     MODE_SEARCH = 2
 
     def __init__(self, ui, db, page_size):
+        self._page_size = page_size
         self.snips_pager = ScrollingPager(db.connection, page_size)
         self.snips_pager.set_query(db.get_listing_query())
         self.snips_pager.set_count_query(db.get_listing_count_query())
@@ -38,11 +39,20 @@ class Pager(object):
             self._mode = self.MODE_LIST
             self._current_pager = self.snips_pager
 
+    @property
+    def page_size(self):
+        return self._page_size
+
+    @page_size.setter
+    def page_size(self, size):
+        self.set_page_size(size)
+
     def set_sort_columns(self, columns):
         self.snips_pager.set_sort_columns(columns)
         self.search_pager.set_sort_columns(columns)
 
     def set_page_size(self, size):
+        self._page_size = size
         self.snips_pager.set_page_size(size)
         self.search_pager.set_page_size(size)
 
