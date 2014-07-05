@@ -39,7 +39,7 @@ class SnippetsDatabase(object):
         self.connection = None
         self.cursor = None
         self.block_size = 1024
-        self._num_rows = None
+        self._num_rows = 0
 
     def get_connection(self):
         return self.connection
@@ -68,7 +68,7 @@ class SnippetsDatabase(object):
         return self
 
     def __len__(self):
-        if self._num_rows is None:
+        if not self._num_rows:
             self.cursor.execute('SELECT COUNT(rowid) AS count FROM snippets')
             self._num_rows = self.cursor.fetchone()['count']
         return self._num_rows
@@ -141,8 +141,16 @@ class SnippetsDatabase(object):
             return self.cursor.lastrowid
 
     def insertmany(self, data):
-        query = ('INSERT INTO snippets(title, cmd, doc, tag) '
-                 'VALUES(:title, :cmd, :doc, :tag)')
+        query = '''
+            INSERT INTO snippets(
+                title, cmd, doc, tag,
+                created_at, last_used_at, usage_count
+            )
+            VALUES(
+                :title, :cmd, :doc, :tag,
+                :created_at, :last_used_at, :usage_count
+            )
+        '''
         with self.connection:
             self.cursor.executemany(query, data)
             if self.cursor.rowcount > 0:

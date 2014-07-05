@@ -24,6 +24,9 @@ class Exporter(object):
 
     def _create_snippet(self, doc, row):
         snip = doc.createElement('snippet')
+        snip.setAttribute('created-at', row['created_at'])
+        snip.setAttribute('last-used-at', row['last_used_at'])
+        snip.setAttribute('usage-count', row['usage_count'])
         self.add_field(doc, snip, 'title', row['title'])
         self.add_field(doc, snip, 'command', row['cmd'])
         self.add_field(doc, snip, 'tag', row['tag'])
