@@ -77,6 +77,13 @@ for pub in ('bgcolor', 'fgcolor', 'cursor_color'):
 
     setattr(_Styles, pub, property(**_prop()))
 
-del pub, _prop 
+del pub, _prop
 
 styles = _Styles()
+
+pager = {
+    'sort_column': 'ranking',
+    'page_size': 100
+}
+
+database_path = None

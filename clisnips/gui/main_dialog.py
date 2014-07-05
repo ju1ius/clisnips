@@ -5,7 +5,7 @@ import gobject
 import glib
 import gtk
 
-from ..config import styles, HELP_URI
+from .. import config 
 from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
@@ -80,9 +80,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
-        helpers.set_font(self.snip_list, styles.font)
-        helpers.set_background_color(self.snip_list, styles.bgcolor)
-        helpers.set_text_color(self.snip_list, styles.fgcolor)
+        helpers.set_font(self.snip_list, config.styles.font)
+        helpers.set_background_color(self.snip_list, config.styles.bgcolor)
+        helpers.set_text_color(self.snip_list, config.styles.fgcolor)
 
         self.model = Model()
         for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
@@ -99,10 +99,11 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             col.add_attribute(cell, 'text', i)
             self.snip_list.append_column(col)
 
-        self.db = SnippetsDatabase().open()
-        self.pager = Pager(self.ui, self.db, page_size=128)
+        self.db = SnippetsDatabase(config.database_path).open()
+        self.pager = Pager(self.ui, self.db,
+                           page_size=int(config.pager['page_size']))
         self.pager.set_sort_columns([
-            ('ranking', 'DESC'),
+            (config.pager['sort_column'], 'DESC'),
             ('id', 'ASC', True)
         ])
 
@@ -459,6 +460,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         ])
 
     def _change_sort_columns(self, columns):
+        config.pager['sort_column'] = columns[0][0]
         self.pager.set_sort_columns(columns)
         if self.pager.mode == Pager.MODE_SEARCH:
             search = self.get_search_text()
@@ -472,7 +474,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def on_helplink_menuitem_activate(self, menuitem):
         gtk.show_uri(gtk.gdk.screen_get_default(),
-                     HELP_URI,
+                     config.HELP_URI,
                      int(glib.get_current_time()))
 
     def on_about_menuitem_activate(self, menuitem):
