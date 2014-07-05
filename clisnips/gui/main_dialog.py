@@ -322,9 +322,12 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
         See `self.on_snip_list_row_activated`.
         """
-        row = self.get_selected_row()
-        if row:
-            self.insert_command(row)
+        try:
+            row = self.get_selected_row()
+            if row:
+                self.insert_command(row)
+        except Exception as error:
+            ErrorDialog().run(error)
 
     def on_cancel_btn_clicked(self, widget, data=None):
         """
@@ -341,10 +344,13 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         Opens an empty command editing dialog
         and inserts the new row into the treeview.
         """
-        response = self.edit_dialog.run()
-        if response == gtk.RESPONSE_ACCEPT:
-            data = self.edit_dialog.get_data()
-            self.insert_row(data)
+        try:
+            response = self.edit_dialog.run()
+            if response == gtk.RESPONSE_ACCEPT:
+                data = self.edit_dialog.get_data()
+                self.insert_row(data)
+        except Exception as error:
+            ErrorDialog().run(error)
 
     def on_edit_btn_clicked(self, widget, data=None):
         """
@@ -356,11 +362,14 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         model, it = self.get_selection()
         if not model or not it:
             return
-        row = self.db.get(model.get_value(it, Model.COLUMN_ID))
-        response = self.edit_dialog.run(row)
-        if response == gtk.RESPONSE_ACCEPT:
-            data = self.edit_dialog.get_data()
-            self.update_row(it, data)
+        try:
+            row = self.db.get(model.get_value(it, Model.COLUMN_ID))
+            response = self.edit_dialog.run(row)
+            if response == gtk.RESPONSE_ACCEPT:
+                data = self.edit_dialog.get_data()
+                self.update_row(it, data)
+        except Exception as error:
+            ErrorDialog().run(error)
 
     def on_delete_btn_clicked(self, widget, data=None):
         """
@@ -369,8 +378,11 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
         Deletes the selected row.
         """
-        model, it = self.get_selection()
-        self.remove_row(it)
+        try:
+            model, it = self.get_selection()
+            self.remove_row(it)
+        except Exception as error:
+            ErrorDialog().run(error)
 
     # ===== Handle Search
 
