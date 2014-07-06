@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS snippets(
 -- Snippets search index
 
 CREATE VIRTUAL TABLE IF NOT EXISTS snippets_index USING fts4(
+    tokenize=unicode_words,
     content="snippets",
     title,
     tag
@@ -33,20 +34,20 @@ CREATE INDEX IF NOT EXISTS snip_ranking_idx ON snippets(ranking DESC);
 -- and to keep track of command usage and ranking.
 --
 
-CREATE TRIGGER IF NOT EXISTS snippets_bu BEFORE UPDATE
-ON snippets
+CREATE TRIGGER IF NOT EXISTS snippets_bu
+BEFORE UPDATE ON snippets
 BEGIN
     DELETE FROM snippets_index WHERE docid=OLD.rowid;
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_bd BEFORE DELETE
-ON snippets
+CREATE TRIGGER IF NOT EXISTS snippets_bd
+BEFORE DELETE ON snippets
 BEGIN
     DELETE FROM snippets_index WHERE docid=OLD.rowid;
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_au AFTER UPDATE
-ON snippets
+CREATE TRIGGER IF NOT EXISTS snippets_au
+AFTER UPDATE ON snippets
 BEGIN
     -- Update Ranking
     UPDATE snippets SET ranking = rank(
@@ -54,15 +55,14 @@ BEGIN
         NEW.last_used_at,
         NEW.usage_count
     ) WHERE rowid = NEW.rowid;
-
     -- Update search index
     INSERT INTO snippets_index(docid, title, tag) VALUES(
         NEW.rowid, NEW.title, NEW.tag
     );
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_ai AFTER INSERT
-ON snippets
+CREATE TRIGGER IF NOT EXISTS snippets_ai
+AFTER INSERT ON snippets
 BEGIN
     -- Update Ranking
     UPDATE snippets SET ranking = rank(
@@ -70,7 +70,6 @@ BEGIN
         NEW.last_used_at,
         NEW.usage_count
     ) WHERE rowid = NEW.rowid;
-
     -- Update search index
     INSERT INTO snippets_index(docid, title, tag) VALUES(
         NEW.rowid, NEW.title, NEW.tag

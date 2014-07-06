@@ -3,6 +3,8 @@ import stat
 import time
 import sqlite3
 
+from . import word_tokenizer
+
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
@@ -62,6 +64,7 @@ class SnippetsDatabase(object):
         if not isinstance(self.connection, sqlite3.Connection):
             self.connection = sqlite3.connect(self.db_file)
             self.connection.create_function('rank', 3, ranking_function)
+            word_tokenizer.register(self.connection)
             self.connection.executescript(SCHEMA_QUERY)
             self.connection.row_factory = sqlite3.Row
             self.cursor = self.connection.cursor()
