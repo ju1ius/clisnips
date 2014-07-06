@@ -59,7 +59,10 @@ class SnippetsDatabase(object):
         self.connection.close()
 
     def open(self):
-        if not os.path.isfile(self.db_file):
+        if (
+            not self.db_file == ':memory:'
+            and not os.path.isfile(self.db_file)
+        ):
             os.mknod(self.db_file, 0o755 | stat.S_IFREG)
         if not isinstance(self.connection, sqlite3.Connection):
             self.connection = sqlite3.connect(self.db_file)
@@ -77,8 +80,7 @@ class SnippetsDatabase(object):
         return self._num_rows
 
     def rebuild_index(self):
-        query = ('INSERT INTO snippets_index(snippets_index) '
-                 'VALUES("rebuild")')
+        query = 'INSERT INTO snippets_index(snippets_index) VALUES("rebuild")'
         with self.connection:
             self.cursor.execute(query)
 
