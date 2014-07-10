@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS snippets(
     title TEXT NOT NULL,
     cmd TEXT NOT NULL,
     tag TEXT,
-    doc TEXT,
+    doc TEXT
 );
 
 -- Snippets search index
