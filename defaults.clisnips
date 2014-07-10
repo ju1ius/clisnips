@@ -62,4 +62,54 @@
         <doc>{message} (string) A descriptive message to reference your backup later.</doc>
     </snippet>
 
+    <!-- APT / DPKG -->
+
+    <snippet>
+        <title>List all files installed by a given package</title>
+        <command>dpkg -L {package}</command>
+        <tag>dpkg,apt</tag>
+        <doc>{package} Package name.</doc>
+    </snippet>
+    <snippet>
+        <title>List which package installed given command</title>
+        <command>dpkg -S $(which {command})</command>
+        <tag>dpkg,apt</tag>
+        <doc>{command} Command name</doc>
+    </snippet>
+    <snippet>
+        <title>List which package installed given file or directory</title>
+        <command>dpkg -S {path}</command>
+        <tag>dpkg,apt</tag>
+        <doc>{path} (path)</doc>
+    </snippet>
+    <snippet>
+        <title>Find version of a package</title>
+        <command>dpkg -l {package}</command>
+        <tag>dpkg,apt</tag>
+        <doc>{package} Package name.</doc>
+    </snippet>
+
+    <!-- MISC -->
+
+    <snippet>
+        <title>Compress PDF</title>
+        <command>ghostscript -dSAFER -dNOPAUSE -dBATCH -sDEVICE=pdfwrite \
+    -dCompatibilityLevel=1.4 \
+    -dUseCIEColor -dColorConversionStrategy=/sRGB \
+    -dPDFSETTINGS=/{quality} \
+    -sOUTPUTFILE="{infile}" -f "{outfile}"</command>
+        <tag>pdf,ghostscript,compression</tag>
+        <doc>{infile} (file) The PDF file to compress.
+{outfile} (path) The output file path.
+{quality} (string) ["screen", "ebook", *"printer", "prepress"]
+    PDF quality from "screen" (lowest) to "prepress" (highest)</doc>
+    </snippet>
+
+    <snippet>
+        <title></title>
+        <command></command>
+        <tag></tag>
+        <doc></doc>
+    </snippet>
+
 </snippets>
