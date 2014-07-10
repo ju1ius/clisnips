@@ -2,14 +2,16 @@
 -- Snippets table
 
 CREATE TABLE IF NOT EXISTS snippets(
-    title TEXT NOT NULL,
-    cmd TEXT NOT NULL,
-    doc TEXT,
-    tag TEXT,
+    -- Statistics
     created_at INTEGER DEFAULT (strftime('%s', 'now')),
     last_used_at INTEGER DEFAULT (strftime('%s', 'now')),
     usage_count INTEGER DEFAULT 0,
-    ranking FLOAT DEFAULT 0.0 
+    ranking FLOAT DEFAULT 0.0,
+    -- Contents
+    title TEXT NOT NULL,
+    cmd TEXT NOT NULL,
+    tag TEXT,
+    doc TEXT,
 );
 
 -- Snippets search index
@@ -20,7 +22,6 @@ CREATE VIRTUAL TABLE IF NOT EXISTS snippets_index USING fts4(
     title,
     tag
 );
-
 
 -- Indexes for fast sorting
 
