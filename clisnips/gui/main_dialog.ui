@@ -12,6 +12,26 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-save-as</property>
   </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-goto-first</property>
+  </object>
+  <object class="GtkImage" id="image4">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-back</property>
+  </object>
+  <object class="GtkImage" id="image5">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-go-forward</property>
+  </object>
+  <object class="GtkImage" id="image6">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-goto-last</property>
+  </object>
   <object class="GtkWindow" id="main_dialog">
     <property name="height_request">320</property>
     <property name="can_focus">False</property>
@@ -188,7 +208,6 @@
                   <object class="GtkVBox" id="box2">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="orientation">vertical</property>
                     <child>
                       <object class="GtkScrolledWindow" id="scrolledwindow1">
                         <property name="visible">True</property>
@@ -221,39 +240,56 @@
                       <object class="GtkHBox" id="box3">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="homogeneous">True</property>
+                        <property name="spacing">12</property>
                         <child>
-                          <object class="GtkHButtonBox" id="buttonbox1">
+                          <object class="GtkLabel" id="pager_info_lbl">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="layout_style">start</property>
+                            <property name="halign">start</property>
+                            <property name="valign">center</property>
+                            <property name="xalign">0</property>
+                            <property name="label" translatable="yes">label</property>
+                            <property name="justify">right</property>
+                            <attributes>
+                              <attribute name="style" value="italic"/>
+                            </attributes>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkHBox" id="buttonbox1">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="homogeneous">True</property>
                             <child>
                               <object class="GtkButton" id="pager_first_btn">
-                                <property name="label">gtk-goto-first</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_stock">True</property>
+                                <property name="image">image3</property>
                                 <signal name="clicked" handler="on_pager_first_btn_clicked" swapped="no"/>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
                                 <property name="position">0</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkButton" id="pager_prev_btn">
-                                <property name="label">gtk-go-back</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_stock">True</property>
+                                <property name="image">image4</property>
                                 <signal name="clicked" handler="on_pager_prev_btn_clicked" swapped="no"/>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
                                 <property name="position">1</property>
                               </packing>
                             </child>
@@ -267,38 +303,36 @@
                                 </attributes>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
                                 <property name="position">2</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkButton" id="pager_next_btn">
-                                <property name="label">gtk-go-forward</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_stock">True</property>
+                                <property name="image">image5</property>
                                 <signal name="clicked" handler="on_pager_next_btn_clicked" swapped="no"/>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
                                 <property name="position">3</property>
                               </packing>
                             </child>
                             <child>
                               <object class="GtkButton" id="pager_last_btn">
-                                <property name="label">gtk-goto-last</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="receives_default">True</property>
-                                <property name="use_stock">True</property>
+                                <property name="image">image6</property>
                                 <signal name="clicked" handler="on_pager_last_btn_clicked" swapped="no"/>
                               </object>
                               <packing>
-                                <property name="expand">True</property>
-                                <property name="fill">True</property>
+                                <property name="expand">False</property>
+                                <property name="fill">False</property>
                                 <property name="position">4</property>
                               </packing>
                             </child>
@@ -306,23 +340,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="pager_info_lbl">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="xalign">0.99000000953674316</property>
-                            <property name="label" translatable="yes">label</property>
-                            <property name="justify">right</property>
-                            <attributes>
-                              <attribute name="style" value="italic"/>
-                            </attributes>
-                          </object>
-                          <packing>
-                            <property name="expand">True</property>
-                            <property name="fill">True</property>
+                            <property name="pack_type">end</property>
                             <property name="position">1</property>
                           </packing>
                         </child>
