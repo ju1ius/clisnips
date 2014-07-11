@@ -5,4 +5,4 @@
 *.pyc
 __pycache__
 /main.py
-/test
+/tmp
