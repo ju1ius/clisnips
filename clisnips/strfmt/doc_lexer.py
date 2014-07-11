@@ -63,6 +63,7 @@ class StringLexer(object):
             self.col = -1
         if self.pos + n >= self.length:
             self.char = None
+            self.pos = self.length
             return self.char
         if n == 1:
             self.pos += 1
@@ -250,11 +251,15 @@ class Lexer(StringLexer):
 # {{{
         #print "ENTER after_param_state"
         char = self._skip_whitespace()
+        if char is None:
+            return False
         if char == '(':
             m = TYPEHINT_RX.match(self.text, self.pos)
             if m:
                 t = self.init_token(T_TYPEHINT, m.group(1))
+                print self.pos
                 self.consume(m.group(0))
+                print self.pos
                 self.finalize_token(t)
                 self.token_queue.append(t)
             else:
@@ -357,6 +362,8 @@ class Lexer(StringLexer):
     def _skip_whitespace(self):
 # {{{
         char = self.advance()
+        if char is None:
+            return None
         if char in WSP_CHARS:
             self.read_until(WSP_RX)
             char = self.advance()

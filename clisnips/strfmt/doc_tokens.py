@@ -52,3 +52,6 @@ class Token(object):
                     s=self,
                     pos=('%s->%s' % (self.startpos, self.endpos)
                          if self.startpos is not None else ''))
+
+    def __repr__(self):
+        return str(self)
