@@ -2,9 +2,12 @@
 clisnips_plugin.py - Terminator Plugin to add a snippet library
 """
 
+from os.path import join
+
 import gtk
 import gobject
 
+from terminatorlib.util import get_config_dir
 from terminatorlib import plugin
 from terminatorlib.config import Config
 from terminatorlib.terminal import Terminal
@@ -26,7 +29,9 @@ class CliSnipsMenu(plugin.MenuItem):
         self.terminal = None
         self.focus_handler = None
         self.config = Config()
+        self.config_dir = get_config_dir()
         self.dialog = None
+        self.configure()
 
     def unload(self):
         self.disconnect_signals()
@@ -51,6 +56,7 @@ class CliSnipsMenu(plugin.MenuItem):
             self.dialog.run()
         except Exception as error:
             ErrorDialog().run(error)
+        self.save_config()
 
     def reconnect_signals(self):
         self.disconnect_signals()
@@ -60,12 +66,28 @@ class CliSnipsMenu(plugin.MenuItem):
         self.focus_handler = gobject.add_emission_hook(
             Terminal,
             'focus-in',
-            self.on_terminal_focus_in)
+            self.on_terminal_focus_in
+        )
 
     def disconnect_signals(self):
         if self.focus_handler:
-            gobject.remove_emission_hook(Terminal, 'focus-in',
-                                         self.focus_handler)
+            gobject.remove_emission_hook(
+                Terminal,
+                'focus-in',
+                self.focus_handler
+            )
+
+    def configure(self):
+        plugin = self.__class__.__name__
+        config = self.config.plugin_get_config(plugin)
+        if not config:
+            self.config.plugin_set(plugin, 'pager', clisnips.config.pager)
+            self.config.plugin_set(plugin, 'database_path',
+                                   join(self.config_dir, 'plugins',
+                                        'clisnips.sqlite'))
+        clisnips.config.pager = self.config.plugin_get(plugin, 'pager')
+        clisnips.config.database_path = self.config.plugin_get(plugin,
+                                                               'database_path')
 
     def set_styles(self):
         try:
@@ -80,6 +102,17 @@ class CliSnipsMenu(plugin.MenuItem):
         styles.bgcolor = self.terminal.bgcolor
         styles.fgcolor = self.terminal.fgcolor_active
         styles.cursor_color = self.config['cursor_color']
+
+    def save_config(self):
+        plugin = self.__class__.__name__
+        self.config.plugin_set_config(plugin, {
+            'pager': {
+                'sort_column': clisnips.config.pager['sort_column'],
+                'page_size': clisnips.config.pager['page_size']
+            },
+            'database_path': clisnips.config.database_path
+        })
+        self.config.save()
 
     # ---------- Signals ---------- #
 

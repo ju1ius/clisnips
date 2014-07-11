@@ -7,6 +7,13 @@ class Documentation(object):
         self.text = text
         self.parameters = params
 
+    def __str__(self):
+        params = ''.join(str(p) for p in self.parameters)
+        return self.text + params
+
+    def __repr__(self):
+        return str(self)
+
 
 class Parameter(object):
 
@@ -22,6 +29,9 @@ class Parameter(object):
             self.valuehint, self.text
         )
 
+    def __repr__(self):
+        return str(self)
+
 
 class ValueRange(object):
 
@@ -29,7 +39,11 @@ class ValueRange(object):
         self.start = start
         self.end = end
         self.step = self._get_default_step() if step is None else step
-        self.default = default if default is not None else start
+        if default is None or default < start:
+            default = start
+        elif default > end:
+            default = end
+        self.default = default
 
     def _get_default_step(self):
         start_decimals = get_num_decimals(self.start)
@@ -44,6 +58,9 @@ class ValueRange(object):
             self.start, self.end, self.step, self.default
         )
 
+    def __repr__(self):
+        return str(self)
+
 
 class ValueList(object):
 
@@ -53,3 +70,18 @@ class ValueList(object):
 
     def get_default_value(self):
         return self.values[self.default]
+
+    def __len__(self):
+        return len(self.values)
+
+    def __str__(self):
+        values = []
+        for i, value in enumerate(self.values):
+            value = repr(value)
+            if i == self.default:
+                value = '*' + value
+            values.append(value)
+        return '[%s]' % ', '.join(values)
+
+    def __repr__(self):
+        return str(self)

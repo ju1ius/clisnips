@@ -4,6 +4,7 @@ http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plu
 """
 
 import re
+import time
 
 from .utils import pad_list
 
@@ -19,8 +20,12 @@ class Importer(object):
         self.db = db
 
     def import_file(self, filepath):
-        self.db.insertmany(self.get_snippets(filepath))
-        self.db.save()
+        try:
+            self.db.insertmany(self.get_snippets(filepath))
+        except Exception as err:
+            raise err
+        else:
+            self.db.save()
 
     def get_snippets(self, filepath):
         for row in self.parse(filepath):
@@ -62,11 +67,15 @@ class Importer(object):
         Since ui is free form text, we have to make an educated guess...
         """
         cmd, ui, desc = row
+        now = time.time()
         result = {
             'title': desc,
             'cmd': cmd,
             'doc': ui,
-            'tag': cmd.split(None, 1)[0]
+            'tag': cmd.split(None, 1)[0],
+            'created_at': now,
+            'last_used_at': now,
+            'usage_count': 0
         }
         nargs = len(ARGS_RE.findall(cmd))
         if not nargs:

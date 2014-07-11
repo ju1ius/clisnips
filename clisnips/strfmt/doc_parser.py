@@ -11,6 +11,8 @@ value_range:    T_DIGIT T_RANGE_SEP T_DIGIT (T_COLON T_DIGIT)? (T_STAR T_DIGIT)?
 value:          T_STAR? (T_STRING | T_DIGIT)
 """
 
+from collections import OrderedDict
+
 from ..exceptions import ParsingError
 from .doc_tokens import *
 from .doc_nodes import *
@@ -251,7 +253,7 @@ def _to_number(string):
 def parse(docstring):
     parser = Parser(Lexer(docstring))
     tree = parser.parse()
-    params_dict = {}
+    params_dict = OrderedDict()
     auto_count = -1
     has_numeric_field = False
     for param in tree.parameters:
