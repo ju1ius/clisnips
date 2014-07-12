@@ -3,13 +3,15 @@ from ..utils import get_num_decimals
 
 class Documentation(object):
 
-    def __init__(self, text, params):
+    def __init__(self, text, params, code):
         self.text = text
         self.parameters = params
+        self.code_blocks = code
 
     def __str__(self):
         params = ''.join(str(p) for p in self.parameters)
-        return self.text + params
+        code = '\n'.join(str(c) for c in self.code_blocks)
+        return self.text + params + code
 
     def __repr__(self):
         return str(self)
@@ -82,6 +84,23 @@ class ValueList(object):
                 value = '*' + value
             values.append(value)
         return '[%s]' % ', '.join(values)
+
+    def __repr__(self):
+        return str(self)
+
+
+class CodeBlock(object):
+
+    def __init__(self, code):
+        self.code = code
+
+    def execute(self, _vars=None):
+        if not _vars:
+            _vars = {}
+        exec(self.code, _vars)
+
+    def __str__(self):
+        return '```\n{code}\n```'.format(code=self.code)
 
     def __repr__(self):
         return str(self)

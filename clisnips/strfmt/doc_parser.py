@@ -1,8 +1,10 @@
 """
 GRAMMAR
 =======
+documentation:  text param_list code
 text:           T_TEXT*
 param_list:     param_doc*
+code:           T_CODEBLOCK*
 param_doc:      T_LBRACE T_IDENT? T_RBRACE typehint? valuehint? doctext?
 typehint:       T_LPAREN T_IDENT T_RPAREN
 valuehint:      T_LBRACK (value_list | value_range) T_RBRACK
@@ -88,7 +90,8 @@ class Parser(LLkParser):
         self.reset()
         preamble = self._text()
         param_list = self._param_list()
-        return Documentation(preamble, param_list)
+        code_blocks = self._code()
+        return Documentation(preamble, param_list, code_blocks)
 #}}}
 
     def _text(self):
@@ -122,6 +125,21 @@ class Parser(LLkParser):
                 break
         return params
 #}}}
+
+    def _code(self):
+        """
+        T_CODEBLOCK*
+        """
+# {{{
+        code_blocks = []
+        while True:
+            t = self._lookahead()
+            if t.type == T_CODEBLOCK:
+                code_blocks.append(CodeBlock(t.value))
+            else:
+                break
+        return code_blocks
+# }}}
 
     def _param_doc(self):
         """
