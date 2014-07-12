@@ -1,8 +1,8 @@
 """
 GRAMMAR
 =======
-documentation:  text param_list code
-text:           T_TEXT*
+documentation:  header param_list code
+header:         T_TEXT*
 param_list:     param_doc*
 code:           T_CODEBLOCK*
 param_doc:      T_LBRACE T_IDENT? T_RBRACE typehint? valuehint? doctext?
@@ -19,6 +19,12 @@ from ..exceptions import ParsingError
 from .doc_tokens import *
 from .doc_nodes import *
 from .doc_lexer import Lexer
+
+
+def _to_number(string):
+    if '.' in string:
+        return float(string)
+    return int(string)
 
 
 class LLkParser(object):
@@ -88,10 +94,13 @@ class Parser(LLkParser):
     def parse(self):
 #{{{
         self.reset()
-        preamble = self._text()
-        param_list = self._param_list()
-        code_blocks = self._code()
-        return Documentation(preamble, param_list, code_blocks)
+        self._ast = Documentation()
+        self._ast.header = self._text()
+        for param in self._param_list():
+            self._ast.parameters.append(param)
+        for block in self._code():
+            self._ast.code_blocks.append(block)
+        return self._ast
 #}}}
 
     def _text(self):
@@ -273,66 +282,5 @@ class Parser(LLkParser):
 #}}}
 
 
-def _to_number(string):
-    if '.' in string:
-        return float(string)
-    return int(string)
-
-
 def parse(docstring):
-    parser = Parser(Lexer(docstring))
-    tree = parser.parse()
-    params_dict = OrderedDict()
-    auto_count = -1
-    has_numeric_field = False
-    for param in tree.parameters:
-        if param.name == '':
-            if has_numeric_field:
-                raise ParsingError(
-                    'cannot switch from automatic field numbering '
-                    'to manual field specification'
-                )
-            auto_count += 1
-            param.name = auto_count
-        else:
-            try:
-                param.name = int(param.name)
-                is_numeric = True
-                has_numeric_field = True
-            except ValueError:
-                is_numeric = False
-            if is_numeric and auto_count > -1:
-                raise ParsingError(
-                    'cannot switch from automatic field numbering '
-                    'to manual field specification'
-                )
-        params_dict[param.name] = param
-    return {
-        'text': tree.text.strip(),
-        'parameters': params_dict,
-        'code': tree.code_blocks
-    }
-
-
-if __name__ == "__main__":
-
-    from doc_lexer import Lexer
-    doc = """
-
-    This is the global description of the command.
-
-    It's all text until a parameter is seen.
-
-        {param_1} (file) This is parameter 1
-                         It's description continues here
-        {param_2} [0..5:1*3] This is parameter 2
-            It's a range of ints from 0 to 5, the default value is 3
-        {param_3} ["foo", *"bar", 25] This is parameter 3
-            It's a list of value, the default being "bar"
-        {}
-    """
-    lexer = Lexer(doc)
-    parser = Parser(lexer)
-    ast = parser.parse()
-    for param in ast.parameters:
-        print param
+    return Parser(Lexer(docstring)).parse()

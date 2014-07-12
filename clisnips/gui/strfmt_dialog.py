@@ -126,17 +126,14 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     # ==================== Populating entry fields ==================== #
 
     def set_docstring(self, docstring=''):
-        if not docstring:
-            doc = {'text': '', 'parameters': {}, 'code': []}
-        else:
-            doc = doc_parser.parse(docstring)
-            self.doc_lbl.set_markup(doc['text'])
-        if not doc['text']:
+        doc = doc_parser.parse(docstring)
+        self.doc_lbl.set_markup(doc.header)
+        if not doc.header:
             self.doc_lbl.hide()
         self._doc_tree = doc
 
     def set_fields(self, field_names):
-        parameters = self._doc_tree['parameters']
+        parameters = self._doc_tree.parameters
         for name in field_names:
             param_doc = parameters.get(name)
             self.add_field(name, param_doc)
@@ -189,7 +186,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         _vars = {'params': {}}
         for name, field in self.fields.items():
             _vars['params'][name] = field.get_value()
-        for code in self._doc_tree['code']:
+        for code in self._doc_tree.code_blocks:
             try:
                 code.execute(_vars)
             except Exception as err:
