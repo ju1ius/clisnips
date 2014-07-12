@@ -93,11 +93,12 @@ class CodeBlock(object):
 
     def __init__(self, code):
         self.code = code
+        self._bytecode = compile(code, '<codeblock>', 'exec')
 
     def execute(self, _vars=None):
         if not _vars:
             _vars = {}
-        exec(self.code, _vars)
+        exec(self._bytecode, _vars)
 
     def __str__(self):
         return '```\n{code}\n```'.format(code=self.code)
