@@ -2,7 +2,8 @@ import unittest
 
 from clisnips.strfmt.doc_lexer import Lexer
 from clisnips.strfmt.doc_parser import Parser
-from clisnips.strfmt.doc_nodes import Parameter, ValueList, ValueRange
+from clisnips.strfmt.doc_nodes import (Parameter, ValueList, ValueRange,
+                                       CodeBlock)
 
 
 class DocParserTest(unittest.TestCase):
@@ -91,3 +92,43 @@ class DocParserTest(unittest.TestCase):
         param = doc.parameters[0]
         hint = param.valuehint
         self.assertEqual(hint.step, 0.001)
+
+    def testParseCodeBlock(self):
+        code_str = '''\
+import os.path
+if params['infile'] and not params['outfile']:
+    path, ext = os.path.splitext(params['infile'])
+    params['outfile'] = path + '.mp4'
+'''
+        text = '''
+{infile} (path) The input file
+{outfile} (path) The output file
+```
+%s
+```''' % code_str
+        doc = self._parse(text)
+        #
+        param = doc.parameters[0]
+        self.assertIsInstance(param, Parameter)
+        self.assertEqual(param.name, 'infile')
+        self.assertEqual(param.typehint, 'path')
+        self.assertEqual(param.text, 'The input file\n')
+        #
+        param = doc.parameters[1]
+        self.assertIsInstance(param, Parameter)
+        self.assertEqual(param.name, 'outfile')
+        self.assertEqual(param.typehint, 'path')
+        self.assertEqual(param.text, 'The output file\n')
+        #
+        code = doc.code_blocks[0]
+        self.assertIsInstance(code, CodeBlock)
+        self.assertEqual(code.code, code_str)
+        # execute code
+        _vars = {
+            'params': {
+                'infile': '/foo/bar.wav',
+                'outfile': ''
+            }
+        }
+        code.execute(_vars)
+        self.assertEqual(_vars['params']['outfile'], '/foo/bar.mp4')

@@ -201,13 +201,11 @@ class DocLexerTest(unittest.TestCase):
 ```
 import foo, bar
 params['foo'] = '{bar}'
-```
-        '''
+```'''
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_TEXT},
             {'type': T_CODEBLOCK},
-            {'type': T_TEXT},
             {'type': T_EOF}
         ]
         self.assertTokenListEqual(tokens, expected)
