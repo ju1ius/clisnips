@@ -56,7 +56,7 @@ class Field(gtk.VBox):
         Builds a field instance from a strfmt.doc_nodes.Parameter object.
         """
         if doc is None:
-            label = name 
+            label = '<b>{}</b>'.format(name)
         else:
             label = '<b>{name}</b> <i>({type})</i> {text}'.format(
                 name=doc.name,
@@ -156,7 +156,8 @@ class PathEntry(gtk.HBox):
 
     def set_cwd(self, cwd=None):
         self._cwd = cwd or os.getcwd()
-        self._filechooser.set_current_folder(self._cwd)
+        if self._mode in (self.MODE_FILE, self.MODE_DIR):
+            self._filechooser.set_current_folder(self._cwd)
 
     def _setup_completion(self):
         # setup text entry

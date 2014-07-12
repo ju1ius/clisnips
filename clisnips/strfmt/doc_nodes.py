@@ -1,18 +1,69 @@
+from collections import OrderedDict
+
 from ..utils import get_num_decimals
+from ..exceptions import ParsingError
 
 
 class Documentation(object):
 
-    def __init__(self, text, params):
-        self.text = text
-        self.parameters = params
+    def __init__(self):
+        self.header = ''
+        self._parameter_list = ParameterList()
+        self.code_blocks = []
+
+    @property
+    def parameters(self):
+        return self._parameter_list
 
     def __str__(self):
-        params = ''.join(str(p) for p in self.parameters)
-        return self.text + params
+        code = '\n'.join(str(c) for c in self.code_blocks)
+        return (
+            str(self.header)
+            + str(self._parameter_list)
+            + code
+        )
 
     def __repr__(self):
         return str(self)
+
+
+class ParameterList(OrderedDict):
+
+    def __init__(self):
+        super(ParameterList, self).__init__()
+        self._auto_count = -1
+        self._has_numeric_field = False
+
+    def append(self, param):
+        if param.name == '':
+            if self._has_numeric_field:
+                raise ParsingError(
+                    'cannot switch from automatic field numbering '
+                    'to manual field specification'
+                )
+            self._auto_count += 1
+            param.name = self._auto_count
+        else:
+            try:
+                param.name = int(param.name)
+                is_numeric = True
+                self._has_numeric_field = True
+            except ValueError:
+                is_numeric = False
+            if is_numeric and self._auto_count > -1:
+                raise ParsingError(
+                    'cannot switch from automatic field numbering '
+                    'to manual field specification'
+                )
+        self.__setitem__(param.name, param)
+
+    def __setitem__(self, key, value):
+        if not isinstance(value, Parameter):
+            raise ValueError('ParameterList only accepts Parameter instances')
+        super(ParameterList, self).__setitem__(key, value)
+
+    def __str__(self):
+        return '\n'.join(str(p) for p in self.values())
 
 
 class Parameter(object):
@@ -82,6 +133,24 @@ class ValueList(object):
                 value = '*' + value
             values.append(value)
         return '[%s]' % ', '.join(values)
+
+    def __repr__(self):
+        return str(self)
+
+
+class CodeBlock(object):
+
+    def __init__(self, code):
+        self.code = code
+        self._bytecode = compile(code, '<codeblock>', 'exec')
+
+    def execute(self, _vars=None):
+        if not _vars:
+            _vars = {}
+        exec(self._bytecode, _vars)
+
+    def __str__(self):
+        return '```\n{code}\n```'.format(code=self.code)
 
     def __repr__(self):
         return str(self)
