@@ -164,8 +164,11 @@ class DocLexerTest(unittest.TestCase):
             {'type': T_LBRACE},
             {'type': T_IDENT, 'value': 'par1'},
             {'type': T_RBRACE},
-            {'type': T_TEXT}
+            {'type': T_TEXT},
+            {'type': T_EOF}
         ]
+        self.assertTokenListEqual(tokens, expected)
+
         text = '''{ par1 } Some free text (wow, [snafu])
             {par2} (hint) Other text
             {par3} (hint) ["foo"] Yet another doctext
@@ -189,4 +192,45 @@ class DocLexerTest(unittest.TestCase):
             {'type': T_STRING, 'value': 'foo'},
             {'type': T_RBRACK},
             {'type': T_TEXT},
+            {'type': T_EOF}
         ]
+        self.assertTokenListEqual(tokens, expected)
+
+    def testCodeBlock(self):
+        text = '''
+```
+import foo, bar
+params['foo'] = '{bar}'
+```
+        '''
+        tokens = [t for t in Lexer(text)]
+        expected = [
+            {'type': T_TEXT},
+            {'type': T_CODEBLOCK},
+            {'type': T_TEXT},
+            {'type': T_EOF}
+        ]
+        self.assertTokenListEqual(tokens, expected)
+
+        text = '''{par1} Some text
+```
+import foo, bar
+params['foo'] = '{bar}'
+```
+    {par2} Other text.
+        '''
+        tokens = [t for t in Lexer(text)]
+        expected = [
+            {'type': T_LBRACE},
+            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_RBRACE},
+            {'type': T_TEXT},
+            {'type': T_CODEBLOCK},
+            {'type': T_TEXT},
+            {'type': T_LBRACE},
+            {'type': T_IDENT, 'value': 'par2'},
+            {'type': T_RBRACE},
+            {'type': T_TEXT},
+            {'type': T_EOF}
+        ]
+        self.assertTokenListEqual(tokens, expected)

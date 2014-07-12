@@ -7,14 +7,25 @@ from doc_tokens import *
 
 _PATTERN_TYPE = type(re.compile("", 0))
 _RE_CACHE = {}
+
 WSP_CHARS = '\t\f\x20'
 WSP_RX = re.compile(r'[\t\f ]*')
+
 PARAM_START_RX = re.compile(r'\n[\t\f ]*\{')
+CODEBLOCK_START_RX = re.compile(r'\n```\n')
+
+FREETEXT_BOUNDS_RX = re.compile(
+    r'(?P<param>{param})|(?P<code>{code})'.format(
+        param=PARAM_START_RX.pattern,
+        code=CODEBLOCK_START_RX.pattern
+    )
+)
+
 IDENT_RX = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
-INTEGER_RX = re.compile(r'0|(?:[1-9][0-9]*)')
 TYPEHINT_RX = re.compile(r'\(\s*({ident})\s*\)'.format(ident=IDENT_RX.pattern))
 DIGIT_RX = re.compile(r'-?[0-9]+(?:\.[0-9]+)?')
-STRING_RX = re.compile(r'"((?:[^"]|\\.)*)"')
+STRING_RX = re.compile(r'"((?:[^"]|\\")*)"')
+CODEBLOCK_RX = re.compile(r'```\n(.*?)\n```', re.DOTALL)
 
 
 class StringLexer(object):
@@ -207,18 +218,23 @@ class Lexer(StringLexer):
         char = self.advance()
         if char is None:
             return False
-        elif char == '{':
+        if char == '{':
             t = self.init_token(T_LBRACE, '{')
             self.finalize_token(t)
             self.token_queue.append(t)
             self.state = self.param_state
-        else:
-            t = self.init_token(T_TEXT)
-            text = self._skip_until_param()
-            if not text:
-                text = self.read_until('$')
-            self.finalize_token(t, value=text)
-            self.token_queue.append(t)
+            return True
+        if char == '`':
+            t = self._handle_codeblock()
+            if t:
+                self.token_queue.append(t)
+                return True
+        t = self.init_token(T_TEXT)
+        text = self._consume_freetext()
+        if not text:
+            text = self.read_until('$')
+        self.finalize_token(t, value=text)
+        self.token_queue.append(t)
         return True
 # }}}
 
@@ -257,9 +273,7 @@ class Lexer(StringLexer):
             m = TYPEHINT_RX.match(self.text, self.pos)
             if m:
                 t = self.init_token(T_TYPEHINT, m.group(1))
-                print self.pos
                 self.consume(m.group(0))
-                print self.pos
                 self.finalize_token(t)
                 self.token_queue.append(t)
             else:
@@ -349,14 +363,29 @@ class Lexer(StringLexer):
         return t
 # }}}
 
-    def _skip_until_param(self):
+    def _handle_codeblock(self):
 # {{{
-        m = PARAM_START_RX.search(self.text, self.pos)
-        if m:
-            text = self.text[self.pos:m.end() - 1]
-            self.advance(m.end() - 1 - self.pos - 1)
-            return text
-        return ''
+        m = CODEBLOCK_RX.match(self.text, self.pos)
+        if not m:
+            return
+        t = self.init_token(T_CODEBLOCK, m.group(1))
+        self.advance(m.end() - 1 - m.start())
+        self.finalize_token(t)
+        return t
+# }}}
+
+    def _consume_freetext(self):
+# {{{
+        m = FREETEXT_BOUNDS_RX.search(self.text, self.pos)
+        if not m:
+            return ''
+        if m.group('param'):
+            end = m.end('param') - 1
+        elif m.group('code'):
+            end = m.end('code') - 4
+        text = self.text[self.pos:end]
+        self.advance(end - self.pos - 1)
+        return text
 # }}}
 
     def _skip_whitespace(self):

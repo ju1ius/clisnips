@@ -3,6 +3,7 @@
     T_TEXT,
     T_PARAM,
     T_TYPEHINT,
+    T_CODEBLOCK,
     T_LBRACE, T_RBRACE,
     T_LBRACK, T_RBRACK,
     T_STRING, T_DIGIT, T_IDENT,
@@ -10,7 +11,7 @@
     T_RANGE_SEP,
     T_COLON,
     T_STAR
-) = range(15)
+) = range(16)
 
 __TOKEN_NAMES = {}
 
