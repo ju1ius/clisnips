@@ -135,7 +135,18 @@ class Parser(LLkParser):
         while True:
             t = self._lookahead()
             if t.type == T_CODEBLOCK:
-                code_blocks.append(CodeBlock(t.value))
+                self._consume()
+                try:
+                    block = CodeBlock(t.value)
+                except SyntaxError as err:
+                    msg = 'Syntax error in code block: %s' % repr(t.value)
+                    msg += '\n' + str(err)
+                    raise ParsingError(msg)
+                except TypeError as err:
+                    msg = 'Null bytes in code block: %s' % repr(t.value)
+                    raise ParsingError(msg)
+                else:
+                    code_blocks.append(block)
             else:
                 break
         return code_blocks
@@ -298,7 +309,8 @@ def parse(docstring):
         params_dict[param.name] = param
     return {
         'text': tree.text.strip(),
-        'parameters': params_dict
+        'parameters': params_dict,
+        'code': tree.code_blocks
     }
 
 
