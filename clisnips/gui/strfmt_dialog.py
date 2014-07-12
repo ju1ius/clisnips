@@ -8,11 +8,12 @@ import glib
 from ..config import styles
 from .state import State
 from .helpers import BuildableWidgetDecorator, SimpleTextView
-from ..strfmt import doc_parser 
-from ..strfmt import fmt_parser 
+from ..strfmt import doc_parser
+from ..strfmt import fmt_parser
 from ..strfmt.doc_tokens import T_PARAM
 from ..diff import InlineMyersSequenceMatcher
-from .strfmt_widgets import Field, PathEntry 
+from .strfmt_widgets import Field, PathEntry
+from .error_dialog import ErrorDialog
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -35,6 +36,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     def __init__(self):
         super(StringFormatterDialog, self).__init__()
         self.formatter = string.Formatter()
+        # Parsed Documentation AST
+        self._doc_tree = None
         # the original format string
         self.format_string = ''
         # the string used for diffing and advanced editing
@@ -102,8 +105,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         if not field_names:
             # no arguments, return command as is
             return gtk.RESPONSE_ACCEPT
-        doc = self.set_docstring(docstring)
-        self.set_fields(field_names, doc['parameters'])
+        self.set_docstring(docstring)
+        self.set_fields(field_names)
         return self.widget.run()
 
     # ==================== State management ==================== #
@@ -124,15 +127,16 @@ class StringFormatterDialog(BuildableWidgetDecorator):
 
     def set_docstring(self, docstring=''):
         if not docstring:
-            doc = {'text': '', 'parameters': {}}
+            doc = {'text': '', 'parameters': {}, 'code': []}
         else:
             doc = doc_parser.parse(docstring)
             self.doc_lbl.set_markup(doc['text'])
         if not doc['text']:
             self.doc_lbl.hide()
-        return doc
+        self._doc_tree = doc
 
-    def set_fields(self, field_names, parameters):
+    def set_fields(self, field_names):
+        parameters = self._doc_tree['parameters']
         for name in field_names:
             param_doc = parameters.get(name)
             self.add_field(name, param_doc)
@@ -157,8 +161,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
 
     def get_output(self):
         args, kwargs = [], {}
-        for name, field in self.fields.items():
-            value = field.get_value()
+        params = self._apply_code_blocks()
+        for name, value in params.items():
             try:
                 # we need to convert integer keys
                 # because they won't work if used in kwargs...
@@ -180,6 +184,18 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             if token.type == T_PARAM:
                 field_names.append(token.value['identifier'])
         return field_names
+
+    def _apply_code_blocks(self):
+        _vars = {'params': {}}
+        for name, field in self.fields.items():
+            _vars['params'][name] = field.get_value()
+        for code in self._doc_tree['code']:
+            try:
+                code.execute(_vars)
+            except Exception as err:
+                msg = 'Error while running code block: %s' % code
+                ErrorDialog().run(err, msg)
+        return _vars['params']
 
     def _update_diffs(self, output):
         # clear all text tags
