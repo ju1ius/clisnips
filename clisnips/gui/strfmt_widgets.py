@@ -56,7 +56,7 @@ class Field(gtk.VBox):
         Builds a field instance from a strfmt.doc_nodes.Parameter object.
         """
         if doc is None:
-            label = name 
+            label = '<b>{}</b>'.format(name)
         else:
             label = '<b>{name}</b> <i>({type})</i> {text}'.format(
                 name=doc.name,
