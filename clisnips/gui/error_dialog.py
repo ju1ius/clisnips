@@ -24,8 +24,11 @@ class ErrorDialog(BuildableWidgetDecorator):
 
     def run(self, message, details=''):
         if isinstance(message, Exception):
-            message = '{}: {}'.format(message.__class__.__name__,
-                                      str(message))
+            message = '{}{}: {}'.format(
+                details + '\n' if details else '',
+                message.__class__.__name__,
+                str(message)
+            )
             details = format_exc()
         self.details_vbox.set_visible(bool(details))
         self.message_lbl.set_text(message)
