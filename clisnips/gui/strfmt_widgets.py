@@ -142,6 +142,7 @@ class PathEntry(gtk.HBox):
 
     def __init__(self, cwd=None, mode=None, default=''):
         super(PathEntry, self).__init__(spacing=6)
+        self._filechooser = None
         self._mode = mode or self.MODE_FILE
         self.show_files = self._mode in (self.MODE_PATH, self.MODE_FILE)
         self._entry = gtk.Entry()
@@ -156,7 +157,7 @@ class PathEntry(gtk.HBox):
 
     def set_cwd(self, cwd=None):
         self._cwd = cwd or os.getcwd()
-        if self._mode in (self.MODE_FILE, self.MODE_DIR):
+        if self._filechooser:
             self._filechooser.set_current_folder(self._cwd)
 
     def _setup_completion(self):

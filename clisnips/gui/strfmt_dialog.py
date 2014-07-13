@@ -90,7 +90,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.cwd = cwd
 
         def _cb(widget):
-            if isinstance(widget, PathEntry):
+            if hasattr(widget, 'set_cwd'):
                 widget.set_cwd(cwd)
         self.fields_vbox.foreach(_cb)
 
