@@ -50,6 +50,7 @@ def replace_widget(old, new):
         new.show()
     else:
         new.hide()
+    return new
 
 
 class BuildableWidgetDecorator(gobject.GObject):
