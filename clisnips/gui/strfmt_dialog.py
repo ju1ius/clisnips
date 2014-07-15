@@ -127,7 +127,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
 
     def set_docstring(self, docstring=''):
         doc = doc_parser.parse(docstring)
-        self.doc_lbl.set_markup(doc.header)
+        self.doc_lbl.set_markup(doc.header.strip())
         if not doc.header:
             self.doc_lbl.hide()
         self._doc_tree = doc

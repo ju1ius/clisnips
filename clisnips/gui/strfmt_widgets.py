@@ -51,17 +51,19 @@ class Field(gtk.VBox):
         self.pack_start(self.entry, False)
 
     @classmethod
-    def from_documentation(klass, name, doc):
+    def from_documentation(klass, name, doc=None):
         """
         Builds a field instance from a strfmt.doc_nodes.Parameter object.
         """
-        if doc is None:
+        if not doc:
             label = '<b>{}</b>'.format(name)
         else:
-            label = '<b>{name}</b> <i>({type})</i> {text}'.format(
+            hint = '(<i>%s</i>)' % (doc.typehint) if doc.typehint else ''
+            text = doc.text.strip() if doc.text else ''
+            label = '<b>{name}</b> {type} {text}'.format(
                 name=doc.name,
-                type=doc.typehint if doc.typehint else '',
-                text=doc.text.strip()
+                type=hint,
+                text=text
             )
         entry = _entry_from_doc(doc)
         return klass(label, entry)
