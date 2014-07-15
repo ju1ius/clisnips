@@ -11,21 +11,34 @@ _RE_CACHE = {}
 WSP_CHARS = '\t\f\x20'
 WSP_RX = re.compile(r'[\t\f ]*')
 
-PARAM_START_RX = re.compile(r'\n[\t\f ]*\{')
-CODEBLOCK_START_RX = re.compile(r'\n```\n')
-
+PARAM_START_RX = re.compile(r'^[\t\f ]*(?=\{)', re.MULTILINE)
+CODEBLOCK_START_RX = re.compile(r'^[\t\f ]*(?=```$)', re.MULTILINE)
 FREETEXT_BOUNDS_RX = re.compile(
-    r'(?P<param>{param})|(?P<code>{code})'.format(
-        param=PARAM_START_RX.pattern,
-        code=CODEBLOCK_START_RX.pattern
-    )
+    r'''
+        ^               # start of string or line
+        [\x20\t\f]*     # any whitespace except newline
+        (?=             # followed by
+            {           # parameter start char
+            |           # or
+            ```$        # codeblock start marker
+        )
+    ''',
+    re.MULTILINE | re.X
 )
 
 IDENT_RX = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
+PARAM_RX = re.compile(r'(\d+)|({ident})'.format(ident=IDENT_RX.pattern))
+INTEGER_RX = re.compile(r'\d+')
+FLOAT_RX = re.compile(r'\d*\.\d+')
 TYPEHINT_RX = re.compile(r'\(\s*({ident})\s*\)'.format(ident=IDENT_RX.pattern))
-DIGIT_RX = re.compile(r'-?[0-9]+(?:\.[0-9]+)?')
-STRING_RX = re.compile(r'"((?:[^"]|\\")*)"')
-CODEBLOCK_RX = re.compile(r'```\n(.*?)\n```', re.DOTALL)
+DIGIT_RX = re.compile(
+    r'-?(?:({float})|({int}))'.format(float=FLOAT_RX.pattern,
+                                      int=INTEGER_RX.pattern)
+)
+STRING_RX = re.compile(r'"((?:\\"|[^"])*)"')
+DSTR_RX = re.compile(r'"(?:\\.|[^"])*"')
+SSTR_RX = re.compile(r"'(?:\\.|[^'])*'")
+TSTR_RX = re.compile(r'(\'\'\'|""")(?:\\.|[^\\])*\1')
 
 
 class StringLexer(object):
@@ -53,18 +66,26 @@ class StringLexer(object):
         self.newline_pending = False
 #}}}
 
-    def lookahead(self, n=1):
+    def lookahead(self, n=1, accumulate=False):
 #{{{
         pos = self.pos + n
         if pos < self.length:
+            if accumulate:
+                return self.text[self.pos+1:pos+1]
             return self.text[pos]
+        if accumulate:
+            return self.text[self.pos+1:]
 #}}}
 
-    def lookbehind(self, n=1):
+    def lookbehind(self, n=1, accumulate=False):
 #{{{
         pos = self.pos - n
         if pos >= 0:
+            if accumulate:
+                return self.text[pos:self.pos]
             return self.text[pos]
+        if accumulate:
+            return self.text[:self.pos]
 #}}}
 
     def advance(self, n=1):
@@ -219,22 +240,25 @@ class Lexer(StringLexer):
         if char is None:
             return False
         if char == '{':
-            t = self.init_token(T_LBRACE, '{')
-            self.finalize_token(t)
-            self.token_queue.append(t)
+            token = self.init_token(T_LBRACE, '{')
+            self.finalize_token(token)
+            self.token_queue.append(token)
             self.state = self.param_state
             return True
         if char == '`':
-            t = self._handle_codeblock()
-            if t:
-                self.token_queue.append(t)
+            if self.lookahead(2, True) == '``':
+                token = self.init_token(T_CODEMARK, '```')
+                self.advance(2)
+                self.finalize_token(token)
+                self.token_queue.append(token)
+                self.state = self.codeblock_state
                 return True
-        t = self.init_token(T_TEXT)
+        token = self.init_token(T_TEXT)
         text = self._consume_freetext()
         if not text:
             text = self.read_until('$')
-        self.finalize_token(t, value=text)
-        self.token_queue.append(t)
+        self.finalize_token(token, value=text)
+        self.token_queue.append(token)
         return True
 # }}}
 
@@ -243,20 +267,18 @@ class Lexer(StringLexer):
         #print "ENTER param_state"
         while True:
             char = self._skip_whitespace()
-            if char.isalpha():
-                t = self.init_token(T_IDENT, self.read_until(IDENT_RX))
-                self.finalize_token(t)
-                self.token_queue.append(t)
-            elif char.isdigit():
-                t = self.init_token(T_IDENT, self.read_until(DIGIT_RX))
-                self.finalize_token(t)
-                self.token_queue.append(t)
-            elif char == '}':
-                t = self.init_token(T_RBRACE, '}')
-                self.finalize_token(t)
-                self.token_queue.append(t)
+            if char == '}':
+                token = self.init_token(T_RBRACE, '}')
+                self.finalize_token(token)
+                self.token_queue.append(token)
                 self.state = self.after_param_state
-                break
+                break 
+            if char.isalnum() or char == '_':
+                token = self._handle_param_identifier()
+                if not token:
+                    self.state = self.freetext_state
+                    break
+                self.token_queue.append(token)
             else:
                 self.state = self.freetext_state
                 break
@@ -270,22 +292,40 @@ class Lexer(StringLexer):
         if char is None:
             return False
         if char == '(':
-            m = TYPEHINT_RX.match(self.text, self.pos)
-            if m:
-                t = self.init_token(T_TYPEHINT, m.group(1))
-                self.consume(m.group(0))
-                self.finalize_token(t)
-                self.token_queue.append(t)
-            else:
+            token = self.init_token(T_LPAREN, '(')
+            self.token_queue.append(token)
+            self.state = self.typehint_state
+            return True
+        if char == '[':
+            token = self.init_token(T_LBRACK, '[')
+            self.token_queue.append(token)
+            self.state = self.valuehint_state
+            return True
+        self.recede()
+        self.state = self.freetext_state
+        return True
+# }}}
+
+    def typehint_state(self):
+# {{{
+        while True:
+            char = self._skip_whitespace()
+            if char is None:
+                return False
+            if char == ')':
+                token = self.init_token(T_RPAREN, ')')
+                self.token_queue.append(token)
+                self.state = self.after_param_state
+                break
+            m = IDENT_RX.match(self.text, self.pos)
+            if not m:
                 self.recede()
                 self.state = self.freetext_state
-        elif char == '[':
-            t = self.init_token(T_LBRACK, '[')
-            self.token_queue.append(t)
-            self.state = self.valuehint_state
-        else:
-            self.recede()
-            self.state = self.freetext_state
+                break 
+            token = self.init_token(T_IDENTIFIER, m.group(0))
+            self._consume_match(m)
+            self.finalize_token(token)
+            self.token_queue.append(token)
         return True
 # }}}
 
@@ -294,51 +334,107 @@ class Lexer(StringLexer):
         #print "ENTER valuehint_state"
         while True:
             char = self._skip_whitespace()
+            if char is None:
+                return False
             if char == ']':
-                t = self.init_token(T_RBRACK, ']')
-                self.finalize_token(t)
-                self.token_queue.append(t)
+                token = self.init_token(T_RBRACK, ']')
+                self.finalize_token(token)
+                self.token_queue.append(token)
                 self.state = self.freetext_state
                 break
             elif char == '"':
                 token = self._handle_quoted_string()
-                if token:
-                    self.token_queue.append(token)
-                else:
+                if not token:
                     self.state = self.freetext_state
                     break
+                self.token_queue.append(token)
             elif char == ',':
-                t = self.init_token(T_COMMA, ',')
-                self.finalize_token(t)
-                self.token_queue.append(t)
-            elif char == '.':
-                la = self.lookahead()
-                if la == '.':
-                    t = self.init_token(T_RANGE_SEP, '..')
-                    self.advance()
-                    self.finalize_token(t)
-                    self.token_queue.append(t)
-                #elif la.isdigit():
-                    #self.advance()
-                    #token = self._handle_digit()
-                    #self.token_queue.append(token)
-                else:
-                    self.state = self.freetext_state
-                    break
+                token = self.init_token(T_COMMA, ',')
+                self.finalize_token(token)
+                self.token_queue.append(token)
             elif char == ':':
-                t = self.init_token(T_COLON, ':')
-                self.token_queue.append(t)
+                token = self.init_token(T_COLON, ':')
+                self.token_queue.append(token)
             elif char == '*':
-                t = self.init_token(T_STAR, '*')
-                self.token_queue.append(t)
+                token = self.init_token(T_STAR, '*')
+                self.token_queue.append(token)
             else:
                 token = self._handle_digit()
-                if token:
-                    self.token_queue.append(token)
-                    continue
-                self.state = self.freetext_state
-                break
+                if not token:
+                    self.recede()
+                    self.state = self.freetext_state
+                    break
+                self.token_queue.append(token)
         return True
+# }}}
+
+    def codeblock_state(self):
+# {{{
+        code = self.init_token(T_TEXT, '')
+        while True:
+            code.value += self.read_until(r'"\'`')
+            char = self.advance()
+            if not char:
+                self.finalize_token(code)
+                self.token_queue.append(code)
+                return False
+            if char == '"':
+                if self.lookahead(2, True) == '""':
+                    m = TSTR_RX.match(self.text, self.pos)
+                    if m:
+                        code.value += m.group(0)
+                        self._consume_match(m)
+                    else:
+                        code.value += char
+                    continue
+                m = DSTR_RX.match(self.text, self.pos)
+                if m:
+                    code.value += m.group(0)
+                    self._consume_match(m)
+                else:
+                    code.value += char
+            elif char == "'":
+                if self.lookahead(2, True) == "''":
+                    m = TSTR_RX.match(self.text, self.pos)
+                    if m:
+                        code.value += m.group(0)
+                        self._consume_match(m)
+                    else:
+                        code.value += char
+                    continue
+                m = SSTR_RX.match(self.text, self.pos)
+                if m:
+                    code.value += m.group(0)
+                    self._consume_match(m)
+                else:
+                    code.value += char
+            elif char == '`':
+                if self.lookahead(2, True) == '``':
+                    self.finalize_token(code)
+                    self.token_queue.append(code)
+                    token = self.init_token(T_CODEMARK, '```')
+                    self.advance(2)
+                    self.finalize_token(token)
+                    self.token_queue.append(token)
+                    self.state = self.freetext_state
+                    break 
+                code.value += char
+        return True
+# }}}
+
+    def _handle_param_identifier(self):
+# {{{
+        m = PARAM_RX.match(self.text, self.pos)
+        if not m:
+            return
+        if m.group(1):
+            _type = T_INTEGER
+        elif m.group(2):
+            _type = T_IDENTIFIER
+        token = self.init_token(_type, m.group(0))
+        self._consume_match(m)
+        self.finalize_token(token)
+        return token
 # }}}
 
     def _handle_quoted_string(self):
@@ -346,32 +442,26 @@ class Lexer(StringLexer):
         m = STRING_RX.match(self.text, self.pos)
         if not m:
             return
-        t = self.init_token(T_STRING, m.group(1))
-        self.advance(m.end() - 1 - m.start())
-        self.finalize_token(t)
-        return t
+        token = self.init_token(T_STRING, m.group(1))
+        self._consume_match(m)
+        self.finalize_token(token)
+        return token
 # }}}
 
     def _handle_digit(self):
 # {{{
         m = DIGIT_RX.match(self.text, self.pos)
         if not m:
+            print self.text[self.pos:]
             return
-        t = self.init_token(T_DIGIT, m.group(0))
-        self.advance(m.end() - 1 - m.start())
-        self.finalize_token(t)
-        return t
-# }}}
-
-    def _handle_codeblock(self):
-# {{{
-        m = CODEBLOCK_RX.match(self.text, self.pos)
-        if not m:
-            return
-        t = self.init_token(T_CODEBLOCK, m.group(1))
-        self.advance(m.end() - 1 - m.start())
-        self.finalize_token(t)
-        return t
+        if m.group(1):
+            _type = T_FLOAT
+        elif m.group(2):
+            _type = T_INTEGER
+        token = self.init_token(_type, m.group(0))
+        self._consume_match(m)
+        self.finalize_token(token)
+        return token
 # }}}
 
     def _consume_freetext(self):
@@ -379,10 +469,7 @@ class Lexer(StringLexer):
         m = FREETEXT_BOUNDS_RX.search(self.text, self.pos)
         if not m:
             return ''
-        if m.group('param'):
-            end = m.end('param') - 1
-        elif m.group('code'):
-            end = m.end('code') - 4
+        end = m.end()
         text = self.text[self.pos:end]
         self.advance(end - self.pos - 1)
         return text
@@ -398,22 +485,11 @@ class Lexer(StringLexer):
             char = self.advance()
         return char
 # }}}
-        
 
-if __name__ == "__main__":
-
-    doc = """
-
-    This is the global description of the command.
-
-    It's all text until a parameter is seen.
-
-        {param_1} (file) This is parameter 1
-                         It's description continues here
-        {param_2} This is parameter 2
-                  It's description continues here
-    """
-
-    lexer = Lexer(doc)
-    for token in lexer:
-        print token
+    def _consume_match(self, match, group=0):
+# {{{
+        if not match:
+            return
+        self.advance(match.end(group) - 1 - match.start(group))
+        return match.group(group)
+# }}}
