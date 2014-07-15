@@ -255,7 +255,6 @@ codemarks in strings should be skipped !
 """
 ```'''
         tokens = [t for t in Lexer(text)]
-        print tokens
         expected = [
             {'type': T_CODEMARK},
             {'type': T_TEXT},
@@ -263,4 +262,3 @@ codemarks in strings should be skipped !
             {'type': T_EOF}
         ]
         self.assertTokenListEqual(tokens, expected)
-        #self.fail()
