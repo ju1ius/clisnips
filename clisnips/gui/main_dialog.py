@@ -47,7 +47,7 @@ class Model(gtk.ListStore):
 class MainDialog(helpers.BuildableWidgetDecorator):
 
     # Constants needed for BuildableWidgetDecorator
-    UI_FILE = os.path.join(__DIR__, 'main_dialog.ui')
+    UI_FILE = os.path.join(__DIR__, 'resources', 'main_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
     WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
                   'pager_first_btn', 'pager_prev_btn',

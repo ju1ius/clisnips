@@ -26,7 +26,7 @@ class StrfmtDialogState(State):
 
 class StringFormatterDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'strfmt_dialog.ui')
+    UI_FILE = os.path.join(__DIR__, 'resources', 'strfmt_dialog.ui')
     MAIN_WIDGET = 'main_dialog'
     WIDGET_IDS = ('title_lbl', 'doc_lbl', 'fields_vbox',
                   'fmtstr_lbl', 'fmtstr_textview',

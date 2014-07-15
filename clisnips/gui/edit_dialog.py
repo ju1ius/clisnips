@@ -11,7 +11,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 class EditDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'edit_dialog.ui')
+    UI_FILE = os.path.join(__DIR__, 'resources', 'edit_dialog.ui')
     MAIN_WIDGET = 'edit_dialog'
     WIDGET_IDS = ('desc_entry', 'cmd_textview', 'doc_textview', 'tags_entry')
 

@@ -10,7 +10,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 class ErrorDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'error_dialog.ui')
+    UI_FILE = os.path.join(__DIR__, 'resources', 'error_dialog.ui')
     MAIN_WIDGET = 'error_dialog'
     WIDGET_IDS = ('message_lbl', 'details_textview', 'details_vbox')
 
