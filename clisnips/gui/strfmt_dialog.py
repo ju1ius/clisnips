@@ -156,6 +156,12 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     # ==================== Output handling ==================== #
 
     def get_output(self):
+        return self.output_textview.get_text()
+
+    def update_preview(self):
+        self.handlers['update_timeout'] = 0
+        output = self.get_output()
+        #
         args, kwargs = [], {}
         params = self._apply_code_blocks()
         for name, value in params.items():
@@ -166,11 +172,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
                 args.insert(name, value)
             except ValueError:
                 kwargs[name] = value
-        return self.format_string.format(*args, **kwargs)
-
-    def update_preview(self):
-        self.handlers['update_timeout'] = 0
-        output = self.get_output()
+        output = self.format_string.format(*args, **kwargs)
+        #
         self.output_textview.set_text(output)
         self._update_diffs(output)
 
