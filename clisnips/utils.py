@@ -47,9 +47,8 @@ def get_contrast_fgcolor(color):
     bright colors => black font
     dark colors => white font
     """
-    clr = parse_color(color)
-    # Counting the perceptive luminance - human eye favors green color... 
-    luminance = get_luminance(clr.red, clr.green, clr.blue)
+    # Counting the perceptive luminance - human eye favors green color...
+    luminance = get_luminance(color)
     v = 0 if luminance > 0.5 else MAX_COLOR_VALUE
     return gtk.gdk.Color(red=v, green=v, blue=v)
 
@@ -68,9 +67,10 @@ def interpolate_colors(c1, c2, distance):
     return gtk.gdk.Color(red=int(r), green=int(g), blue=int(b))
 
 
-def get_luminance(r, g, b):
+def get_luminance(color):
     """
     Returns the perceptive luminance of a rgb color.
     """
-    yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
+    c = parse_color(color)
+    yiq = ((c.red * 299) + (c.green * 587) + (c.blue * 114)) / 1000
     return yiq / MAX_COLOR_VALUE

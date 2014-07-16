@@ -51,17 +51,19 @@ class Field(gtk.VBox):
         self.pack_start(self.entry, False)
 
     @classmethod
-    def from_documentation(klass, name, doc):
+    def from_documentation(klass, name, doc=None):
         """
         Builds a field instance from a strfmt.doc_nodes.Parameter object.
         """
-        if doc is None:
-            label = name 
+        if not doc:
+            label = '<b>{}</b>'.format(name)
         else:
-            label = '<b>{name}</b> <i>({type})</i> {text}'.format(
+            hint = '(<i>%s</i>)' % (doc.typehint) if doc.typehint else ''
+            text = doc.text.strip() if doc.text else ''
+            label = '<b>{name}</b> {type} {text}'.format(
                 name=doc.name,
-                type=doc.typehint if doc.typehint else '',
-                text=doc.text.strip()
+                type=hint,
+                text=text
             )
         entry = _entry_from_doc(doc)
         return klass(label, entry)
@@ -142,6 +144,7 @@ class PathEntry(gtk.HBox):
 
     def __init__(self, cwd=None, mode=None, default=''):
         super(PathEntry, self).__init__(spacing=6)
+        self._filechooser = None
         self._mode = mode or self.MODE_FILE
         self.show_files = self._mode in (self.MODE_PATH, self.MODE_FILE)
         self._entry = gtk.Entry()
@@ -156,7 +159,8 @@ class PathEntry(gtk.HBox):
 
     def set_cwd(self, cwd=None):
         self._cwd = cwd or os.getcwd()
-        self._filechooser.set_current_folder(self._cwd)
+        if self._filechooser:
+            self._filechooser.set_current_folder(self._cwd)
 
     def _setup_completion(self):
         # setup text entry

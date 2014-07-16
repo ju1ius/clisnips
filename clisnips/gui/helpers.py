@@ -1,5 +1,6 @@
 import gobject
 import gtk
+import pango
 
 from ..utils import parse_font, parse_color
 
@@ -49,6 +50,7 @@ def replace_widget(old, new):
         new.show()
     else:
         new.hide()
+    return new
 
 
 class BuildableWidgetDecorator(gobject.GObject):
@@ -109,6 +111,8 @@ class SimpleTextView(WidgetDecorator):
 
     def __init__(self, widget):
         super(SimpleTextView, self).__init__(widget)
+        self._tab_width = 4
+        self.set_tab_width(self._tab_width, force=True)
         self.buffer.connect('changed', self._on_buffer_changed)
 
     @property
@@ -149,6 +153,23 @@ class SimpleTextView(WidgetDecorator):
 
     def set_font(self, spec):
         set_font(self.widget, spec)
+        self.set_tab_width(self._tab_width, force=True)
+
+    def set_tab_width(self, width, force=False):
+        if width < 1:
+            return
+        if not force and width == self._tab_width:
+            return
+        tab_size = self._calculate_tab_size(width, ' ')
+        if not tab_size:
+            return
+        tab_array = pango.TabArray(1, True)
+        tab_array.set_tab(0, pango.TAB_LEFT, tab_size)
+        self.widget.set_tabs(tab_array)
+        self._tab_width = width
+
+    def get_tab_width(self):
+        return self._tab_width
 
     def set_background_color(self, spec):
         set_background_color(self.widget, spec)
@@ -173,3 +194,11 @@ class SimpleTextView(WidgetDecorator):
             win = self.widget.get_window(self.WINDOWS[win])
             if win:
                 set_background_color(win, color)
+
+    def _calculate_tab_size(self, tab_width, tab_char):
+        tab_str = tab_char * tab_width
+        layout = self.widget.create_pango_layout(tab_str)
+        if not layout:
+            return
+        width, height = layout.get_pixel_size()
+        return width

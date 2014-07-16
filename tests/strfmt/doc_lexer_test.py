@@ -43,11 +43,11 @@ class DocLexerTest(unittest.TestCase):
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_TEXT, 'value': '\n'},
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par2'},
+            {'type': T_IDENTIFIER, 'value': 'par2'},
             {'type': T_RBRACE},
             {'type': T_EOF}
         ]
@@ -58,9 +58,11 @@ class DocLexerTest(unittest.TestCase):
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
-            {'type': T_TYPEHINT, 'value': 'string'},
+            {'type': T_LPAREN},
+            {'type': T_IDENTIFIER, 'value': 'string'},
+            {'type': T_RPAREN},
             {'type': T_EOF}
         ]
         self.assertTokenListEqual(tokens, expected)
@@ -72,7 +74,7 @@ class DocLexerTest(unittest.TestCase):
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_LBRACK},
             {'type': T_STRING, 'value': 'value1'},
@@ -90,15 +92,15 @@ class DocLexerTest(unittest.TestCase):
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_LBRACK},
-            {'type': T_DIGIT, 'value': '1'},
+            {'type': T_INTEGER, 'value': '1'},
             {'type': T_COMMA},
             {'type': T_STAR},
-            {'type': T_DIGIT, 'value': '-2'},
+            {'type': T_INTEGER, 'value': '-2'},
             {'type': T_COMMA},
-            {'type': T_DIGIT, 'value': '0.3'},
+            {'type': T_FLOAT, 'value': '0.3'},
             {'type': T_RBRACK},
             {'type': T_EOF}
         ]
@@ -106,52 +108,52 @@ class DocLexerTest(unittest.TestCase):
 
     def testValueHintRange(self):
         # simple range 
-        text = '{par1} [1..5]'
+        text = '{par1} [1:5]'
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_LBRACK},
-            {'type': T_DIGIT, 'value': '1'},
-            {'type': T_RANGE_SEP},
-            {'type': T_DIGIT, 'value': '5'},
+            {'type': T_INTEGER, 'value': '1'},
+            {'type': T_COLON},
+            {'type': T_INTEGER, 'value': '5'},
             {'type': T_RBRACK},
             {'type': T_EOF}
         ]
         self.assertTokenListEqual(tokens, expected)
         # range with step
-        text = '{par1} [1..10:2]'
+        text = '{par1} [1:10:2]'
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_LBRACK},
-            {'type': T_DIGIT, 'value': '1'},
-            {'type': T_RANGE_SEP},
-            {'type': T_DIGIT, 'value': '10'},
+            {'type': T_INTEGER, 'value': '1'},
             {'type': T_COLON},
-            {'type': T_DIGIT, 'value': '2'},
+            {'type': T_INTEGER, 'value': '10'},
+            {'type': T_COLON},
+            {'type': T_INTEGER, 'value': '2'},
             {'type': T_RBRACK},
             {'type': T_EOF}
         ]
         self.assertTokenListEqual(tokens, expected)
         # range with step and default
-        text = '{ par1 } [1 .. 10 : 2 * 5]'
+        text = '{ par1 } [1 : 10 : 2 * 5]'
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_LBRACK},
-            {'type': T_DIGIT, 'value': '1'},
-            {'type': T_RANGE_SEP},
-            {'type': T_DIGIT, 'value': '10'},
+            {'type': T_INTEGER, 'value': '1'},
             {'type': T_COLON},
-            {'type': T_DIGIT, 'value': '2'},
+            {'type': T_INTEGER, 'value': '10'},
+            {'type': T_COLON},
+            {'type': T_INTEGER, 'value': '2'},
             {'type': T_STAR},
-            {'type': T_DIGIT, 'value': '5'},
+            {'type': T_INTEGER, 'value': '5'},
             {'type': T_RBRACK},
             {'type': T_EOF}
         ]
@@ -162,10 +164,13 @@ class DocLexerTest(unittest.TestCase):
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
-            {'type': T_TEXT}
+            {'type': T_TEXT},
+            {'type': T_EOF}
         ]
+        self.assertTokenListEqual(tokens, expected)
+
         text = '''{ par1 } Some free text (wow, [snafu])
             {par2} (hint) Other text
             {par3} (hint) ["foo"] Yet another doctext
@@ -173,20 +178,87 @@ class DocLexerTest(unittest.TestCase):
         tokens = [t for t in Lexer(text)]
         expected = [
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par1'},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
             {'type': T_RBRACE},
             {'type': T_TEXT},
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par2'},
+            {'type': T_IDENTIFIER, 'value': 'par2'},
             {'type': T_RBRACE},
-            {'type': T_TYPEHINT, 'value': 'hint'},
+            {'type': T_LPAREN},
+            {'type': T_IDENTIFIER, 'value': 'hint'},
+            {'type': T_RPAREN},
             {'type': T_TEXT},
             {'type': T_LBRACE},
-            {'type': T_IDENT, 'value': 'par3'},
+            {'type': T_IDENTIFIER, 'value': 'par3'},
             {'type': T_RBRACE},
-            {'type': T_TYPEHINT, 'value': 'hint'},
+            {'type': T_LPAREN},
+            {'type': T_IDENTIFIER, 'value': 'hint'},
+            {'type': T_RPAREN},
             {'type': T_LBRACK},
             {'type': T_STRING, 'value': 'foo'},
             {'type': T_RBRACK},
             {'type': T_TEXT},
+            {'type': T_EOF}
         ]
+        self.assertTokenListEqual(tokens, expected)
+
+    def testCodeBlock(self):
+        text = '''
+```
+import foo, bar
+params['foo'] = '{bar}'
+```'''
+        tokens = [t for t in Lexer(text)]
+        expected = [
+            {'type': T_TEXT},
+            {'type': T_CODEMARK},
+            {'type': T_TEXT},
+            {'type': T_CODEMARK},
+            {'type': T_EOF}
+        ]
+        self.assertTokenListEqual(tokens, expected)
+
+        text = '''{par1} Some text
+```
+import foo, bar
+params['foo'] = '{bar}'
+```
+    {par2} Other text.
+        '''
+        tokens = [t for t in Lexer(text)]
+        expected = [
+            {'type': T_LBRACE},
+            {'type': T_IDENTIFIER, 'value': 'par1'},
+            {'type': T_RBRACE},
+            {'type': T_TEXT},
+            {'type': T_CODEMARK},
+            {'type': T_TEXT},
+            {'type': T_CODEMARK},
+            {'type': T_TEXT},
+            {'type': T_LBRACE},
+            {'type': T_IDENTIFIER, 'value': 'par2'},
+            {'type': T_RBRACE},
+            {'type': T_TEXT},
+            {'type': T_EOF}
+        ]
+        self.assertTokenListEqual(tokens, expected)
+
+    def testComplexCodeBlock(self):
+        text = r'''```
+foo = "bar\"baz"
+params['foo'] = "{bar}"
+bar = 'a\'b\'c'
+baz = """
+"
+```
+codemarks in strings should be skipped !
+"""
+```'''
+        tokens = [t for t in Lexer(text)]
+        expected = [
+            {'type': T_CODEMARK},
+            {'type': T_TEXT},
+            {'type': T_CODEMARK},
+            {'type': T_EOF}
+        ]
+        self.assertTokenListEqual(tokens, expected)

@@ -53,8 +53,8 @@ def parse(fmt_str):
             if name == '':
                 if has_numeric_field:
                     raise ParsingError(
-                        'cannot switch from automatic field numbering '
-                        'to manual field specification'
+                        'Cannot switch from manual '
+                        'to automatic field numbering'
                     )
                 auto_count += 1
                 token.value['identifier'] = auto_count
@@ -66,8 +66,8 @@ def parse(fmt_str):
                     is_numeric = False
                 if is_numeric and auto_count > -1:
                     raise ParsingError(
-                        'cannot switch from automatic field numbering '
-                        'to manual field specification'
+                        'Cannot switch from automatic '
+                        'to manual field numbering'
                     )
         yield token
 

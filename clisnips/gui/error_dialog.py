@@ -10,7 +10,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 class ErrorDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'error_dialog.ui')
+    UI_FILE = os.path.join(__DIR__, 'resources', 'error_dialog.ui')
     MAIN_WIDGET = 'error_dialog'
     WIDGET_IDS = ('message_lbl', 'details_textview', 'details_vbox')
 
@@ -24,10 +24,15 @@ class ErrorDialog(BuildableWidgetDecorator):
 
     def run(self, message, details=''):
         if isinstance(message, Exception):
-            message = '{}: {}'.format(message.__class__.__name__,
-                                      str(message))
+            message = '{}{}: {}'.format(
+                details + '\n' if details else '',
+                message.__class__.__name__,
+                str(message)
+            )
             details = format_exc()
         self.details_vbox.set_visible(bool(details))
         self.message_lbl.set_text(message)
         self.details_textview.set_text(details)
-        return self.widget.run()
+        response = self.widget.run()
+        self.widget.destroy()
+        return response

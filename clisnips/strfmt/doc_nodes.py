@@ -1,15 +1,24 @@
+from collections import OrderedDict
+
 from ..utils import get_num_decimals
+from ..exceptions import ParsingError
 
 
 class Documentation(object):
 
-    def __init__(self, text, params):
-        self.text = text
-        self.parameters = params
+    def __init__(self):
+        self.header = ''
+        self.parameters = OrderedDict()
+        self.code_blocks = []
 
     def __str__(self):
-        params = ''.join(str(p) for p in self.parameters)
-        return self.text + params
+        code = '\n'.join(str(c) for c in self.code_blocks)
+        params = '\n'.join(str(p) for p in self.parameters.values())
+        return (
+            str(self.header)
+            + params
+            + code
+        )
 
     def __repr__(self):
         return str(self)
@@ -82,6 +91,24 @@ class ValueList(object):
                 value = '*' + value
             values.append(value)
         return '[%s]' % ', '.join(values)
+
+    def __repr__(self):
+        return str(self)
+
+
+class CodeBlock(object):
+
+    def __init__(self, code):
+        self.code = code
+        self._bytecode = compile(code, '<codeblock>', 'exec')
+
+    def execute(self, _vars=None):
+        if not _vars:
+            _vars = {}
+        exec(self._bytecode, _vars)
+
+    def __str__(self):
+        return '```\n{code}\n```'.format(code=self.code)
 
     def __repr__(self):
         return str(self)

@@ -1,14 +1,18 @@
 """
 GRAMMAR
 =======
-text:           T_TEXT*
+documentation:  header param_list code
+header:         T_TEXT*
 param_list:     param_doc*
-param_doc:      T_LBRACE T_IDENT? T_RBRACE typehint? valuehint? doctext?
-typehint:       T_LPAREN T_IDENT T_RPAREN
+code:           T_CODEMARK T_TEXT T_CODEMARK
+param_doc:      T_LBRACE param_name T_RBRACE typehint? valuehint? doctext?
+param_name:     (T_IDENTIFIER | T_INTEGER)?
+typehint:       T_LPAREN T_IDENTIFIER T_RPAREN
 valuehint:      T_LBRACK (value_list | value_range) T_RBRACK
 value_list:     value (T_COMMA value)*
-value_range:    T_DIGIT T_RANGE_SEP T_DIGIT (T_COLON T_DIGIT)? (T_STAR T_DIGIT)?
-value:          T_STAR? (T_STRING | T_DIGIT)
+value_range:    T_DIGIT T_COLON digit (T_COLON digit)? (T_STAR digit)?
+value:          T_STAR? (T_STRING | digit)
+digit:          T_INTEGER | T_FLOAT
 """
 
 from collections import OrderedDict
@@ -17,6 +21,12 @@ from ..exceptions import ParsingError
 from .doc_tokens import *
 from .doc_nodes import *
 from .doc_lexer import Lexer
+
+
+def _to_number(string):
+    if '.' in string:
+        return float(string)
+    return int(string)
 
 
 class LLkParser(object):
@@ -86,9 +96,15 @@ class Parser(LLkParser):
     def parse(self):
 #{{{
         self.reset()
-        preamble = self._text()
-        param_list = self._param_list()
-        return Documentation(preamble, param_list)
+        self._auto_field_count = -1
+        self._has_numeric_field = False
+        self._ast = Documentation()
+        self._ast.header = self._text()
+        for param in self._param_list():
+            self._ast.parameters[param.name] = param
+        for block in self._code():
+            self._ast.code_blocks.append(block)
+        return self._ast
 #}}}
 
     def _text(self):
@@ -112,48 +128,90 @@ class Parser(LLkParser):
         param_doc*
         """
 #{{{
-        params = []
         while True:
             t = self._lookahead()
             if t.type == T_LBRACE:
-                param = self._param_doc()
-                params.append(param)
+                yield self._param_doc()
             else:
                 break
-        return params
 #}}}
+
+    def _code(self):
+        """
+        T_CODEBLOCK*
+        """
+# {{{
+        code_blocks = []
+        while self._lookahead_type() == T_CODEMARK:
+            self._match(T_CODEMARK)
+            code = self._match(T_TEXT).value
+            try:
+                block = CodeBlock(code)
+            except SyntaxError as err:
+                msg = 'Syntax error in code block: %r' % code
+                msg += '\n' + str(err)
+                raise ParsingError(msg)
+            except TypeError as err:
+                msg = 'Null bytes in code block: %r' % code
+                raise ParsingError(msg)
+            else:
+                code_blocks.append(block)
+            self._match(T_CODEMARK)
+        return code_blocks
+# }}}
 
     def _param_doc(self):
         """
-        T_LBRACE T_IDENT? T_RBRACE typehint? valuehint? doctext?
+        T_LBRACE param_name T_RBRACE
+        typehint? valuehint? doctext?
         """
 #{{{
-        name, typehint, valuehint, text = '', None, None, None
+        typehint, valuehint, text = None, None, None
         self._match(T_LBRACE)
-        t = self._lookahead()
-        if t.type == T_IDENT:
-            self._consume()
-            name = t.value
+        name = self._param_name()
         self._match(T_RBRACE)
-        t = self._lookahead()
-        if t.type == T_TYPEHINT:
+
+        token = self._lookahead()
+        if token.type == T_LPAREN:
             typehint = self._typehint()
-            t = self._lookahead()
-        if t.type == T_LBRACK:
+            token = self._lookahead()
+        if token.type == T_LBRACK:
             valuehint = self._valuehint()
-            t = self._lookahead()
-        if t.type == T_TEXT:
+            token = self._lookahead()
+        if token.type == T_TEXT:
             text = self._text()
         return Parameter(name, typehint, valuehint, text)
 #}}}
 
+    def _param_name(self):
+# {{{
+        # no name, try automatic numbering
+        if self._lookahead_type() == T_RBRACE:
+            if self._has_numeric_field:
+                raise ParsingError(
+                    'cannot switch from manual to automatic field numbering'
+                )
+            self._auto_field_count += 1
+            return self._auto_field_count
+        token = self._match(T_IDENTIFIER, T_INTEGER)
+        if token.type == T_INTEGER:
+            if self._auto_field_count > -1:
+                raise ParsingError(
+                    'cannot switch from automatic to manual field numbering'
+                )
+            self._has_numeric_field = True
+        return token.value
+# }}}
+
     def _typehint(self):
         """
-        T_LPAREN T_IDENT T_RPAREN
+        T_LPAREN T_IDENTIFIER T_RPAREN
         """
 #{{{
-        t = self._match(T_TYPEHINT)
-        return t.value
+        self._match(T_LPAREN)
+        hint = self._match(T_IDENTIFIER).value
+        self._match(T_RPAREN)
+        return hint 
 #}}}
 
     def _valuehint(self):
@@ -162,8 +220,11 @@ class Parser(LLkParser):
         """
 #{{{
         self._match(T_LBRACK)
-        t = self._lookahead()
-        if t.type == T_DIGIT and self._lookahead_type(2) == T_RANGE_SEP:
+        token = self._lookahead()
+        if (
+            token.type in (T_INTEGER, T_FLOAT)
+            and self._lookahead_type(2) == T_COLON
+        ):
             valuehint = self._value_range()
         else:
             valuehint = self._value_list()
@@ -179,8 +240,6 @@ class Parser(LLkParser):
         values = []
         default, count = 0, 0
         initial = self._value()
-        if not initial:
-            return values
         values.append(initial['value'])
         while True:
             count += 1
@@ -188,12 +247,9 @@ class Parser(LLkParser):
             if t.type == T_COMMA:
                 self._consume()
                 value = self._value()
-                if value:
-                    values.append(value['value'])
-                    if value['default']:
-                        default = count
-                else:
-                    break
+                values.append(value['value'])
+                if value['default']:
+                    default = count
             else:
                 break
         return ValueList(values, default)
@@ -201,40 +257,37 @@ class Parser(LLkParser):
 
     def _value(self):
         """
-        T_STAR? (T_STRING | T_DIGIT)
+        T_STAR? (T_STRING | digit)
         """
 #{{{
         is_default = False
-        t = self._lookahead()
-        if t.type == T_STAR:
+        token = self._match(T_STAR, T_STRING, T_INTEGER, T_FLOAT)
+        if token.type == T_STAR:
             is_default = True
-            self._consume()
-            t = self._lookahead()
-        if t.type == T_STRING:
-            self._consume()
-            return {'value': t.value, 'default': is_default}
-        elif t.type == T_DIGIT:
-            self._consume()
-            return {'value': _to_number(t.value), 'default': is_default}
+            token = self._match(T_STRING, T_INTEGER, T_FLOAT)
+        if token.type == T_STRING:
+            return {'value': token.value, 'default': is_default}
+        else:
+            return {'value': _to_number(token.value), 'default': is_default}
 #}}}
 
     def _value_range(self):
         """
-        T_DIGIT T_RANGE_SEP T_DIGIT (T_COLON T_DIGIT)? (T_STAR T_DIGIT)?
+        digit T_COLON digit (T_COLON digit)? (T_STAR digit)?
         """
 #{{{
-        start = self._match(T_DIGIT).value
-        self._match(T_RANGE_SEP)
-        end = self._match(T_DIGIT).value
+        start = self._digit().value
+        self._match(T_COLON)
+        end = self._digit().value
         step, default = None, None
-        t = self._lookahead()
-        if t.type == T_COLON:
+        token = self._lookahead()
+        if token.type == T_COLON:
             self._consume()
-            step = self._match(T_DIGIT).value
-            t = self._lookahead()
-        if t.type == T_STAR:
+            step = self._digit().value
+            token = self._lookahead()
+        if token.type == T_STAR:
             self._consume()
-            default = self._match(T_DIGIT).value
+            default = self._digit().value
         return ValueRange(
             _to_number(start),
             _to_number(end),
@@ -243,66 +296,9 @@ class Parser(LLkParser):
         )
 #}}}
 
-
-def _to_number(string):
-    if '.' in string:
-        return float(string)
-    return int(string)
+    def _digit(self):
+        return self._match(T_INTEGER, T_FLOAT)
 
 
 def parse(docstring):
-    parser = Parser(Lexer(docstring))
-    tree = parser.parse()
-    params_dict = OrderedDict()
-    auto_count = -1
-    has_numeric_field = False
-    for param in tree.parameters:
-        if param.name == '':
-            if has_numeric_field:
-                raise ParsingError(
-                    'cannot switch from automatic field numbering '
-                    'to manual field specification'
-                )
-            auto_count += 1
-            param.name = auto_count
-        else:
-            try:
-                param.name = int(param.name)
-                is_numeric = True
-                has_numeric_field = True
-            except ValueError:
-                is_numeric = False
-            if is_numeric and auto_count > -1:
-                raise ParsingError(
-                    'cannot switch from automatic field numbering '
-                    'to manual field specification'
-                )
-        params_dict[param.name] = param
-    return {
-        'text': tree.text.strip(),
-        'parameters': params_dict
-    }
-
-
-if __name__ == "__main__":
-
-    from doc_lexer import Lexer
-    doc = """
-
-    This is the global description of the command.
-
-    It's all text until a parameter is seen.
-
-        {param_1} (file) This is parameter 1
-                         It's description continues here
-        {param_2} [0..5:1*3] This is parameter 2
-            It's a range of ints from 0 to 5, the default value is 3
-        {param_3} ["foo", *"bar", 25] This is parameter 3
-            It's a list of value, the default being "bar"
-        {}
-    """
-    lexer = Lexer(doc)
-    parser = Parser(lexer)
-    ast = parser.parse()
-    for param in ast.parameters:
-        print param
+    return Parser(Lexer(docstring)).parse()

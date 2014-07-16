@@ -3,7 +3,13 @@ import os
 import gtk
 
 from ..config import styles
-from .helpers import BuildableWidgetDecorator, SimpleTextView
+from .helpers import BuildableWidgetDecorator, SimpleTextView, replace_widget
+
+HAS_GTKSOURCEVIEW = True
+try:
+    from .source_view import SourceView
+except ImportError:
+    HAS_GTKSOURCEVIEW = False
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -11,7 +17,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 
 class EditDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'edit_dialog.ui')
+    UI_FILE = os.path.join(__DIR__, 'resources', 'edit_dialog.ui')
     MAIN_WIDGET = 'edit_dialog'
     WIDGET_IDS = ('desc_entry', 'cmd_textview', 'doc_textview', 'tags_entry')
 
@@ -19,17 +25,7 @@ class EditDialog(BuildableWidgetDecorator):
         super(EditDialog, self).__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
 
-        self.cmd_textview = SimpleTextView(self.cmd_textview)
-        self.doc_textview = SimpleTextView(self.doc_textview)
-
-        for textview in ('cmd_textview', 'doc_textview'):
-            textview = getattr(self, textview)
-            textview.set_font(styles.font)
-            textview.set_background_color(styles.bgcolor)
-            textview.set_text_color(styles.fgcolor)
-            textview.set_cursor_color(styles.cursor_color)
-            textview.set_padding(6)
-
+        self._setup_textviews()
         self.connect_signals()
 
         self._editable = True
@@ -73,6 +69,28 @@ class EditDialog(BuildableWidgetDecorator):
             'doc': self.doc_textview.get_text(),
             'tag': self.tags_entry.get_text(),
         }
+
+    def _setup_textviews(self):
+        views = ('cmd_textview', 'doc_textview')
+        if HAS_GTKSOURCEVIEW:
+            for name in views:
+                view = getattr(self, name)
+                src_view = SourceView()
+                src_view.set_font(styles.font)
+                replace_widget(view, src_view)
+                setattr(self, name, src_view)
+            self.cmd_textview.set_syntax('clisnips-cmd')
+            self.doc_textview.set_syntax('clisnips-doc')
+        else:
+            for name in views:
+                view = getattr(self, name)
+                view = SimpleTextView(view)
+                view.set_font(styles.font)
+                view.set_background_color(styles.bgcolor)
+                view.set_text_color(styles.fgcolor)
+                view.set_cursor_color(styles.cursor_color)
+                view.set_padding(6)
+                setattr(self, name, view)
 
     ###########################################################################
     # ------------------------------ SIGNALS
