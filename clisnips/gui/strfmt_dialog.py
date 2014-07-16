@@ -13,6 +13,7 @@ from ..strfmt.doc_tokens import T_PARAM
 from ..diff import InlineMyersSequenceMatcher
 from .strfmt_widgets import Field, PathEntry
 from .error_dialog import ErrorDialog
+from . import msg_dialogs 
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -21,6 +22,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 class StrfmtDialogState(State):
     NORMAL_EDITING = 0x01
     DIRECT_EDITING = 0x02
+    DIRECT_EDITING_DIRTY = 0x04
 
 
 class StringFormatterDialog(BuildableWidgetDecorator):
@@ -121,6 +123,9 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         else:
             self.output_textview.handler_block(
                 self.handlers['output_changed'])
+            if StrfmtDialogState.DIRECT_EDITING_DIRTY in self.state:
+                msg_dialogs.warning('Your edits will be lost if you modify '
+                                    'one of the fields !')
 
     # ==================== Populating entry fields ==================== #
 
@@ -230,6 +235,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             self.state.leave(StrfmtDialogState.DIRECT_EDITING)
 
     def on_output_changed(self, widget):
+        self.state += StrfmtDialogState.DIRECT_EDITING_DIRTY
         self._update_diffs(widget.get_text())
 
     def on_reset_btn_clicked(self, widget):
@@ -239,6 +245,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.update_preview()
 
     def on_field_change(self, widget):
+        self.state -= StrfmtDialogState.DIRECT_EDITING_DIRTY
         if self.handlers['update_timeout']:
             glib.source_remove(self.handlers['update_timeout'])
         self.handlers['update_timeout'] = glib.timeout_add(
