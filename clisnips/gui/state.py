@@ -47,6 +47,7 @@ class State(gobject.GObject):
 
     def reset(self):
         self._mask = self.INITIAL
+        self.emit('set-state', self.INITIAL)
 
     def get(self):
         """
