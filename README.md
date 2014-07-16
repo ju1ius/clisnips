@@ -11,10 +11,17 @@ your commands (or any code snippet for use in i.e. ipython or irb).
 This is a plugin for teh awesome [Terminator](http://gnometerminator.blogspot.fr/p/introduction.html) terminal emulator.
 
 
-## Requirements
+## Dependencies
 
  * Python >= 2.7
+ * PyGtk
+ * PyGtkSourceView (optional)
  * [Terminator](http://gnometerminator.blogspot.fr/p/introduction.html)
+
+On Debian, Ubuntu, Mint, etc... 
+```sh
+sudo apt-get install terminator python-gtksourceview2
+```
 
 
 ## Installation
