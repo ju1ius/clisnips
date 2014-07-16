@@ -8,8 +8,7 @@ import glib
 from ..config import styles
 from .state import State
 from .helpers import BuildableWidgetDecorator, SimpleTextView
-from ..strfmt import doc_parser
-from ..strfmt import fmt_parser
+from ..strfmt import doc_parser, fmt_parser
 from ..strfmt.doc_tokens import T_PARAM
 from ..diff import InlineMyersSequenceMatcher
 from .strfmt_widgets import Field, PathEntry
@@ -175,12 +174,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.output_textview.set_text(output)
         self._update_diffs(output)
 
-    def _parse_format_string(self, format_string):
-        field_names = []
-        for token in fmt_parser.parse(format_string):
-            if token.type == T_PARAM:
-                field_names.append(token.value['identifier'])
-        return field_names
+    def _parse_format_string(self, string):
+        return [f['name'] for f in fmt_parser.parse(string)]
 
     def _apply_code_blocks(self):
         _vars = {'params': {}}
