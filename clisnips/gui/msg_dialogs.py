@@ -11,6 +11,8 @@ class BaseDialog(gtk.MessageDialog):
                                          buttons=buttons,
                                          **kwargs)
         self.set_border_width(12)
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
 
     def run(self, primary, secondary=''):
         self.set_markup(primary)

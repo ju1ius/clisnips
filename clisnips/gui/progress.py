@@ -314,6 +314,9 @@ class ProgressDialog(gtk.MessageDialog):
             type=gtk.MESSAGE_INFO,
             message_format=message
         )
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+
         self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_APPLY)
         self.apply_btn = self.get_widget_for_response(gtk.RESPONSE_APPLY)
 
