@@ -151,3 +151,20 @@ if params['infile'] and not params['outfile']:
         }
         code.execute(_vars)
         self.assertEqual(_vars['params']['outfile'], '/foo/bar.mp4')
+
+    def testErrorHandling(self):
+        text = '{$$$}'
+        with self.assertRaises(ParsingError):
+            parse(text)
+        text = '{} ($$$)'
+        with self.assertRaises(ParsingError):
+            parse(text)
+        text = '{} (string) [$$$]'
+        with self.assertRaises(ParsingError):
+            parse(text)
+        text = '{}\n{1}'
+        with self.assertRaises(ParsingError):
+            parse(text)
+        text = '{1}\n{}'
+        with self.assertRaises(ParsingError):
+            parse(text)
