@@ -2,6 +2,7 @@
     T_EOF,
     T_TEXT,
     T_IDENTIFIER,
+    T_FLAG,
     T_INTEGER, T_FLOAT,
     T_STRING,
     T_PARAM,
@@ -13,7 +14,7 @@
     T_COMMA,
     T_COLON,
     T_STAR
-) = range(18)
+) = range(19)
 
 __TOKEN_NAMES = {}
 
