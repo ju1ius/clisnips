@@ -47,6 +47,7 @@ class State(gobject.GObject):
 
     def reset(self):
         self._mask = self.INITIAL
+        self.emit('set-state', self.INITIAL)
 
     def get(self):
         """
@@ -135,6 +136,8 @@ class State(gobject.GObject):
 
 def _get_states(klass):
     if isinstance(klass, State):
+        #FIXME: this conflicts with State.with_states factory method
+        # and should be removed 
         klass = klass.__class__
     attrs = [a for a in
              inspect.getmembers(klass, lambda a: isinstance(a, int))

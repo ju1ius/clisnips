@@ -53,6 +53,21 @@ class DocLexerTest(unittest.TestCase):
         ]
         self.assertTokenListEqual(tokens, expected)
 
+    def testFlags(self):
+        text = '{-h}\n{--some-flag}'
+        tokens = [t for t in Lexer(text)]
+        expected = [
+            {'type': T_LBRACE},
+            {'type': T_FLAG, 'value': '-h'},
+            {'type': T_RBRACE},
+            {'type': T_TEXT, 'value': '\n'},
+            {'type': T_LBRACE},
+            {'type': T_FLAG, 'value': '--some-flag'},
+            {'type': T_RBRACE},
+            {'type': T_EOF}
+        ]
+        self.assertTokenListEqual(tokens, expected)
+
     def testTypeHintOnly(self):
         text = '{par1} ( string )'
         tokens = [t for t in Lexer(text)]

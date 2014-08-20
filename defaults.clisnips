@@ -62,6 +62,30 @@
         <doc>{message} (string) A descriptive message to reference your backup later.</doc>
     </snippet>
 
+
+    <!-- System Info -->
+
+    <snippet>
+        <title>Display Filesystem info in human readable format</title>
+        <command>df -T {-h} {-a} {filesystem}</command>
+        <tag>df</tag>
+        <doc>
+            {-h} Display information in human readable form.
+            {-a} Show all filesystems (including virtual ones like tmpfs).
+            {filesystem} The filesystem to analyze or blank for all filesystems.
+        </doc>
+    </snippet>
+    <snippet>
+        <title>Display a folder's disk usage.</title>
+        <command>du -s {-h} {-a} {folder}</command>
+        <tag>du,filesystem</tag>
+        <doc>
+            {-h} Display information in human readable form.
+            {-a} Show more details
+            {folder} (dir) The folder to analyze.
+        </doc>
+    </snippet>
+
     <!-- APT / DPKG -->
 
     <snippet>
@@ -87,6 +111,21 @@
         <command>dpkg -l {package}</command>
         <tag>dpkg,apt</tag>
         <doc>{package} Package name.</doc>
+    </snippet>
+
+    <!-- VIM Snippets -->
+
+    <snippet>
+        <title>Format XML file in VIM</title>
+        <command>:%!xmllint --format -</command>
+        <tag>vim,xml,xmllint</tag>
+        <doc>Reformats the contents of a Vim buffer with xmllint</doc>
+    </snippet>
+    <snippet>
+        <title>Format JSON file in VIM</title>
+        <command>:%!python -m json.tool</command>
+        <tag>vim,json,formatting</tag>
+        <doc>Reformats the contents of a Vim buffer with python's json module</doc>
     </snippet>
 
     <!-- MISC -->

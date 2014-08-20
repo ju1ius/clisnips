@@ -2,6 +2,7 @@
     T_EOF,
     T_TEXT,
     T_IDENTIFIER,
+    T_FLAG,
     T_INTEGER, T_FLOAT,
     T_STRING,
     T_PARAM,
@@ -13,7 +14,7 @@
     T_COMMA,
     T_COLON,
     T_STAR
-) = range(18)
+) = range(19)
 
 __TOKEN_NAMES = {}
 
@@ -49,12 +50,13 @@ class Token(object):
         self.startpos = self.endpos = None
 
     def __str__(self):
+        return ('{s.name} {s.value!r} on line {s.startline}, '
+                'column {s.startcol}').format(s=self)
+
+    def __repr__(self):
         pos = ''
         if self.startpos is not None:
             pos = '%s->%s' % (self.startpos, self.endpos)
-        return ('<Token {s.name}@{pos}'
+        return ('<Token {s.name} @ {pos} '
                 '({s.startline},{s.startcol})->({s.endline},'
-                '{s.endcol}): {s.value!r}>').format(s=self, pos=pos)
-
-    def __repr__(self):
-        return str(self)
+                '{s.endcol}) : {s.value!r}>').format(s=self, pos=pos)

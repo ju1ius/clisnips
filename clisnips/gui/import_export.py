@@ -8,6 +8,9 @@ class ImportDialog(gtk.FileChooserDialog):
 
     def __init__(self):
         super(ImportDialog, self).__init__(title='Import Snippet Database')
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+
         self.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
         self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                          gtk.STOCK_APPLY, gtk.RESPONSE_ACCEPT)
@@ -64,6 +67,9 @@ class ExportDialog(gtk.FileChooserDialog):
 
     def __init__(self):
         super(ExportDialog, self).__init__(title='Export Snippets')
+        self.set_skip_taskbar_hint(True)
+        self.set_skip_pager_hint(True)
+
         self.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
         self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                          gtk.STOCK_APPLY, gtk.RESPONSE_ACCEPT)

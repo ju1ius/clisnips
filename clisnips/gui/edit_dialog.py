@@ -4,6 +4,10 @@ import gtk
 
 from ..config import styles
 from .helpers import BuildableWidgetDecorator, SimpleTextView, replace_widget
+# validation
+from ..exceptions import ParsingError
+from ..strfmt import doc_parser, fmt_parser
+from .error_dialog import ErrorDialog
 
 HAS_GTKSOURCEVIEW = True
 try:
@@ -70,6 +74,34 @@ class EditDialog(BuildableWidgetDecorator):
             'tag': self.tags_entry.get_text(),
         }
 
+    def _validate(self):
+        title = self.desc_entry.get_text().strip()
+        if not title:
+            ErrorDialog().run('You must provide a description.')
+            return False
+        #
+        cmd = self.cmd_textview.get_text().strip()
+        if not cmd:
+            ErrorDialog().run('You must provide a command.')
+            return False
+        try:
+            tokens = [t for t in fmt_parser.parse(cmd)]
+        except ParsingError as err:
+            msg = 'You have an error in your snippet syntax:\n'
+            ErrorDialog().run(err, msg)
+            return False
+        #
+        doc = self.doc_textview.get_text().strip()
+        if doc:
+            try:
+                doc_parser.parse(doc)
+            except ParsingError as err:
+                msg = 'You have an error in your documentation syntax:\n'
+                ErrorDialog().run(err, msg)
+                return False
+        #
+        return True
+
     def _setup_textviews(self):
         views = ('cmd_textview', 'doc_textview')
         if HAS_GTKSOURCEVIEW:
@@ -101,6 +133,9 @@ class EditDialog(BuildableWidgetDecorator):
             self.widget.hide()
             return False
         if response_id == gtk.RESPONSE_ACCEPT:
+            if not self._validate():
+                self.widget.stop_emission('response')
+                return False
             self.widget.hide()
         elif response_id == gtk.RESPONSE_REJECT:
             self.reset_fields()

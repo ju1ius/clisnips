@@ -27,6 +27,7 @@ FREETEXT_BOUNDS_RX = re.compile(
 )
 
 IDENT_RX = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
+FLAG_RX = re.compile(r'--?[a-zA-Z0-9][\w-]*')
 PARAM_RX = re.compile(r'(\d+)|({ident})'.format(ident=IDENT_RX.pattern))
 INTEGER_RX = re.compile(r'\d+')
 FLOAT_RX = re.compile(r'\d*\.\d+')
@@ -231,6 +232,7 @@ class Lexer(StringLexer):
         token.endpos = pos if pos is not None else self.pos
         token.endline = line if line is not None else self.line
         token.endcol = col if col is not None else self.col
+        return token
 #}}}
 
     def freetext_state(self):
@@ -275,6 +277,12 @@ class Lexer(StringLexer):
                 break 
             if char.isalnum() or char == '_':
                 token = self._handle_param_identifier()
+                if not token:
+                    self.state = self.freetext_state
+                    break
+                self.token_queue.append(token)
+            elif char == '-':
+                token = self._handle_flag()
                 if not token:
                     self.state = self.freetext_state
                     break
@@ -433,8 +441,17 @@ class Lexer(StringLexer):
             _type = T_IDENTIFIER
         token = self.init_token(_type, m.group(0))
         self._consume_match(m)
-        self.finalize_token(token)
-        return token
+        return self.finalize_token(token)
+# }}}
+
+    def _handle_flag(self):
+# {{{
+        m = FLAG_RX.match(self.text, self.pos)
+        if not m:
+            return
+        token = self.init_token(T_FLAG, m.group(0))
+        self._consume_match(m)
+        return self.finalize_token(token)
 # }}}
 
     def _handle_quoted_string(self):
@@ -444,8 +461,7 @@ class Lexer(StringLexer):
             return
         token = self.init_token(T_STRING, m.group(1))
         self._consume_match(m)
-        self.finalize_token(token)
-        return token
+        return self.finalize_token(token)
 # }}}
 
     def _handle_digit(self):
@@ -460,8 +476,7 @@ class Lexer(StringLexer):
             _type = T_INTEGER
         token = self.init_token(_type, m.group(0))
         self._consume_match(m)
-        self.finalize_token(token)
-        return token
+        return self.finalize_token(token)
 # }}}
 
     def _consume_freetext(self):

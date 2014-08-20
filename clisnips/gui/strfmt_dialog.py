@@ -8,12 +8,12 @@ import glib
 from ..config import styles
 from .state import State
 from .helpers import BuildableWidgetDecorator, SimpleTextView
-from ..strfmt import doc_parser
-from ..strfmt import fmt_parser
+from ..strfmt import doc_parser, fmt_parser
 from ..strfmt.doc_tokens import T_PARAM
 from ..diff import InlineMyersSequenceMatcher
 from .strfmt_widgets import Field, PathEntry
 from .error_dialog import ErrorDialog
+from . import msg_dialogs 
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -22,6 +22,7 @@ __DIR__ = os.path.abspath(os.path.dirname(__file__))
 class StrfmtDialogState(State):
     NORMAL_EDITING = 0x01
     DIRECT_EDITING = 0x02
+    DIRECT_EDITING_DIRTY = 0x04
 
 
 class StringFormatterDialog(BuildableWidgetDecorator):
@@ -122,6 +123,9 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         else:
             self.output_textview.handler_block(
                 self.handlers['output_changed'])
+            if StrfmtDialogState.DIRECT_EDITING_DIRTY in self.state:
+                msg_dialogs.warning('Your edits will be lost if you modify '
+                                    'one of the fields !')
 
     # ==================== Populating entry fields ==================== #
 
@@ -157,6 +161,12 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     # ==================== Output handling ==================== #
 
     def get_output(self):
+        return self.output_textview.get_text()
+
+    def update_preview(self):
+        self.handlers['update_timeout'] = 0
+        output = self.get_output()
+        #
         args, kwargs = [], {}
         params = self._apply_code_blocks()
         for name, value in params.items():
@@ -167,20 +177,13 @@ class StringFormatterDialog(BuildableWidgetDecorator):
                 args.insert(name, value)
             except ValueError:
                 kwargs[name] = value
-        return self.format_string.format(*args, **kwargs)
-
-    def update_preview(self):
-        self.handlers['update_timeout'] = 0
-        output = self.get_output()
+        output = self.format_string.format(*args, **kwargs)
+        #
         self.output_textview.set_text(output)
         self._update_diffs(output)
 
-    def _parse_format_string(self, format_string):
-        field_names = []
-        for token in fmt_parser.parse(format_string):
-            if token.type == T_PARAM:
-                field_names.append(token.value['identifier'])
-        return field_names
+    def _parse_format_string(self, string):
+        return [f['name'] for f in fmt_parser.parse(string)]
 
     def _apply_code_blocks(self):
         _vars = {'params': {}}
@@ -232,6 +235,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             self.state.leave(StrfmtDialogState.DIRECT_EDITING)
 
     def on_output_changed(self, widget):
+        self.state += StrfmtDialogState.DIRECT_EDITING_DIRTY
         self._update_diffs(widget.get_text())
 
     def on_reset_btn_clicked(self, widget):
@@ -241,6 +245,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.update_preview()
 
     def on_field_change(self, widget):
+        self.state -= StrfmtDialogState.DIRECT_EDITING_DIRTY
         if self.handlers['update_timeout']:
             glib.source_remove(self.handlers['update_timeout'])
         self.handlers['update_timeout'] = glib.timeout_add(

@@ -16,6 +16,9 @@ class ErrorDialog(BuildableWidgetDecorator):
 
     def __init__(self):
         super(ErrorDialog, self).__init__()
+        self.widget.set_skip_taskbar_hint(True)
+        self.widget.set_skip_pager_hint(True)
+
         self.details_textview = SimpleTextView(self.details_textview)
         self.details_textview.set_font(styles.font)
         self.details_textview.set_background_color(styles.bgcolor)

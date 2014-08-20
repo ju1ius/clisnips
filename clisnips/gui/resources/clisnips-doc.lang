@@ -10,6 +10,7 @@
     <definitions>
 
         <define-regex id="identifier">[_a-zA-Z][_a-zA-Z0-9]*</define-regex>
+        <define-regex id="flag">--?[a-zA-Z0-9][\w-]*</define-regex>
         <define-regex id="integer">\d+</define-regex>
         <define-regex id="float">\d*\.\d+</define-regex>
 
@@ -36,7 +37,15 @@
                 <context id="parameter"
                          class="no-spell-check"
                          once-only="true">
-                    <match>\{\s*(\%{integer}|\%{identifier})?\s*\}</match>
+                         <match extended="true">
+                             \{\s*
+                             (
+                                \%{integer}
+                                | \%{identifier}
+                                | \%{flag}
+                            )?
+                            \s*\}
+                        </match>
                     <include>
                         <context sub-pattern="1" style-ref="param-name"/>
                     </include>
