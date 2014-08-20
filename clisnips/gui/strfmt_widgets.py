@@ -203,8 +203,6 @@ class PathEntry(gtk.HBox):
             elif self._mode == self.MODE_DIR:
                 title = 'Select a folder'
                 action = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
-                self._filechooser.connect('current-folder-changed',
-                                          self._on_filechooser_folder_changed)
             self._filechooser.set_title(title)
             self._filechooser.set_action(action)
             self._filechooser.connect('file-set',
