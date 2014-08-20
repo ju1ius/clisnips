@@ -29,6 +29,25 @@ class DocParserTest(unittest.TestCase):
         self.assertEqual(param.typehint, 'file')
         self.assertEqual(param.text, 'Param doc')
 
+    def testParseFlag(self):
+        text = 'Global doc\n{--flag} Some flag\n{-f} Other flag'
+        doc = parse(text)
+        self.assertEqual(doc.header, 'Global doc\n')
+        #
+        self.assertIn('--flag', doc.parameters)
+        param = doc.parameters['--flag']
+        self.assertIsInstance(param, Parameter)
+        self.assertEqual(param.name, '--flag')
+        self.assertEqual(param.typehint, 'flag')
+        self.assertEqual(param.text, 'Some flag\n')
+        #
+        self.assertIn('-f', doc.parameters)
+        param = doc.parameters['-f']
+        self.assertIsInstance(param, Parameter)
+        self.assertEqual(param.name, '-f')
+        self.assertEqual(param.typehint, 'flag')
+        self.assertEqual(param.text, 'Other flag')
+
     def testAutomaticNumbering(self):
         text = '{} foo\n{} bar'
         doc = parse(text)
@@ -166,5 +185,13 @@ if params['infile'] and not params['outfile']:
         with self.assertRaises(ParsingError):
             parse(text)
         text = '{1}\n{}'
+        with self.assertRaises(ParsingError):
+            parse(text)
+        # flags cannot have a typehint
+        text = '{-f} (string)'
+        with self.assertRaises(ParsingError):
+            parse(text)
+        # flags cannot have a valuehint
+        text = '{-f} ["foo", "bar"]'
         with self.assertRaises(ParsingError):
             parse(text)
