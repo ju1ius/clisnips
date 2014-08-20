@@ -5,14 +5,16 @@ from ..exceptions import ParsingError
 
 
 FIELD_NAME_RX = re.compile(r'''
-^
-(\d+|[_a-zA-Z]\w*)      # arg_name
-(?:
-    \.[_a-zA-Z]\w*      # getattr 
-    |
-    \[ \d+ | [^\]]+ \]  # getitem
-)*
-$
+^(?:
+    (--?[a-zA-Z0-9][\w-]*)   # cli flag
+) | (?:
+    (\d+|[_a-zA-Z]\w*)      # arg_name
+    (?:
+        \.[_a-zA-Z]\w*      # getattr 
+        |
+        \[ \d+ | [^\]]+ \]  # getitem
+    )*
+)$
 ''', re.X)
 __lexer = Formatter()
 
@@ -33,7 +35,7 @@ def parse(text):
             m = FIELD_NAME_RX.match(param)
             if not m:
                 raise ParsingError('Invalid replacement field %r' % param)
-            name = m.group(1)
+            name = m.group(1) if m.group(1) else m.group(2)
         if not name:
             if has_explicit_numeric_field:
                 raise ParsingError('Cannot switch from manual '
