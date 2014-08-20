@@ -6,7 +6,7 @@ from ..exceptions import ParsingError
 
 FIELD_NAME_RX = re.compile(r'''
 ^(?:
-    (--?[a-zA-Z0-9][\w]*)   # cli flag
+    (--?[a-zA-Z0-9][\w-]*)   # cli flag
 ) | (?:
     (\d+|[_a-zA-Z]\w*)      # arg_name
     (?:
