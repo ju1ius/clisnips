@@ -5,8 +5,10 @@ documentation:  header param_list code
 header:         T_TEXT*
 param_list:     param_doc*
 code:           T_CODEMARK T_TEXT T_CODEMARK
-param_doc:      T_LBRACE param_name T_RBRACE typehint? valuehint? doctext?
-param_name:     (T_IDENTIFIER | T_INTEGER)?
+param_doc:      T_LBRACE param_id? T_RBRACE typehint? valuehint? doctext?
+param_id:       identifier | flag
+identifier:     T_IDENTIFIER | T_INTEGER
+flag:           T_FLAG
 typehint:       T_LPAREN T_IDENTIFIER T_RPAREN
 valuehint:      T_LBRACK (value_list | value_range) T_RBRACK
 value_list:     value (T_COMMA value)*
@@ -162,45 +164,55 @@ class Parser(LLkParser):
 
     def _param_doc(self):
         """
-        T_LBRACE param_name T_RBRACE
+        T_LBRACE param_id T_RBRACE
         typehint? valuehint? doctext?
         """
 #{{{
         typehint, valuehint, text = None, None, None
         self._match(T_LBRACE)
-        name = self._param_name()
+        param = self._param_id()
         self._match(T_RBRACE)
 
         token = self._lookahead()
         if token.type == T_LPAREN:
-            typehint = self._typehint()
+            if param.typehint == 'flag':
+                raise ParsingError('A flag cannot have a type hint.')
+            param.typehint = self._typehint()
             token = self._lookahead()
         if token.type == T_LBRACK:
-            valuehint = self._valuehint()
+            if param.typehint == 'flag':
+                raise ParsingError('A flag cannot have a value hint.')
+            param.valuehint = self._valuehint()
             token = self._lookahead()
         if token.type == T_TEXT:
-            text = self._text()
-        return Parameter(name, typehint, valuehint, text)
+            param.text = self._text()
+        return param
 #}}}
 
-    def _param_name(self):
+    def _param_id(self):
 # {{{
-        # no name, try automatic numbering
+        # no identifier, try automatic numbering
         if self._lookahead_type() == T_RBRACE:
             if self._has_numeric_field:
                 raise ParsingError(
                     'cannot switch from manual to automatic field numbering'
                 )
             self._auto_field_count += 1
-            return self._auto_field_count
-        token = self._match(T_IDENTIFIER, T_INTEGER)
+            return Parameter(self._auto_field_count)
+        token = self._match(T_IDENTIFIER, T_INTEGER, T_FLAG)
+        # it's a flag
+        if token.type == T_FLAG:
+            param = Parameter(token.value)
+            param.typehint = 'flag'
+            return param
+        # it's an integer, check that numbering is correct
         if token.type == T_INTEGER:
             if self._auto_field_count > -1:
                 raise ParsingError(
                     'cannot switch from automatic to manual field numbering'
                 )
             self._has_numeric_field = True
-        return token.value
+        return Parameter(token.value)
 # }}}
 
     def _typehint(self):
