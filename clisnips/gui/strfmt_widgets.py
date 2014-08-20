@@ -29,6 +29,8 @@ def _entry_from_doc(doc):
         default = str(valuehint.values[0])
     if typehint in ('path', 'file', 'dir'):
         return PathEntry(mode=typehint, default=default)
+    if typehint == 'flag':
+        return FlagEntry(doc.name)
     return Entry(default=default)
 
 
@@ -91,6 +93,23 @@ class Entry(gtk.Entry):
 
     def get_value(self):
         return self.get_text()
+
+
+class FlagEntry(gtk.CheckButton):
+
+    __gsignals__ = {
+        'changed': (gobject.SIGNAL_RUN_LAST,
+                    gobject.TYPE_NONE,
+                    ())
+    }
+
+    def __init__(self, flag):
+        super(FlagEntry, self).__init__()
+        self.flag = flag
+        self.connect('toggled', lambda x: self.emit('changed'))
+
+    def get_value(self):
+        return self.flag if self.get_active() else ''
 
 
 class Select(gtk.ComboBox):
@@ -177,13 +196,16 @@ class PathEntry(gtk.HBox):
         self._entry.set_completion(self._completion)
         # setup filechooser
         if self._mode in (self.MODE_FILE, self.MODE_DIR):
+            self._filechooser = gtk.FileChooserButton('')
             if self._mode == self.MODE_FILE:
                 title = 'Select a file'
                 action = gtk.FILE_CHOOSER_ACTION_OPEN
             elif self._mode == self.MODE_DIR:
                 title = 'Select a folder'
                 action = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
-            self._filechooser = gtk.FileChooserButton(title)
+                self._filechooser.connect('current-folder-changed',
+                                          self._on_filechooser_folder_changed)
+            self._filechooser.set_title(title)
             self._filechooser.set_action(action)
             self._filechooser.connect('file-set',
                                       self._on_filechooser_file_set)
