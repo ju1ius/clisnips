@@ -11,6 +11,7 @@
 
         <define-regex id="identifier">[_a-zA-Z][_a-zA-Z0-9]*</define-regex>
         <define-regex id="integer">\d+</define-regex>
+        <define-regex id="flag">--?[a-zA-Z0-9][\w-]*</define-regex>
         <define-regex id="escaped-char">/\\./s</define-regex>
 
         <!-- Python Format String Syntax -->
@@ -21,7 +22,7 @@
         <define-regex id="fmt-arg-name">\%{identifier}|\%{integer}</define-regex>
         <define-regex id="fmt-field-name" extended="true">
             \%{fmt-arg-name}
-            (
+            (?:
                 \. \%{identifier}
                 |
                 \[ \%{fmt-element-index} \]
@@ -51,9 +52,13 @@
         <context id="replacement-field" style-ref="replacement-field">
             <match extended="true">
                 (?&lt;!{)\{(?:{{)*     # odd number of left braces
-                \%{fmt-field-name}?
-                \%{fmt-conv}?
-                \%{fmt-spec}?
+                (?:
+                    \%{flag}
+                    |
+                    \%{fmt-field-name}?
+                    \%{fmt-conv}?
+                    \%{fmt-spec}?
+                )
                 \}
             </match>
         </context>
