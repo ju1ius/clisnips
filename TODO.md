@@ -10,6 +10,7 @@
 
 - [ ] Import/Export
     - [x] Export popularity, timestamps, etc
+    - [ ] Allow merge / overwrite
 
 - [ ] Preferences
     - [x] sort columns
@@ -23,4 +24,5 @@
     - [ ] apt
 
 - [ ] Replace FileChooserButton by Button + FileChooserDialog
-    
+
+- [ ] Create DBus service to allow access from other terminals
