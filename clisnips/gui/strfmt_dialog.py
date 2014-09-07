@@ -93,6 +93,9 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         def _cb(widget):
             if hasattr(widget, 'set_cwd'):
                 widget.set_cwd(cwd)
+            elif hasattr(widget, 'foreach'):
+                widget.foreach(_cb)
+
         self.fields_vbox.foreach(_cb)
 
     def run(self, title, format_string, docstring=''):
@@ -108,6 +111,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             return gtk.RESPONSE_ACCEPT
         self.set_docstring(docstring)
         self.set_fields(field_names)
+        # Ensure CWD is set on all fields
+        self.set_cwd(self.cwd)
         return self.widget.run()
 
     # ==================== State management ==================== #
