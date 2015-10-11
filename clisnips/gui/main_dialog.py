@@ -58,12 +58,17 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     # Signals emited by this dialog
     __gsignals__ = {
-        'insert-command': (
+        'insert-snippet': (
             gobject.SIGNAL_RUN_LAST,
             gobject.TYPE_NONE,
             (gobject.TYPE_STRING,)
         ),
-        'insert-command-dialog': (
+        'insert-snippet-dialog': (
+            gobject.SIGNAL_RUN_LAST,
+            gobject.TYPE_NONE,
+            ()
+        ),
+        'close': (
             gobject.SIGNAL_RUN_LAST,
             gobject.TYPE_NONE,
             ()
@@ -130,6 +135,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         self.db.close()
         self.widget.destroy()
+        self.emit('close')
 
     def set_cwd(self, cwd):
         """
@@ -210,13 +216,13 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.db.delete(self.model.get_value(it, Model.COLUMN_ID))
         self.model.remove(it)
 
-    def insert_command(self, row):
-        self.emit('insert-command-dialog')
+    def insert_snippet(self, row):
+        self.emit('insert-snippet-dialog')
         response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
         if response == gtk.RESPONSE_ACCEPT:
             output = self.strfmt_dialog.get_output()
             self.db.use_snippet(row['id'])
-            self.emit('insert-command', output)
+            self.emit('insert-snippet', output)
 
     def get_search_text(self):
         return self.search_entry.get_text().strip()
@@ -308,7 +314,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         it = model.get_iter(path)
         rowid = model.get_value(it, Model.COLUMN_ID)
         row = self.db.get(rowid)
-        self.insert_command(row)
+        self.insert_snippet(row)
 
     def on_show_btn_clicked(self, widget, data=None):
         self.edit_dialog.set_editable(False)
@@ -325,7 +331,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         try:
             row = self.get_selected_row()
             if row:
-                self.insert_command(row)
+                self.insert_snippet(row)
         except Exception as error:
             ErrorDialog().run(error)
 

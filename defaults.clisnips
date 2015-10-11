@@ -61,6 +61,60 @@
         <tag>git,stash</tag>
         <doc>{message} (string) A descriptive message to reference your backup later.</doc>
     </snippet>
+    <snippet>
+        <title>View git log with a nice colored graph</title>
+        <command>git log --oneline --decorate --graph</command>
+        <tag>git,log</tag>
+        <doc></doc>
+    </snippet>
+    <snippet>
+        <title>Show files that have changed between two commits</title>
+        <command>git diff --name-status {--oneline} {SHA1} {SHA2}</command>
+        <tag>git,diff</tag>
+        <doc>
+Each file is listed alongside a 1-letter status code:
+<tt>
+<b>M</b> modified      File has been modified
+<b>C</b> copy-edit     File has been copied and modified
+<b>R</b> rename-edit   File has been renamed and modified
+<b>A</b> added         File has been added
+<b>D</b> deleted       File has been deleted
+<b>U</b> unmerged      File has conflicts after a merge
+</tt>
+
+{SHA1} (string)
+{SHA2} (string)
+        </doc>
+    </snippet>
+    <snippet>
+        <title>Show a log with a short summary of what have changed in each commit.</title>
+        <command>git log --oneline --name-status {SHA1} {SHA2}</command>
+        <tag>git,log</tag>
+        <doc>
+Each file is listed alongside a 1-letter status code:
+<tt>
+<b>M</b> modified      File has been modified
+<b>C</b> copy-edit     File has been copied and modified
+<b>R</b> rename-edit   File has been renamed and modified
+<b>A</b> added         File has been added
+<b>D</b> deleted       File has been deleted
+<b>U</b> unmerged      File has conflicts after a merge
+</tt>
+
+{SHA1} (string)
+{SHA2} (string)
+        </doc>
+    </snippet>
+    <snippet>
+        <title>Show divergent commits between two branches</title>
+        <command>git log {branch_a} ^{branch_b}</command>
+        <tag>git,log</tag>
+        <doc>Shows every commit in {branch_a} that is not reachable by {branch_b}.
+In other words, show everything that is unique to {branch_a}, relatively to {branch_b}.
+    {branch_a} (string) ["my-branch"]
+    {branch_b} (string) ["master"]
+        </doc>
+    </snippet>
 
 
     <!-- System Info -->
