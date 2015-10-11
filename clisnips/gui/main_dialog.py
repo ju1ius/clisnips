@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import time
 
@@ -5,7 +6,7 @@ import gobject
 import glib
 import gtk
 
-from .. import config 
+from .. import config
 from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
@@ -404,7 +405,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         Handler for self.search_entry 'changed' signal.
 
-        Queues a request for a search operation. 
+        Queues a request for a search operation.
         """
         if self._search_timeout:
             glib.source_remove(self._search_timeout)

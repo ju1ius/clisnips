@@ -13,7 +13,7 @@ from ..strfmt.doc_tokens import T_PARAM
 from ..diff import InlineMyersSequenceMatcher
 from .strfmt_widgets import Field, PathEntry
 from .error_dialog import ErrorDialog
-from . import msg_dialogs 
+from . import msg_dialogs
 
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
@@ -99,16 +99,17 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.fields_vbox.foreach(_cb)
 
     def run(self, title, format_string, docstring=''):
+        field_names = self._parse_format_string(format_string)
+        if not field_names:
+            # no arguments, return command as is
+            self.output_textview.set_text(format_string)
+            return gtk.RESPONSE_ACCEPT
         self.reset_fields()
         self.format_string = format_string
         self.diff_string = ''.join(f[0] for f in
                                    self.formatter.parse(format_string))
         self.fmtstr_textview.set_text(self.diff_string)
         self.title_lbl.set_text(title)
-        field_names = self._parse_format_string(format_string)
-        if not field_names:
-            # no arguments, return command as is
-            return gtk.RESPONSE_ACCEPT
         self.set_docstring(docstring)
         self.set_fields(field_names)
         # Ensure CWD is set on all fields

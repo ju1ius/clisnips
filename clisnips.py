@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from __future__ import print_function
 import sys
 import time
 
@@ -78,8 +79,8 @@ if __name__ == '__main__':
     if request != dbus.bus.REQUEST_NAME_REPLY_EXISTS:
         app = Application(bus, BUS_PATH, BUS_NAME)
     else:
-        object = bus.get_object(BUS_NAME, BUS_PATH)
-        app = dbus.Interface(object, BUS_NAME)
+        obj = bus.get_object(BUS_NAME, BUS_PATH)
+        app = dbus.Interface(obj, BUS_NAME)
 
     # Get your options from the command line, e.g. with OptionParser
     options = {'option1': 'value1'}
