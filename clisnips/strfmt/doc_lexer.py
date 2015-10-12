@@ -274,7 +274,7 @@ class Lexer(StringLexer):
                 self.finalize_token(token)
                 self.token_queue.append(token)
                 self.state = self.after_param_state
-                break 
+                break
             if char.isalnum() or char == '_':
                 token = self._handle_param_identifier()
                 if not token:
@@ -329,7 +329,7 @@ class Lexer(StringLexer):
             if not m:
                 self.recede()
                 self.state = self.freetext_state
-                break 
+                break
             token = self.init_token(T_IDENTIFIER, m.group(0))
             self._consume_match(m)
             self.finalize_token(token)
@@ -425,7 +425,7 @@ class Lexer(StringLexer):
                     self.finalize_token(token)
                     self.token_queue.append(token)
                     self.state = self.freetext_state
-                    break 
+                    break
                 code.value += char
         return True
 # }}}
@@ -468,7 +468,6 @@ class Lexer(StringLexer):
 # {{{
         m = DIGIT_RX.match(self.text, self.pos)
         if not m:
-            print self.text[self.pos:]
             return
         if m.group(1):
             _type = T_FLOAT

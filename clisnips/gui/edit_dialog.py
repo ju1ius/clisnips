@@ -75,31 +75,32 @@ class EditDialog(BuildableWidgetDecorator):
         }
 
     def _validate(self):
+        errors = []
         title = self.desc_entry.get_text().strip()
         if not title:
-            ErrorDialog().run('You must provide a description.')
-            return False
+            errors.append('You must provide a description.')
         #
         cmd = self.cmd_textview.get_text().strip()
         if not cmd:
-            ErrorDialog().run('You must provide a command.')
-            return False
-        try:
-            tokens = [t for t in fmt_parser.parse(cmd)]
-        except ParsingError as err:
-            msg = 'You have an error in your snippet syntax:\n'
-            ErrorDialog().run(err, msg)
-            return False
+            errors.append('You must provide a command.')
+        else:
+            try:
+                tokens = [t for t in fmt_parser.parse(cmd)]
+            except ParsingError as err:
+                msg = 'You have an error in your snippet syntax:\n%s'
+                errors.append(msg % str(err))
         #
         doc = self.doc_textview.get_text().strip()
         if doc:
             try:
                 doc_parser.parse(doc)
             except ParsingError as err:
-                msg = 'You have an error in your documentation syntax:\n'
-                ErrorDialog().run(err, msg)
-                return False
+                msg = 'You have an error in your documentation syntax:\n%s'
+                errors.append(msg % str(err))
         #
+        if errors:
+            ErrorDialog().run('\n'.join(errors))
+            return False
         return True
 
     def _setup_textviews(self):

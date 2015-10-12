@@ -11,6 +11,7 @@ import gtk
 
 from .error_dialog import ErrorDialog
 
+
 gtk.gdk.threads_init()
 
 
@@ -210,7 +211,7 @@ class Process(multiprocessing.Process):
                 'Process must be associated with a progress.MessageQueue'
             )
         print("Starting process %s" % self.pid)
-        # pass the queue object to the function object 
+        # pass the queue object to the function object
         self._target.message_queue = self.queue
         self.queue.start()
         self.queue.update(0.0)
@@ -247,7 +248,7 @@ class Worker(object):
 
     @classmethod
     def from_job(kls, job, args=(), kwargs=None):
-        queue = MessageQueue() 
+        queue = MessageQueue()
         if inspect.isgeneratorfunction(job) or inspect.isgenerator(job):
             process = Process(job, args=args, kwargs=kwargs, queue=queue)
             listener = Listener(queue)
@@ -354,7 +355,7 @@ class ProgressDialog(gtk.MessageDialog):
         self.destroy()
 
     def on_response(self, widget, response_id, data=None):
-        if self.worker.process.is_alive():
+        if self.worker.is_running():
             return
         self._close()
 
@@ -373,8 +374,14 @@ class ProgressDialog(gtk.MessageDialog):
         self.progressbar.set_text(msg)
 
     def _on_error(self, listener, err):
-        ErrorDialog().run(err)
         self._close()
+
+        def _err():
+            gtk.gdk.threads_enter()
+            ErrorDialog().run(err)
+            gtk.gdk.threads_leave()
+
+        glib.idle_add(_err)
 
     def _on_finish(self, listener):
         self.progressbar.set_fraction(1.0)

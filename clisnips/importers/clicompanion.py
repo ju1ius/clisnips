@@ -1,6 +1,6 @@
 """
 parsing code adapted from:
-http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plugins/LocalCommandList.py 
+http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plugins/LocalCommandList.py
 """
 
 import re
@@ -19,7 +19,7 @@ class Importer(object):
     def __init__(self, db):
         self.db = db
 
-    def import_file(self, filepath):
+    def process(self, filepath):
         try:
             self.db.insertmany(self.get_snippets(filepath))
         except Exception as err:
@@ -35,7 +35,7 @@ class Importer(object):
         commands, seen = [], set()
         with open(filepath, 'r') as fp:
             # try to detect if the line is a old fashion config line
-            # (separated by ':') 
+            # (separated by ':')
             no_tabs = True
             some_colon = False
             for line in fp:

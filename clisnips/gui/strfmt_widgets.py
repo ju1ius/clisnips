@@ -177,7 +177,7 @@ class PathEntry(gtk.HBox):
         return self._entry.get_text()
 
     def set_cwd(self, cwd=None):
-        self._cwd = cwd or os.getcwd()
+        self._cwd = cwd if cwd is not None else os.getcwd()
         if self._filechooser:
             self._filechooser.set_current_folder(self._cwd)
 

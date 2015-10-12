@@ -1,3 +1,4 @@
+from __future__ import print_function
 import os
 import time
 
@@ -5,11 +6,12 @@ import gobject
 import glib
 import gtk
 
-from .. import config 
+from ..config import config, styles, HELP_URI
 from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
 from .import_export import ImportDialog, ExportDialog
+from .open_dialog import OpenDialog, CreateDialog
 from .error_dialog import ErrorDialog
 from .about_dialog import AboutDialog
 from ..database.snippets_db import SnippetsDatabase
@@ -58,12 +60,17 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     # Signals emited by this dialog
     __gsignals__ = {
-        'insert-command': (
+        'insert-snippet': (
             gobject.SIGNAL_RUN_LAST,
             gobject.TYPE_NONE,
             (gobject.TYPE_STRING,)
         ),
-        'insert-command-dialog': (
+        'insert-snippet-dialog': (
+            gobject.SIGNAL_RUN_LAST,
+            gobject.TYPE_NONE,
+            ()
+        ),
+        'close': (
             gobject.SIGNAL_RUN_LAST,
             gobject.TYPE_NONE,
             ()
@@ -80,9 +87,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
-        helpers.set_font(self.snip_list, config.styles.font)
-        helpers.set_background_color(self.snip_list, config.styles.bgcolor)
-        helpers.set_text_color(self.snip_list, config.styles.fgcolor)
+        helpers.set_font(self.snip_list, styles.font)
+        helpers.set_background_color(self.snip_list, styles.bgcolor)
+        helpers.set_text_color(self.snip_list, styles.fgcolor)
 
         self.model = Model()
         for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
@@ -99,13 +106,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             col.add_attribute(cell, 'text', i)
             self.snip_list.append_column(col)
 
-        self.db = SnippetsDatabase(config.database_path).open()
-        self.pager = Pager(self.ui, self.db,
-                           page_size=int(config.pager['page_size']))
-        self.pager.set_sort_columns([
-            (config.pager['sort_column'], 'DESC'),
-            ('id', 'ASC', True)
-        ])
+        self.db = None
+        self.pager = None
+        self.set_database(config.database_path)
 
         self._search_timeout = 0
 
@@ -130,12 +133,37 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         self.db.close()
         self.widget.destroy()
+        self.emit('close')
 
     def set_cwd(self, cwd):
         """
         Sets the current working directory for path completion widgets.
         """
         self.strfmt_dialog.set_cwd(cwd)
+
+    def set_database(self, db_file):
+        old_db = None
+        # FIXME:  don't call __len__ !
+        if self.db is not None:
+            old_db = self.db.db_file
+            self.db.close()
+        try:
+            self.db = SnippetsDatabase(db_file).open()
+        except:
+            if old_db:
+                self.set_database(old_db)
+            raise
+        else:
+            if db_file != old_db:
+                config.database_path = db_file
+                if db_file != ':memory:':
+                    config.save()
+            self.pager = Pager(self.ui, self.db,
+                               page_size=config.pager_page_size)
+            self.pager.set_sort_columns([
+                (config.pager_sort_column, 'DESC'),
+                ('id', 'ASC', True)
+            ])
 
     def emit(self, *args):
         """
@@ -210,13 +238,17 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.db.delete(self.model.get_value(it, Model.COLUMN_ID))
         self.model.remove(it)
 
-    def insert_command(self, row):
-        self.emit('insert-command-dialog')
-        response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
-        if response == gtk.RESPONSE_ACCEPT:
-            output = self.strfmt_dialog.get_output()
-            self.db.use_snippet(row['id'])
-            self.emit('insert-command', output)
+    def insert_snippet(self, row):
+        self.emit('insert-snippet-dialog')
+        try:
+            response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
+        except Exception as err:
+            ErrorDialog().run(err)
+        else:
+            if response == gtk.RESPONSE_ACCEPT:
+                output = self.strfmt_dialog.get_output()
+                self.db.use_snippet(row['id'])
+                self.emit('insert-snippet', output)
 
     def get_search_text(self):
         return self.search_entry.get_text().strip()
@@ -308,7 +340,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         it = model.get_iter(path)
         rowid = model.get_value(it, Model.COLUMN_ID)
         row = self.db.get(rowid)
-        self.insert_command(row)
+        self.insert_snippet(row)
 
     def on_show_btn_clicked(self, widget, data=None):
         self.edit_dialog.set_editable(False)
@@ -325,7 +357,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         try:
             row = self.get_selected_row()
             if row:
-                self.insert_command(row)
+                self.insert_snippet(row)
         except Exception as error:
             ErrorDialog().run(error)
 
@@ -398,7 +430,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         Handler for self.search_entry 'changed' signal.
 
-        Queues a request for a search operation. 
+        Queues a request for a search operation.
         """
         if self._search_timeout:
             glib.source_remove(self._search_timeout)
@@ -431,6 +463,26 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     # ===== File Menu
 
+    def on_open_menuitem_activate(self, menuitem):
+        filename = OpenDialog().run()
+        if not filename:
+            return
+        try:
+            self.set_database(filename)
+            self.load_snippets()
+        except Exception as err:
+            ErrorDialog().run(err)
+
+    def on_create_menuitem_activate(self, menuitem):
+        filename = CreateDialog().run()
+        if not filename:
+            return
+        try:
+            self.set_database(filename)
+            self.load_snippets()
+        except Exception as err:
+            ErrorDialog().run(err)
+
     def on_import_menuitem_activate(self, menuitem):
         try:
             ImportDialog().run(self.db)
@@ -440,10 +492,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self.load_snippets()
 
     def on_export_menuitem_activate(self, menuitem):
-        try:
-            ExportDialog().run(self.db)
-        except Exception as err:
-            ErrorDialog().run(err)
+        ExportDialog().run(self.db)
 
     # ===== Display Menu
 
@@ -472,7 +521,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         ])
 
     def _change_sort_columns(self, columns):
-        config.pager['sort_column'] = columns[0][0]
+        config.pager_sort_column = columns[0][0]
+        config.save()
         self.pager.set_sort_columns(columns)
         if self.pager.mode == Pager.MODE_SEARCH:
             search = self.get_search_text()
@@ -486,7 +536,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def on_helplink_menuitem_activate(self, menuitem):
         gtk.show_uri(gtk.gdk.screen_get_default(),
-                     config.HELP_URI,
+                     HELP_URI,
                      int(glib.get_current_time()))
 
     def on_about_menuitem_activate(self, menuitem):

@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=org.ju1ius.CliSnips
+Exec=__EXECPATH__

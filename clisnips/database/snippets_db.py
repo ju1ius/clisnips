@@ -42,6 +42,7 @@ class SnippetsDatabase(object):
         self.cursor = None
         self.block_size = 1024
         self._num_rows = 0
+        self.closed = True
 
     def get_connection(self):
         return self.connection
@@ -55,8 +56,10 @@ class SnippetsDatabase(object):
         return self
 
     def close(self):
-        self.save()
-        self.connection.close()
+        if not self.closed:
+            self.save()
+            self.connection.close()
+            self.closed = True
 
     def open(self):
         if (
@@ -64,13 +67,14 @@ class SnippetsDatabase(object):
             and not os.path.isfile(self.db_file)
         ):
             os.mknod(self.db_file, 0o755 | stat.S_IFREG)
-        if not isinstance(self.connection, sqlite3.Connection):
+        if self.closed or not isinstance(self.connection, sqlite3.Connection):
             self.connection = sqlite3.connect(self.db_file)
             self.connection.create_function('rank', 3, ranking_function)
             word_tokenizer.register(self.connection)
             self.connection.executescript(SCHEMA_QUERY)
             self.connection.row_factory = sqlite3.Row
             self.cursor = self.connection.cursor()
+        self.closed = False
         return self
 
     def __len__(self):
