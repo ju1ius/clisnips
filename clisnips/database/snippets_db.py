@@ -67,7 +67,7 @@ class SnippetsDatabase(object):
             and not os.path.isfile(self.db_file)
         ):
             os.mknod(self.db_file, 0o755 | stat.S_IFREG)
-        if not isinstance(self.connection, sqlite3.Connection):
+        if self.closed or not isinstance(self.connection, sqlite3.Connection):
             self.connection = sqlite3.connect(self.db_file)
             self.connection.create_function('rank', 3, ranking_function)
             word_tokenizer.register(self.connection)
