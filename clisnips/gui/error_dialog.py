@@ -1,4 +1,5 @@
 import os
+from textwrap import wrap
 from traceback import format_exc
 
 from ..config import styles
@@ -14,8 +15,8 @@ class ErrorDialog(BuildableWidgetDecorator):
     MAIN_WIDGET = 'error_dialog'
     WIDGET_IDS = ('message_lbl', 'details_textview', 'details_vbox')
 
-    def __init__(self):
-        super(ErrorDialog, self).__init__()
+    def __init__(self, **kwargs):
+        super(ErrorDialog, self).__init__(**kwargs)
         self.widget.set_skip_taskbar_hint(True)
         self.widget.set_skip_pager_hint(True)
 
@@ -34,7 +35,7 @@ class ErrorDialog(BuildableWidgetDecorator):
             )
             details = format_exc()
         self.details_vbox.set_visible(bool(details))
-        self.message_lbl.set_text(message)
+        self.message_lbl.set_text('\n'.join(wrap(message)))
         self.details_textview.set_text(details)
         response = self.widget.run()
         self.widget.destroy()

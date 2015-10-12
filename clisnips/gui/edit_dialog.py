@@ -87,7 +87,7 @@ class EditDialog(BuildableWidgetDecorator):
             try:
                 tokens = [t for t in fmt_parser.parse(cmd)]
             except ParsingError as err:
-                msg = 'You have an error in your snippet syntax: %s'
+                msg = 'You have an error in your snippet syntax:\n%s'
                 errors.append(msg % str(err))
         #
         doc = self.doc_textview.get_text().strip()
@@ -95,7 +95,7 @@ class EditDialog(BuildableWidgetDecorator):
             try:
                 doc_parser.parse(doc)
             except ParsingError as err:
-                msg = 'You have an error in your documentation syntax: %s'
+                msg = 'You have an error in your documentation syntax:\n%s'
                 errors.append(msg % str(err))
         #
         if errors:

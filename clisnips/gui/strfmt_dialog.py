@@ -8,6 +8,7 @@ import glib
 from ..config import styles
 from .state import State
 from .helpers import BuildableWidgetDecorator, SimpleTextView
+from ..exceptions import ParsingError
 from ..strfmt import doc_parser, fmt_parser
 from ..strfmt.doc_tokens import T_PARAM
 from ..diff import InlineMyersSequenceMatcher
@@ -99,7 +100,13 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.fields_vbox.foreach(_cb)
 
     def run(self, title, format_string, docstring=''):
-        field_names = self._parse_format_string(format_string)
+        try:
+            field_names = self._parse_format_string(format_string)
+        except ParsingError as err:
+            msg = 'You have an error in your snippet syntax:'
+            ErrorDialog().run(err, msg)
+            return gtk.RESPONSE_REJECT
+
         if not field_names:
             # no arguments, return command as is
             self.output_textview.set_text(format_string)
@@ -110,7 +117,14 @@ class StringFormatterDialog(BuildableWidgetDecorator):
                                    self.formatter.parse(format_string))
         self.fmtstr_textview.set_text(self.diff_string)
         self.title_lbl.set_text(title)
-        self.set_docstring(docstring)
+
+        try:
+            self.set_docstring(docstring)
+        except ParsingError as err:
+            msg = 'You have an error in your docstring syntax:'
+            ErrorDialog().run(err, msg)
+            return gtk.RESPONSE_REJECT
+
         self.set_fields(field_names)
         # Ensure CWD is set on all fields
         self.set_cwd(self.cwd)
@@ -199,7 +213,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             try:
                 code.execute(_vars)
             except Exception as err:
-                msg = 'Error while running code block: %s' % code
+                msg = 'Error while running code block:\n%s' % code
                 ErrorDialog().run(err, msg)
         return _vars['params']
 
