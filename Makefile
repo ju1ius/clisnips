@@ -17,7 +17,7 @@ install:
 	install -d $(dest_dir)
 	install -m 0755 clisnips.py $(plugins_dir)/clisnips.py
 	install -m 0755 clisnips_plugin.py $(plugins_dir)/clisnips_plugin.py
-	find clisnips -type f -name "*.py" -or -name "*.ui" -or -name "*.xml" -or -name "*.lang" \
+	find clisnips -type f -name "*.py" -or -name "*.sql" -or -name "*.ui" -or -name "*.xml" -or -name "*.lang" \
 		| while read src; do \
 		dest=`echo "$$src" | sed "s@.*@$(plugins_dir)/\0@"`; \
 		install -Dm 0755 "$$src" "$$dest"; \

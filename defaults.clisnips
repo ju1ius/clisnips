@@ -115,6 +115,16 @@ In other words, show everything that is unique to {branch_a}, relatively to {bra
     {branch_b} (string) ["master"]
         </doc>
     </snippet>
+    <snippet>
+        <title>Enable rerere locally</title>
+        <command>git config --local rerere.enabled true</command>
+        <tag>git,merge,conflict</tag>
+        <doc>
+            Enables rerere: REuse REcorded REsolution
+            Remembers the shape of the merge conflict resolutions, storing it for later reuse.
+        </doc>
+    </snippet>
+
 
 
     <!-- System Info -->
@@ -206,3 +216,5 @@ In other words, show everything that is unique to {branch_a}, relatively to {bra
     </snippet>
 
 </snippets>
+
+
