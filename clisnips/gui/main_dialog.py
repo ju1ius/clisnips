@@ -6,7 +6,7 @@ import gobject
 import glib
 import gtk
 
-from .. import config
+from ..config import config, styles, HELP_URI
 from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
@@ -87,9 +87,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
-        helpers.set_font(self.snip_list, config.styles.font)
-        helpers.set_background_color(self.snip_list, config.styles.bgcolor)
-        helpers.set_text_color(self.snip_list, config.styles.fgcolor)
+        helpers.set_font(self.snip_list, styles.font)
+        helpers.set_background_color(self.snip_list, styles.bgcolor)
+        helpers.set_text_color(self.snip_list, styles.fgcolor)
 
         self.model = Model()
         for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
@@ -142,15 +142,28 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.strfmt_dialog.set_cwd(cwd)
 
     def set_database(self, db_file):
-        if self.db:
+        old_db = None
+        # FIXME:  don't call __len__ !
+        if self.db is not None:
+            old_db = self.db.db_file
             self.db.close()
-        self.db = SnippetsDatabase(db_file).open()
-        self.pager = Pager(self.ui, self.db,
-                           page_size=int(config.pager['page_size']))
-        self.pager.set_sort_columns([
-            (config.pager['sort_column'], 'DESC'),
-            ('id', 'ASC', True)
-        ])
+        try:
+            self.db = SnippetsDatabase(db_file).open()
+        except:
+            if old_db:
+                self.set_database(old_db)
+            raise
+        else:
+            if db_file != old_db:
+                config.database_path = db_file
+                if db_file != ':memory:':
+                    config.save()
+            self.pager = Pager(self.ui, self.db,
+                               page_size=config.pager_page_size)
+            self.pager.set_sort_columns([
+                (config.pager_sort_column, 'DESC'),
+                ('id', 'ASC', True)
+            ])
 
     def emit(self, *args):
         """
@@ -227,11 +240,15 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def insert_snippet(self, row):
         self.emit('insert-snippet-dialog')
-        response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
-        if response == gtk.RESPONSE_ACCEPT:
-            output = self.strfmt_dialog.get_output()
-            self.db.use_snippet(row['id'])
-            self.emit('insert-snippet', output)
+        try:
+            response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
+        except Exception as err:
+            ErrorDialog().run(err)
+        else:
+            if response == gtk.RESPONSE_ACCEPT:
+                output = self.strfmt_dialog.get_output()
+                self.db.use_snippet(row['id'])
+                self.emit('insert-snippet', output)
 
     def get_search_text(self):
         return self.search_entry.get_text().strip()
@@ -475,10 +492,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self.load_snippets()
 
     def on_export_menuitem_activate(self, menuitem):
-        try:
-            ExportDialog().run(self.db)
-        except Exception as err:
-            ErrorDialog().run(err)
+        ExportDialog().run(self.db)
 
     # ===== Display Menu
 
@@ -507,7 +521,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         ])
 
     def _change_sort_columns(self, columns):
-        config.pager['sort_column'] = columns[0][0]
+        config.pager_sort_column = columns[0][0]
+        config.save()
         self.pager.set_sort_columns(columns)
         if self.pager.mode == Pager.MODE_SEARCH:
             search = self.get_search_text()
@@ -521,7 +536,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def on_helplink_menuitem_activate(self, menuitem):
         gtk.show_uri(gtk.gdk.screen_get_default(),
-                     config.HELP_URI,
+                     HELP_URI,
                      int(glib.get_current_time()))
 
     def on_about_menuitem_activate(self, menuitem):

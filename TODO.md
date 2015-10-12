@@ -12,6 +12,7 @@
     - [x] Export popularity, timestamps, etc
 
 - [ ] Preferences
+    - [x] store independent config file (use configparser)
     - [x] sort columns
     - [x] page size
     - [x] db file path

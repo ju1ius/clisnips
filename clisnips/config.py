@@ -1,6 +1,10 @@
+import os
+import os.path
+import sys
+from StringIO import StringIO
+import ConfigParser
 from .utils import (parse_font, parse_color,
                     get_contrast_fgcolor, interpolate_colors)
-
 
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']
@@ -22,9 +26,39 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """.format(authors=', '.join(AUTHORS))
 
+DEFAULTS = '''
+[Default]
+font: monospace 10
+bg_color: #111
+fg_color: #ccc
+cursor_color: yellow
+
+[Database]
+path: ~/.config/clisnips/snippets.sqlite
+
+[Pager]
+sort_column: ranking
+page_size: 100
+
+'''
+
 
 _DIFF_INS_BG_BASE = '#00FF00'  # green
 _DIFF_DEL_BG_BASE = '#FF0000'  # red
+
+HOME = os.path.expanduser('~')
+
+XDG_CONFIG_HOME = (os.environ.get('XDG_CONFIG_HOME')
+                   or os.path.join(HOME, '.config'))
+XDG_CONFIG_DIRS = ([XDG_CONFIG_HOME]
+                   + (os.environ.get('XDG_CONFIG_DIRS')
+                   or '/etc/xdg').split(':'))
+
+XDG_DATA_HOME = (os.environ.get('XDG_DATA_HOME')
+                 or os.path.join(HOME, '.local', 'share'))
+XDG_DATA_DIRS = ([XDG_DATA_HOME]
+                 + (os.environ.get('XDG_DATA_DIRS')
+                    or '/usr/local/share:/usr/share').split(':'))
 
 
 class _Styles(object):
@@ -81,9 +115,66 @@ del pub, _prop
 
 styles = _Styles()
 
+
+class _Parser(ConfigParser.RawConfigParser, object):
+
+    def __init__(self):
+        super(_Parser, self).__init__()
+        self.readfp(StringIO(DEFAULTS))
+        self._read_configs()
+
+    def _read_configs(self):
+        for confdir in reversed(XDG_CONFIG_DIRS):
+            path = os.path.join(confdir, 'clisnips', 'clisnips.conf')
+            if os.path.exists(path):
+                self.read(path)
+
+    @property
+    def database_path(self):
+        path = self.get('Database', 'path')
+        if path == ':memory:':
+            return path
+        return os.path.abspath(os.path.expanduser(path))
+
+    @database_path.setter
+    def database_path(self, value):
+        if value != ':memory:':
+            value = os.path.abspath(os.path.expanduser(value))
+        self.set('Database', 'path', value)
+
+    @property
+    def pager_sort_column(self):
+        return self.get('Pager', 'sort_column')
+
+    @pager_sort_column.setter
+    def pager_sort_column(self, value):
+        self.set('Pager', 'sort_column', str(value))
+
+    @property
+    def pager_page_size(self):
+        return self.getint('Pager', 'page_size')
+
+    @pager_page_size.setter
+    def pager_page_size(self, value):
+        return self.set('Pager', 'page_size', str(value))
+
+    def save(self):
+        confdir = os.path.join(XDG_CONFIG_HOME, 'clisnips')
+        if not os.path.isdir(confdir):
+            try:
+                os.makedirs(confdir)
+            except OSError as why:
+                raise RuntimeError("Could not create config directory %s: %s"
+                                   % (confdir, why))
+        with open(os.path.join(confdir, 'clisnips.conf'), 'w') as fp:
+            self.write(fp)
+
+
 pager = {
     'sort_column': 'ranking',
     'page_size': 100
 }
 
 database_path = None
+
+config = _Parser()
