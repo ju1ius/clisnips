@@ -26,13 +26,11 @@ class Application(dbus.service.Object):
         self.window = MainDialog()
         self._connect_signals()
 
-    @dbus.service.method(BUS_NAME,
-                         in_signature='', out_signature='b')
+    @dbus.service.method(BUS_NAME, in_signature='', out_signature='b')
     def IsRunning(self):
         return self.running
 
-    @dbus.service.method(BUS_NAME,
-                         in_signature='a{sv}i', out_signature='')
+    @dbus.service.method(BUS_NAME, in_signature='a{sv}i', out_signature='')
     def Start(self, options, timestamp):
         if self.IsRunning():
             self.window.present_with_time(timestamp)
