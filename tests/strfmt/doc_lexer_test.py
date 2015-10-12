@@ -26,7 +26,7 @@ class DocLexerTest(unittest.TestCase):
     def _tokenize(self, text):
         lexer = Lexer(text)
         return [t for t in Lexer(text)]
-    
+
     def testFreeTextOnly(self):
         text = """
             This is the global description of the command.
@@ -122,7 +122,7 @@ class DocLexerTest(unittest.TestCase):
         self.assertTokenListEqual(tokens, expected)
 
     def testValueHintRange(self):
-        # simple range 
+        # simple range
         text = '{par1} [1:5]'
         tokens = [t for t in Lexer(text)]
         expected = [
