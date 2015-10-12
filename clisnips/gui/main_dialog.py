@@ -11,6 +11,7 @@ from . import helpers
 from .edit_dialog import EditDialog
 from .strfmt_dialog import StringFormatterDialog
 from .import_export import ImportDialog, ExportDialog
+from .open_dialog import OpenDialog, CreateDialog
 from .error_dialog import ErrorDialog
 from .about_dialog import AboutDialog
 from ..database.snippets_db import SnippetsDatabase
@@ -105,13 +106,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             col.add_attribute(cell, 'text', i)
             self.snip_list.append_column(col)
 
-        self.db = SnippetsDatabase(config.database_path).open()
-        self.pager = Pager(self.ui, self.db,
-                           page_size=int(config.pager['page_size']))
-        self.pager.set_sort_columns([
-            (config.pager['sort_column'], 'DESC'),
-            ('id', 'ASC', True)
-        ])
+        self.db = None
+        self.pager = None
+        self.set_database(config.database_path)
 
         self._search_timeout = 0
 
@@ -143,6 +140,17 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         Sets the current working directory for path completion widgets.
         """
         self.strfmt_dialog.set_cwd(cwd)
+
+    def set_database(self, db_file):
+        if self.db:
+            self.db.close()
+        self.db = SnippetsDatabase(db_file).open()
+        self.pager = Pager(self.ui, self.db,
+                           page_size=int(config.pager['page_size']))
+        self.pager.set_sort_columns([
+            (config.pager['sort_column'], 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
     def emit(self, *args):
         """
@@ -437,6 +445,26 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # ========== MenuBar items event handlers ========== #
 
     # ===== File Menu
+
+    def on_open_menuitem_activate(self, menuitem):
+        filename = OpenDialog().run()
+        if not filename:
+            return
+        try:
+            self.set_database(filename)
+            self.load_snippets()
+        except Exception as err:
+            ErrorDialog().run(err)
+
+    def on_create_menuitem_activate(self, menuitem):
+        filename = CreateDialog().run()
+        if not filename:
+            return
+        try:
+            self.set_database(filename)
+            self.load_snippets()
+        except Exception as err:
+            ErrorDialog().run(err)
 
     def on_import_menuitem_activate(self, menuitem):
         try:
