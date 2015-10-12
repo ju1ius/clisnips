@@ -1,5 +1,6 @@
 import gtk
 
+from ..database.snippets_db import SnippetsDatabase
 from .progress import ProgressDialog
 from ..exporters.clisnips import Exporter
 
@@ -45,18 +46,17 @@ class ImportDialog(gtk.FileChooserDialog):
         if type == 'CliCompanion 2':
             from ..importers.clicompanion import Importer
         else:
-            from ..importers.clisnips import Importer 
-        importer = Importer(db)
-        
+            from ..importers.clisnips import Importer
+
         def _task(filename):
-            importer.import_file(filename)
+            Importer(db).process(filename)
 
         msg = 'Importing snippets from %s' % filename
         dlg = ProgressDialog(msg).run(_task, filename)
 
     def xml_filter_func(self, filter_info):
         path, uri, name, mimetype = filter_info
-        return name.endswith('.clisnips') and mimetype == 'application/xml'
+        return name.endswith('.clisnips') or mimetype == 'application/xml'
 
     def cc2_filter_func(self, filter_info):
         path, uri, name, mimetype = filter_info
