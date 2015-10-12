@@ -1,6 +1,6 @@
 - [ ] Documentation !!!
 
-- [ ] Allow communication with terminal via dbus.
+- [x] Allow communication with terminal via dbus.
 
 - [ ] Parser
     - [x] Handle command-line flags (-h, -R, -i, etc...)
@@ -8,7 +8,7 @@
 - [ ] Database
     - [ ] Maintenace operations (rebuild index, optimize, integrity check, etc...)
 
-- [ ] Import/Export
+- [x] Import/Export
     - [x] Export popularity, timestamps, etc
 
 - [ ] Preferences
@@ -23,4 +23,4 @@
     - [ ] apt
 
 - [ ] Replace FileChooserButton by Button + FileChooserDialog
-    
+
