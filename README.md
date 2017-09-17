@@ -29,7 +29,7 @@ sudo apt-get install terminator python-gtksourceview2
 ```sh
 git clone https://github.com/ju1ius/clisnips.git clisnips
 cd clisnips
-./install.sh
+make install
 ```
 
 Open Terminator, go to Preferences > Plugins and enable CliSnipsMenu.
