@@ -1,12 +1,9 @@
-import os
 import locale
+import os
 
-import gtk
-import glib
-import gio
-import gobject
+from gi.repository import GLib, GObject, Gio, Gtk
 
-from ..strfmt.doc_nodes import ValueRange, ValueList
+from ..strfmt.doc_nodes import ValueList, ValueRange
 from ..utils import get_num_decimals
 
 
@@ -34,17 +31,15 @@ def _entry_from_doc(doc):
     return Entry(default=default)
 
 
-class Field(gtk.VBox):
+class Field(Gtk.VBox):
 
     __gsignals__ = {
-        'changed': (gobject.SIGNAL_RUN_LAST,
-                    gobject.TYPE_NONE,
-                    ())
+        'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
     def __init__(self, label, entry):
         super(Field, self).__init__(spacing=6)
-        self.label = gtk.Label()
+        self.label = Gtk.Label()
         self.label.set_alignment(0, 0.5)
         self.label.set_markup(label)
         self.entry = entry
@@ -84,7 +79,7 @@ class Field(gtk.VBox):
         self.emit('changed')
 
 
-class Entry(gtk.Entry):
+class Entry(Gtk.Entry):
 
     def __init__(self, default=''):
         super(Entry, self).__init__()
@@ -95,12 +90,10 @@ class Entry(gtk.Entry):
         return self.get_text()
 
 
-class FlagEntry(gtk.CheckButton):
+class FlagEntry(Gtk.CheckButton):
 
     __gsignals__ = {
-        'changed': (gobject.SIGNAL_RUN_LAST,
-                    gobject.TYPE_NONE,
-                    ())
+        'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
     def __init__(self, flag):
@@ -112,14 +105,14 @@ class FlagEntry(gtk.CheckButton):
         return self.flag if self.get_active() else ''
 
 
-class Select(gtk.ComboBox):
+class Select(Gtk.ComboBox):
 
     def __init__(self, options=[], default=0):
-        model = gtk.ListStore(str)
+        model = Gtk.ListStore(str)
         for value in options:
             model.append(row=(value,))
         super(Select, self).__init__(model)
-        cell = gtk.CellRendererText()
+        cell = Gtk.CellRendererText()
         self.pack_start(cell, True)
         self.add_attribute(cell, 'text', 0)
         self.set_active(default)
@@ -129,10 +122,10 @@ class Select(gtk.ComboBox):
         return self.get_model()[idx][0]
 
 
-class Range(gtk.SpinButton):
+class Range(Gtk.SpinButton):
 
     def __init__(self, start, end, step, default):
-        adjustment = gtk.Adjustment(lower=start, upper=end, step_incr=step)
+        adjustment = Gtk.Adjustment(lower=start, upper=end, step_incr=step)
         decimals = get_num_decimals(step)
         super(Range, self).__init__(adjustment, digits=decimals)
         self.set_snap_to_ticks(True)
@@ -145,16 +138,14 @@ class Range(gtk.SpinButton):
         return super(Range, self).get_value()
 
 
-class PathEntry(gtk.HBox):
+class PathEntry(Gtk.HBox):
 
     __gsignals__ = {
-        'changed': (gobject.SIGNAL_RUN_LAST,
-                    gobject.TYPE_NONE,
-                    ())
+        'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
     COLUMN_ICON, COLUMN_TEXT = range(2)
-    COLUMNS = (gio.Icon, str)
+    COLUMNS = (Gio.Icon, str)
     COMPLETION_TIMEOUT = 300
 
     MODE_PATH = 'path'
@@ -166,7 +157,7 @@ class PathEntry(gtk.HBox):
         self._filechooser = None
         self._mode = mode or self.MODE_FILE
         self.show_files = self._mode in (self.MODE_PATH, self.MODE_FILE)
-        self._entry = gtk.Entry()
+        self._entry = Gtk.Entry()
         if default:
             self._entry.set_text(default)
         self._setup_completion()
@@ -186,23 +177,23 @@ class PathEntry(gtk.HBox):
         self._entry.connect("changed", self._on_entry_changed)
         self.pack_start(self._entry, True, True, 0)
         # setup completion
-        self._completion = gtk.EntryCompletion()
-        self._model = gtk.ListStore(*self.COLUMNS)
+        self._completion = Gtk.EntryCompletion()
+        self._model = Gtk.ListStore(*self.COLUMNS)
         self._completion.set_model(self._model)
-        pixbuf_cell = gtk.CellRendererPixbuf()
-        self._completion.pack_start(pixbuf_cell, expand=False)
+        pixbuf_cell = Gtk.CellRendererPixbuf()
+        self._completion.pack_start(pixbuf_cell, False, True, 0)
         self._completion.add_attribute(pixbuf_cell, 'gicon', self.COLUMN_ICON)
         self._completion.set_text_column(self.COLUMN_TEXT)
         self._entry.set_completion(self._completion)
         # setup filechooser
         if self._mode in (self.MODE_FILE, self.MODE_DIR):
-            self._filechooser = gtk.FileChooserButton('')
+            self._filechooser = Gtk.FileChooserButton('')
             if self._mode == self.MODE_FILE:
                 title = 'Select a file'
-                action = gtk.FILE_CHOOSER_ACTION_OPEN
+                action = Gtk.FileChooserAction.OPEN
             elif self._mode == self.MODE_DIR:
                 title = 'Select a folder'
-                action = gtk.FILE_CHOOSER_ACTION_SELECT_FOLDER
+                action = Gtk.FileChooserAction.SELECT_FOLDER
             self._filechooser.set_title(title)
             self._filechooser.set_action(action)
             self._filechooser.connect('file-set',
@@ -211,8 +202,8 @@ class PathEntry(gtk.HBox):
 
     def _on_entry_changed(self, entry):
         if self._completion_timeout:
-            glib.source_remove(self._completion_timeout)
-        self._completion_timeout = glib.timeout_add(
+            GLib.source_remove(self._completion_timeout)
+        self._completion_timeout = GLib.timeout_add(
             self.COMPLETION_TIMEOUT,
             self._on_completion_timeout
         )
@@ -232,7 +223,7 @@ class PathEntry(gtk.HBox):
         self._completion.set_model(None)
         self._model.clear()
         for filepath, filetype in self._get_completions(text):
-            gicon = gio.content_type_get_icon(filetype)
+            gicon = Gio.content_type_get_icon(filetype)
             self._model.append((gicon, filepath))
         self._completion.set_model(self._model)
         return False
@@ -258,7 +249,7 @@ class PathEntry(gtk.HBox):
             if os.path.isdir(fp):
                 dirs.append((fn, 'inode/directory'))
             elif self.show_files and os.path.isfile(fp):
-                ft = gio.content_type_guess(fp)
+                ft = Gio.content_type_guess(fp)
                 files.append((fn, ft))
         dirs = sorted(dirs, key=self._sort)
         if self.show_files:

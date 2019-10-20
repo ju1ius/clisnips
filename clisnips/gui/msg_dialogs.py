@@ -1,11 +1,11 @@
-import gtk
+from gi.repository import Gtk
 
 
-class BaseDialog(gtk.MessageDialog):
+class BaseDialog(Gtk.MessageDialog):
 
     def __init__(self,
-                 flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                 buttons=gtk.BUTTONS_OK,
+                 flags=Gtk.DialogFlags.MODAL | Gtk.DialogFlags.DESTROY_WITH_PARENT,
+                 buttons=Gtk.ButtonsType.OK,
                  **kwargs):
         super(BaseDialog, self).__init__(flags=flags,
                                          buttons=buttons,
@@ -23,20 +23,20 @@ class BaseDialog(gtk.MessageDialog):
 class InfoDialog(BaseDialog):
 
     def __init__(self):
-        super(InfoDialog, self).__init__(type=gtk.MESSAGE_INFO)
+        super(InfoDialog, self).__init__(type=Gtk.MessageType.INFO)
 
 
 class WarningDialog(BaseDialog):
 
     def __init__(self):
-        super(WarningDialog, self).__init__(type=gtk.MESSAGE_WARNING)
+        super(WarningDialog, self).__init__(type=Gtk.MessageType.WARNING)
 
 
 class QuestionDialog(BaseDialog):
 
     def __init__(self):
-        super(QuestionDialog, self).__init__(type=gtk.MESSAGE_WARNING,
-                                             buttons=gtk.BUTTONS_YES_NO)
+        super(QuestionDialog, self).__init__(type=Gtk.MessageType.WARNING,
+                                             buttons=Gtk.ButtonsType.YES_NO)
 
 
 def dialog(klass, primary, secondary='', **kwargs):

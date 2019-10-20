@@ -5,14 +5,11 @@ import multiprocessing.queues
 import threading
 import inspect
 
-import glib
-import gobject
-import gtk
+from gi.repository import GLib
+from gi.repository import GObject
+from gi.repository import Gtk
 
 from .error_dialog import ErrorDialog
-
-
-gtk.gdk.threads_init()
 
 
 (
@@ -50,48 +47,48 @@ class MessageQueue(multiprocessing.queues.Queue):
         self.put((CANCEL,))
 
 
-class Listener(gobject.GObject):
+class Listener(GObject.GObject):
 
     __gsignals__ = {
         'start': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         ),
         'finish': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         ),
         'update': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_FLOAT,)
+            (GObject.TYPE_FLOAT,)
         ),
         'pulse': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         ),
         'message': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_STRING,)
+            (GObject.TYPE_STRING,)
         ),
         'error': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_PYOBJECT,)
+            (GObject.TYPE_PYOBJECT,)
         ),
         'cancel': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         )
     }
 
     def __init__(self, queue=None):
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
         if queue:
             self.set_queue(queue)
         self.stopevent = multiprocessing.Event()
@@ -106,7 +103,7 @@ class Listener(gobject.GObject):
 
     def emit(self, *args):
         """Ensures signals are emitted in the main thread"""
-        glib.idle_add(gobject.GObject.emit, self, *args)
+        GLib.idle_add(GObject.GObject.emit, self, *args)
 
     def start(self):
         self.thread.start()
@@ -145,7 +142,7 @@ class Listener(gobject.GObject):
                 self.emit('message', data[1])
 
 
-gobject.type_register(Listener)
+GObject.type_register(Listener)
 
 
 class IndeterminateListener(Listener):
@@ -306,22 +303,22 @@ class Worker(object):
         self.cleanup()
 
 
-class ProgressDialog(gtk.MessageDialog):
+class ProgressDialog(Gtk.MessageDialog):
 
     def __init__(self, message='', parent=None):
         super(ProgressDialog, self).__init__(
             parent=parent,
-            flags=gtk.DIALOG_MODAL,
-            type=gtk.MESSAGE_INFO,
+            flags=Gtk.DialogFlags.MODAL,
+            type=Gtk.MessageType.INFO,
             message_format=message
         )
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
 
-        self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_APPLY)
-        self.apply_btn = self.get_widget_for_response(gtk.RESPONSE_APPLY)
+        self.add_button(Gtk.STOCK_APPLY, Gtk.ResponseType.APPLY)
+        self.apply_btn = self.get_widget_for_response(Gtk.ResponseType.APPLY)
 
-        self.progressbar = gtk.ProgressBar()
+        self.progressbar = Gtk.ProgressBar()
         self.progressbar.set_pulse_step(0.05)
         self.get_message_area().pack_end(self.progressbar, True, True, 0)
 
@@ -343,11 +340,11 @@ class ProgressDialog(gtk.MessageDialog):
         listener.connect("finish", self._on_finish)
         listener.connect("error", self._on_error)
         #
-        #gtk.gdk.threads_enter()
+        #Gdk.threads_enter()
         self.apply_btn.set_sensitive(False)
         self.worker.start()
         response = super(ProgressDialog, self).run()
-        #gtk.gdk.threads_leave()
+        #Gdk.threads_leave()
         return response
 
     def _close(self):
@@ -377,11 +374,11 @@ class ProgressDialog(gtk.MessageDialog):
         self._close()
 
         def _err():
-            gtk.gdk.threads_enter()
+            Gdk.threads_enter()
             ErrorDialog().run(err)
-            gtk.gdk.threads_leave()
+            Gdk.threads_leave()
 
-        glib.idle_add(_err)
+        GLib.idle_add(_err)
 
     def _on_finish(self, listener):
         self.progressbar.set_fraction(1.0)

@@ -1,13 +1,13 @@
 import os
 
-import gtk
+from gi.repository import Gtk
 
-from ..config import styles
+from .error_dialog import ErrorDialog
 from .helpers import BuildableWidgetDecorator, SimpleTextView, replace_widget
+from ..config import styles
 # validation
 from ..exceptions import ParsingError
 from ..strfmt import doc_parser, fmt_parser
-from .error_dialog import ErrorDialog
 
 HAS_GTKSOURCEVIEW = True
 try:
@@ -41,7 +41,7 @@ class EditDialog(BuildableWidgetDecorator):
             self.populate_fields(data)
         response = self.widget.run()
         if not self._editable:
-            return gtk.RESPONSE_REJECT
+            return Gtk.ResponseType.REJECT
         return response
 
     def set_editable(self, editable):
@@ -133,15 +133,15 @@ class EditDialog(BuildableWidgetDecorator):
         if not self._editable:
             self.widget.hide()
             return False
-        if response_id == gtk.RESPONSE_ACCEPT:
+        if response_id == Gtk.ResponseType.ACCEPT:
             if not self._validate():
                 self.widget.stop_emission('response')
                 return False
             self.widget.hide()
-        elif response_id == gtk.RESPONSE_REJECT:
+        elif response_id == Gtk.ResponseType.REJECT:
             self.reset_fields()
             self.widget.hide()
-        elif response_id == gtk.RESPONSE_DELETE_EVENT:
+        elif response_id == Gtk.ResponseType.DELETE_EVENT:
             self.reset_fields()
             self.widget.hide()
             return True

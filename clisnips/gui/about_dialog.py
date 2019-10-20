@@ -1,9 +1,9 @@
-import gtk
+from gi.repository import Gtk
 
 from ..config import VERSION, AUTHORS, LICENSE
 
 
-class AboutDialog(gtk.AboutDialog):
+class AboutDialog(Gtk.AboutDialog):
 
     def __init__(self):
         super(AboutDialog, self).__init__()

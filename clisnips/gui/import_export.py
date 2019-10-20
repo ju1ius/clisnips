@@ -1,40 +1,39 @@
-import gtk
+from gi.repository import Gtk
 
-from ..database.snippets_db import SnippetsDatabase
 from .progress import ProgressDialog
 from ..exporters.clisnips import Exporter
 
 
-class ImportDialog(gtk.FileChooserDialog):
+class ImportDialog(Gtk.FileChooserDialog):
 
     def __init__(self):
         super(ImportDialog, self).__init__(title='Import Snippet Database')
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
 
-        self.set_action(gtk.FILE_CHOOSER_ACTION_OPEN)
-        self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                         gtk.STOCK_APPLY, gtk.RESPONSE_ACCEPT)
+        self.set_action(Gtk.FileChooserAction.OPEN)
+        self.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                         Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
 
-        xml_filter = gtk.FileFilter()
+        xml_filter = Gtk.FileFilter()
         xml_filter.set_name('CliSnips XML')
         xml_filter.add_custom(
-            gtk.FILE_FILTER_DISPLAY_NAME | gtk.FILE_FILTER_MIME_TYPE,
+            Gtk.FILE_FILTER_DISPLAY_NAME | Gtk.FILE_FILTER_MIME_TYPE,
             self.xml_filter_func
         )
         self.add_filter(xml_filter)
 
-        cc2_filter = gtk.FileFilter()
+        cc2_filter = Gtk.FileFilter()
         cc2_filter.set_name('CliCompanion 2')
         cc2_filter.add_custom(
-            gtk.FILE_FILTER_DISPLAY_NAME | gtk.FILE_FILTER_MIME_TYPE,
+            Gtk.FILE_FILTER_DISPLAY_NAME | Gtk.FILE_FILTER_MIME_TYPE,
             self.cc2_filter_func
         )
         self.add_filter(cc2_filter)
 
     def run(self, db):
         response = super(ImportDialog, self).run()
-        if response != gtk.RESPONSE_ACCEPT:
+        if response != Gtk.ResponseType.ACCEPT:
             self.destroy()
             return
         name = self.get_filename()
@@ -63,21 +62,21 @@ class ImportDialog(gtk.FileChooserDialog):
         return name.endswith('.config') and mimetype == 'text/plain'
 
 
-class ExportDialog(gtk.FileChooserDialog):
+class ExportDialog(Gtk.FileChooserDialog):
 
     def __init__(self):
         super(ExportDialog, self).__init__(title='Export Snippets')
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
 
-        self.set_action(gtk.FILE_CHOOSER_ACTION_SAVE)
-        self.add_buttons(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
-                         gtk.STOCK_APPLY, gtk.RESPONSE_ACCEPT)
+        self.set_action(Gtk.FileChooserAction.SAVE)
+        self.add_buttons(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                         Gtk.STOCK_APPLY, Gtk.ResponseType.ACCEPT)
         self.set_do_overwrite_confirmation(True)
 
     def run(self, db):
         response = super(ExportDialog, self).run()
-        if response != gtk.RESPONSE_ACCEPT:
+        if response != Gtk.ResponseType.ACCEPT:
             self.destroy()
             return
         filename = self.get_filename()

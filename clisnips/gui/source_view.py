@@ -1,18 +1,15 @@
 from os.path import abspath, dirname, join
 
-import gobject
-import gtk
-import gtksourceview2
+from gi.repository import GObject, Gtk, GtkSource
 
+from .helpers import set_font
 from ..config import styles
 from ..utils import get_luminance
-from .helpers import set_font
-
 
 __dir__ = dirname(abspath(__file__))
 
 
-class Buffer(gtksourceview2.Buffer):
+class Buffer(GtkSource.Buffer):
 
     def __init__(self):
         super(Buffer, self).__init__()
@@ -20,10 +17,10 @@ class Buffer(gtksourceview2.Buffer):
         self.set_highlight_syntax(True)
 
 
-class SourceView(gtksourceview2.View):
+class SourceView(GtkSource.View):
 
     __gsignals__ = {
-        'changed': gobject.signal_query('changed', gtk.TextBuffer)[3:]
+        'changed': GObject.signal_query('changed', Gtk.TextBuffer)[3:]
     }
 
     def __init__(self):
@@ -68,7 +65,7 @@ class SourceView(gtksourceview2.View):
         self.emit('changed')
 
 
-class LanguageManager(gtksourceview2.LanguageManager):
+class LanguageManager(GtkSource.LanguageManager):
 
     def __init__(self):
         super(LanguageManager, self).__init__()
@@ -77,7 +74,7 @@ class LanguageManager(gtksourceview2.LanguageManager):
         self.set_search_path(path)
 
 
-class StyleManager(gtksourceview2.StyleSchemeManager):
+class StyleManager(GtkSource.StyleSchemeManager):
 
     def __init__(self):
         super(StyleManager, self).__init__()

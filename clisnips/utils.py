@@ -1,8 +1,7 @@
 
 from decimal import Decimal
 
-import gtk
-import pango
+from gi.repository import Gdk, Pango
 
 
 def get_num_decimals(n):
@@ -16,15 +15,16 @@ def get_num_decimals(n):
 
 
 def parse_color(spec):
-    if isinstance(spec, gtk.gdk.Color):
+    if isinstance(spec, Gdk.Color):
         return spec
-    return gtk.gdk.color_parse(spec)
+    # FIXME Gdk.color_parse() is deprecated in favour of Gdk.RGBA().parse()
+    return Gdk.color_parse(spec)
 
 
 def parse_font(spec):
-    if isinstance(spec, pango.FontDescription):
+    if isinstance(spec, Pango.FontDescription):
         return spec
-    return pango.FontDescription(spec)
+    return Pango.FontDescription(spec)
 
 
 # 65535. Set this to 255 to work with 8bit integers.
@@ -49,7 +49,7 @@ def get_contrast_fgcolor(color):
     # Counting the perceptive luminance - human eye favors green color...
     luminance = get_luminance(color)
     v = 0 if luminance > 0.5 else MAX_COLOR_VALUE
-    return gtk.gdk.Color(red=v, green=v, blue=v)
+    return Gdk.Color(red=v, green=v, blue=v)
 
 
 def interpolate_colors(c1, c2, distance):
@@ -63,7 +63,7 @@ def interpolate_colors(c1, c2, distance):
     g = c1.green + distance * (c2.green - c1.green)
     b = c1.blue + distance * (c2.blue - c1.blue)
 
-    return gtk.gdk.Color(red=int(r), green=int(g), blue=int(b))
+    return Gdk.Color(red=int(r), green=int(g), blue=int(b))
 
 
 def get_luminance(color):

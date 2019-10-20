@@ -15,8 +15,8 @@ class ErrorDialog(BuildableWidgetDecorator):
     MAIN_WIDGET = 'error_dialog'
     WIDGET_IDS = ('message_lbl', 'details_textview', 'details_vbox')
 
-    def __init__(self, **kwargs):
-        super(ErrorDialog, self).__init__(**kwargs)
+    def __init__(self):
+        super(ErrorDialog, self).__init__()
         self.widget.set_skip_taskbar_hint(True)
         self.widget.set_skip_pager_hint(True)
 

@@ -1,10 +1,9 @@
 import os
-import unittest
 
 from clisnips import config
 from clisnips.database.snippets_db import SnippetsDatabase
 from clisnips.gui.main_dialog import MainDialog
-from gui_testcase import GtkTestCase
+from .gui_testcase import GtkTestCase
 
 fixtures = [
     {'title': '', 'cmd': '', 'doc': '', 'tag': ''}

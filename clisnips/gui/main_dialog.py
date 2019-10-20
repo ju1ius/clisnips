@@ -1,8 +1,6 @@
 import os
 
-import glib
-import gobject
-import gtk
+from gi.repository import GLib, GObject, Gtk
 
 from . import helpers
 from .about_dialog import AboutDialog
@@ -24,7 +22,7 @@ class State(BaseState):
     SEARCHING = 1 << 1
 
 
-class Model(gtk.ListStore):
+class Model(Gtk.ListStore):
 
     (
         COLUMN_ID,
@@ -58,18 +56,18 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # Signals emited by this dialog
     __gsignals__ = {
         'insert-snippet': (
-            gobject.SIGNAL_RUN_LAST,
-            gobject.TYPE_NONE,
-            (gobject.TYPE_STRING,)
+            GObject.SignalFlags.RUN_LAST,
+            None,
+            (GObject.TYPE_STRING,)
         ),
         'insert-snippet-dialog': (
-            gobject.SIGNAL_RUN_LAST,
-            gobject.TYPE_NONE,
+            GObject.SignalFlags.RUN_LAST,
+            None,
             ()
         ),
         'close': (
-            gobject.SIGNAL_RUN_LAST,
-            gobject.TYPE_NONE,
+            GObject.SignalFlags.RUN_LAST,
+            None,
             ()
         )
     }
@@ -90,8 +88,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
         self.model = Model()
         for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
-            col = gtk.TreeViewColumn()
-            cell = gtk.CellRendererText()
+            col = Gtk.TreeViewColumn()
+            cell = Gtk.CellRendererText()
             #cell.set_property('font', styles.font)
             #cell.set_property('background', styles.bgcolor)
             #cell.set_property('foreground', styles.fgcolor)
@@ -166,7 +164,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         Ensures signals are emitted in the main thread
         """
-        glib.idle_add(gobject.GObject.emit, self, *args)
+        GLib.idle_add(GObject.GObject.emit, self, *args)
 
     def load_snippets(self):
         """
@@ -242,7 +240,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         except Exception as err:
             ErrorDialog().run(err)
         else:
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 output = self.strfmt_dialog.get_output()
                 self.db.use_snippet(row['id'])
                 self.emit('insert-snippet', output)
@@ -271,19 +269,19 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         return row
 
     def show_row_context_menu(self):
-        menu = gtk.Menu()
-        for sid, cb in ((gtk.STOCK_APPLY, self.on_apply_btn_clicked),
-                        (gtk.STOCK_PROPERTIES, self.on_show_btn_clicked)):
+        menu = Gtk.Menu()
+        for sid, cb in ((Gtk.STOCK_APPLY, self.on_apply_btn_clicked),
+                        (Gtk.STOCK_PROPERTIES, self.on_show_btn_clicked)):
             self._add_context_menu_item(menu, sid, cb)
-        menu.append(gtk.SeparatorMenuItem())
-        for sid, cb in ((gtk.STOCK_EDIT, self.on_edit_btn_clicked),
-                        (gtk.STOCK_DELETE, self.on_delete_btn_clicked)):
+        menu.append(Gtk.SeparatorMenuItem())
+        for sid, cb in ((Gtk.STOCK_EDIT, self.on_edit_btn_clicked),
+                        (Gtk.STOCK_DELETE, self.on_delete_btn_clicked)):
             self._add_context_menu_item(menu, sid, cb)
         menu.show_all()
         menu.popup(None, None, None, 3, 0)
 
     def _add_context_menu_item(self, menu, stock_id, cb):
-        item = gtk.ImageMenuItem(stock_id)
+        item = Gtk.ImageMenuItem(stock_id)
         item.connect('activate', cb)
         menu.append(item)
 
@@ -375,7 +373,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         try:
             response = self.edit_dialog.run()
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 data = self.edit_dialog.get_data()
                 self.insert_row(data)
         except Exception as error:
@@ -394,7 +392,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         try:
             row = self.db.get(model.get_value(it, Model.COLUMN_ID))
             response = self.edit_dialog.run(row)
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 data = self.edit_dialog.get_data()
                 self.update_row(it, data)
         except Exception as error:
@@ -430,8 +428,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         Queues a request for a search operation.
         """
         if self._search_timeout:
-            glib.source_remove(self._search_timeout)
-        self._search_timeout = glib.timeout_add(self.SEARCH_TIMEOUT,
+            GLib.source_remove(self._search_timeout)
+        self._search_timeout = GLib.timeout_add(self.SEARCH_TIMEOUT,
                                                 self._on_search_timeout)
 
     def _on_search_timeout(self):
@@ -532,9 +530,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # ===== Help Menu
 
     def on_helplink_menuitem_activate(self, menuitem):
-        gtk.show_uri(gtk.gdk.screen_get_default(),
+        Gtk.show_uri(Gdk.Screen.get_default(),
                      HELP_URI,
-                     int(glib.get_current_time()))
+                     int(GLib.get_current_time()))
 
     def on_about_menuitem_activate(self, menuitem):
         dlg = AboutDialog()
