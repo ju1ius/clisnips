@@ -1,0 +1,35 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "9fc1e042a72b137abf68b235a9f2a8d7a62b1dc7dc9ec8c8f0f081ef5718dcce"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.7"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "pycairo": {
+            "hashes": [
+                "sha256:70172e58b6bad7572a3518c26729b074acdde15e6fee6cbab6d3528ad552b786"
+            ],
+            "index": "pypi",
+            "version": "==1.18.1"
+        },
+        "pygobject": {
+            "hashes": [
+                "sha256:2acb0daf2b3a23a90f52066cc23d1053339fee2f5f7f4275f8baa3704ae0c543"
+            ],
+            "index": "pypi",
+            "version": "==3.34.0"
+        }
+    },
+    "develop": {}
+}
