@@ -7,7 +7,7 @@ from ..exporters.clisnips import Exporter
 class ImportDialog(Gtk.FileChooserDialog):
 
     def __init__(self):
-        super(ImportDialog, self).__init__(title='Import Snippet Database')
+        super().__init__(title='Import Snippet Database')
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
 
@@ -32,7 +32,7 @@ class ImportDialog(Gtk.FileChooserDialog):
         self.add_filter(cc2_filter)
 
     def run(self, db):
-        response = super(ImportDialog, self).run()
+        response = super().run()
         if response != Gtk.ResponseType.ACCEPT:
             self.destroy()
             return
@@ -50,7 +50,7 @@ class ImportDialog(Gtk.FileChooserDialog):
         def _task(filename):
             Importer(db).process(filename)
 
-        msg = 'Importing snippets from %s' % filename
+        msg = f'Importing snippets from {filename}'
         dlg = ProgressDialog(msg).run(_task, filename)
 
     def xml_filter_func(self, filter_info):
@@ -65,7 +65,7 @@ class ImportDialog(Gtk.FileChooserDialog):
 class ExportDialog(Gtk.FileChooserDialog):
 
     def __init__(self):
-        super(ExportDialog, self).__init__(title='Export Snippets')
+        super().__init__(title='Export Snippets')
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
 
@@ -75,7 +75,7 @@ class ExportDialog(Gtk.FileChooserDialog):
         self.set_do_overwrite_confirmation(True)
 
     def run(self, db):
-        response = super(ExportDialog, self).run()
+        response = super().run()
         if response != Gtk.ResponseType.ACCEPT:
             self.destroy()
             return
@@ -89,5 +89,5 @@ class ExportDialog(Gtk.FileChooserDialog):
         def _task(filename):
             exporter.export(filename)
 
-        msg = 'Exporting snippets to %s' % filename
+        msg = f'Exporting snippets to {filename}'
         dlg = ProgressDialog(msg).run(_task, filename)

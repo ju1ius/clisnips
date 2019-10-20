@@ -1,6 +1,7 @@
 import os
 import string
 from collections import OrderedDict
+from pathlib import Path
 
 from gi.repository import GLib, Gtk
 
@@ -14,7 +15,7 @@ from ..diff import InlineMyersSequenceMatcher
 from ..exceptions import ParsingError
 from ..strfmt import doc_parser, fmt_parser
 
-__DIR__ = os.path.abspath(os.path.dirname(__file__))
+__DIR__ = Path(__file__).parent.absolute()
 
 
 class StrfmtDialogState(State):
@@ -25,15 +26,15 @@ class StrfmtDialogState(State):
 
 class StringFormatterDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'resources', 'strfmt_dialog.ui')
-    MAIN_WIDGET = 'main_dialog'
+    UI_FILE = __DIR__ / 'resources' / 'glade' / 'strfmt_dialog.glade'
+    MAIN_WIDGET = 'strfmt_dialog'
     WIDGET_IDS = ('title_lbl', 'doc_lbl', 'fields_vbox',
                   'fmtstr_lbl', 'fmtstr_textview',
                   'output_edit_cb', 'output_textview')
     UPDATE_TIMEOUT = 200
 
     def __init__(self):
-        super(StringFormatterDialog, self).__init__()
+        super().__init__()
         self.formatter = string.Formatter()
         # Parsed Documentation AST
         self._doc_tree = None
@@ -50,28 +51,17 @@ class StringFormatterDialog(BuildableWidgetDecorator):
 
         # output textview
         self.output_textview = SimpleTextView(self.output_textview)
-        self.output_textview.set_font(styles.font)
-        self.output_textview.set_background_color(styles.bgcolor)
-        self.output_textview.set_text_color(styles.fgcolor)
-        self.output_textview.set_cursor_color(styles.cursor_color)
-        self.output_textview.set_padding(6)
-
         # format string textview
         self.fmtstr_textview = SimpleTextView(self.fmtstr_textview)
-        self.fmtstr_textview.set_font(styles.font)
-        self.fmtstr_textview.set_background_color('white')
-        self.fmtstr_textview.set_text_color('black')
-        self.fmtstr_textview.set_padding(6)
+        self.fmtstr_textview.get_style_context().add_class('inverted')
 
         # diff tags
         ins_bg, ins_fg = styles.diff_insert_bg, styles.diff_insert_fg
         del_bg, del_fg = styles.diff_delete_bg, styles.diff_delete_fg
         for tv in ('output_textview', 'fmtstr_textview'):
             textview = getattr(self, tv)
-            textview.create_tag('diff_insert', weight=700,
-                                background_gdk=ins_bg, foreground_gdk=ins_fg)
-            textview.create_tag('diff_delete', weight=700,
-                                background_gdk=del_bg, foreground_gdk=del_fg)
+            textview.create_tag('diff_insert', weight=700, background_gdk=ins_bg, foreground_gdk=ins_fg)
+            textview.create_tag('diff_delete', weight=700, background_gdk=del_bg, foreground_gdk=del_fg)
 
         # signals
         self.connect_signals()
@@ -99,8 +89,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         try:
             field_names = self._parse_format_string(format_string)
         except ParsingError as err:
-            msg = 'You have an error in your snippet syntax:'
-            ErrorDialog().run(err, msg)
+            ErrorDialog().run(err, 'You have an error in your snippet syntax:')
             return Gtk.ResponseType.REJECT
 
         if not field_names:
@@ -109,16 +98,14 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             return Gtk.ResponseType.ACCEPT
         self.reset_fields()
         self.format_string = format_string
-        self.diff_string = ''.join(f[0] for f in
-                                   self.formatter.parse(format_string))
+        self.diff_string = ''.join(f[0] for f in self.formatter.parse(format_string))
         self.fmtstr_textview.set_text(self.diff_string)
         self.title_lbl.set_text(title)
 
         try:
             self.set_docstring(docstring)
         except ParsingError as err:
-            msg = 'You have an error in your docstring syntax:'
-            ErrorDialog().run(err, msg)
+            ErrorDialog().run(err, 'You have an error in your docstring syntax:')
             return Gtk.ResponseType.REJECT
 
         self.set_fields(field_names)
@@ -134,14 +121,11 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             field.set_editable(not direct_editing)
         self.output_textview.set_editable(direct_editing)
         if direct_editing:
-            self.output_textview.handler_unblock(
-                self.handlers['output_changed'])
+            self.output_textview.handler_unblock(self.handlers['output_changed'])
         else:
-            self.output_textview.handler_block(
-                self.handlers['output_changed'])
+            self.output_textview.handler_block(self.handlers['output_changed'])
             if StrfmtDialogState.DIRECT_EDITING_DIRTY in self.state:
-                msg_dialogs.warning('Your edits will be lost if you modify '
-                                    'one of the fields !')
+                msg_dialogs.warning('Your edits will be lost if you modify one of the fields !')
 
     # ==================== Populating entry fields ==================== #
 
@@ -161,8 +145,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.update_preview()
 
     def reset_fields(self):
-        for wname in ('title_lbl', 'doc_lbl', 'fmtstr_textview',
-                      'output_textview'):
+        for wname in ('title_lbl', 'doc_lbl', 'fmtstr_textview', 'output_textview'):
             getattr(self, wname).set_text('')
         self.fields = OrderedDict()
         for child in self.fields_vbox.get_children():
@@ -171,7 +154,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
     def add_field(self, name, doc):
         field = Field.from_documentation(name, doc)
         field.connect('changed', self.on_field_change)
-        self.fields_vbox.pack_start(field, True, True, 0)
+        self.fields_vbox.pack_start(field, expand=True, fill=True, padding=0)
         self.fields[name] = field
 
     # ==================== Output handling ==================== #
@@ -209,8 +192,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             try:
                 code.execute(_vars)
             except Exception as err:
-                msg = 'Error while running code block:\n%s' % code
-                ErrorDialog().run(err, msg)
+                ErrorDialog().run(err, f'Error while running code block:\n{code}')
         return _vars['params']
 
     def _update_diffs(self, output):
@@ -264,10 +246,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.state -= StrfmtDialogState.DIRECT_EDITING_DIRTY
         if self.handlers['update_timeout']:
             GLib.source_remove(self.handlers['update_timeout'])
-        self.handlers['update_timeout'] = GLib.timeout_add(
-            self.UPDATE_TIMEOUT,
-            self.update_preview
-        )
+        self.handlers['update_timeout'] = GLib.timeout_add(self.UPDATE_TIMEOUT, self.update_preview)
 
     def on_main_dialog_response(self, widget, response_id):
         if response_id == Gtk.ResponseType.ACCEPT:

@@ -11,13 +11,13 @@ def set_font(widget, font):
     widget.modify_font(desc)
 
 
-def set_background_color(widget, color, state=Gtk.StateType.NORMAL):
+def set_background_color(widget, color, state=Gtk.StateFlags.NORMAL):
     color = parse_color(color)
     widget.modify_base(state, color)
     widget.modify_bg(state, color)
 
 
-def set_text_color(widget, color, state=Gtk.StateType.NORMAL):
+def set_text_color(widget, color, state=Gtk.StateFlags.NORMAL):
     color = parse_color(color)
     widget.modify_fg(state, color)
     widget.modify_text(state, color)
@@ -38,13 +38,12 @@ def set_cursor_color(widget, primary, secondary=None):
 def replace_widget(old, new):
     parent = old.get_parent()
     if parent is not None:
-        props = []
-        for pspec in parent.list_child_properties():
-            props.append(pspec.name)
-            props.append(parent.child_get_property(old, pspec.name))
+        props = {p.name: parent.child_get_property(old, p.name) for p in parent.list_child_properties()}
         parent.remove(old)
-        parent.add_with_properties(new, *props)
-    if old.flags() & Gtk.VISIBLE:
+        parent.add(new)
+        for name, value in props.items():
+            parent.child_set_property(new, name, value)
+    if old.get_property('visible'):
         new.show()
     else:
         new.hide()
@@ -60,15 +59,17 @@ class BuildableWidgetDecorator(GObject.GObject):
     def __init__(self):
         GObject.GObject.__init__(self)
         self.ui = Gtk.Builder()
-        self.ui.add_from_file(self.UI_FILE)
+        self.ui.add_from_file(str(self.UI_FILE))
         self.widget = self.ui.get_object(self.MAIN_WIDGET)
+        self.widget.set_name(self.MAIN_WIDGET)
         if self.WIDGET_IDS:
             self.add_ui_widgets(*self.WIDGET_IDS)
 
     def add_ui_widget(self, name):
         widget = self.ui.get_object(name)
         if not widget:
-            raise RuntimeError('No widget found with name "%s"' % name)
+            raise RuntimeError(f'No widget found with name "{name}"')
+        widget.get_style_context().add_class(name)
         setattr(self, name, widget)
 
     def add_ui_widgets(self, *names):
@@ -104,11 +105,11 @@ class SimpleTextView(WidgetDecorator):
     }
 
     __gsignals__ = {
-        'changed': GObject.signal_query('changed', Gtk.TextBuffer)[3:]
+        'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
     def __init__(self, widget):
-        super(SimpleTextView, self).__init__(widget)
+        super().__init__(widget)
         self._tab_width = 4
         self.set_tab_width(self._tab_width, force=True)
         self.buffer.connect('changed', self._on_buffer_changed)
@@ -147,7 +148,7 @@ class SimpleTextView(WidgetDecorator):
     def get_text(self):
         buf = self.widget.get_buffer()
         start, end = buf.get_bounds()
-        return buf.get_text(start, end)
+        return buf.get_text(start, end, False)
 
     def set_font(self, spec):
         set_font(self.widget, spec)
@@ -186,8 +187,8 @@ class SimpleTextView(WidgetDecorator):
 
     def _update_background(self, color=None):
         if not color:
-            style = self.widget.get_style()
-            color = style.bg[Gtk.StateType.NORMAL]
+            context = self.widget.get_style_context()
+            color = context.get_background_color(Gtk.StateFlags.NORMAL)
         for win in ('left', 'right', 'top', 'bottom'):
             win = self.widget.get_window(self.WINDOWS[win])
             if win:

@@ -31,8 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 DEFAULTS = '''
 [Default]
 font: monospace 10
-bg_color: #111
-fg_color: #ccc
+bg_color: #282c34
+fg_color: #abb2bf
 cursor_color: yellow
 
 [Database]
@@ -44,9 +44,9 @@ page_size: 100
 
 '''
 
-
-_DIFF_INS_BG_BASE = '#00FF00'  # green
-_DIFF_DEL_BG_BASE = '#FF0000'  # red
+# TODO: fetch these from CSS
+_DIFF_INS_BG_BASE = '#2ba143'  # green
+_DIFF_DEL_BG_BASE = '#d13b2e'  # red
 
 HOME = os.path.expanduser('~')
 
@@ -67,8 +67,8 @@ class _Styles(object):
 
     def __init__(self):
         self._font = 'monospace 10'
-        self._bgcolor = parse_color('#111')
-        self._fgcolor = parse_color('#ccc')
+        self._bgcolor = parse_color('#282c34')
+        self._fgcolor = parse_color('#abb2bf')
         self._cursor_color = parse_color('yellow')
 
     @property
@@ -121,7 +121,7 @@ styles = _Styles()
 class _Parser(configparser.RawConfigParser, object):
 
     def __init__(self):
-        super(_Parser, self).__init__()
+        super().__init__()
         self.read_string(DEFAULTS)
         self._read_configs()
 
@@ -158,7 +158,7 @@ class _Parser(configparser.RawConfigParser, object):
 
     @pager_page_size.setter
     def pager_page_size(self, value):
-        return self.set('Pager', 'page_size', str(value))
+        self.set('Pager', 'page_size', str(value))
 
     def save(self):
         confdir = os.path.join(XDG_CONFIG_HOME, 'clisnips')
@@ -166,8 +166,7 @@ class _Parser(configparser.RawConfigParser, object):
             try:
                 os.makedirs(confdir)
             except OSError as why:
-                raise RuntimeError("Could not create config directory %s: %s"
-                                   % (confdir, why))
+                raise RuntimeError(f'Could not create config directory {confdir}: {why}')
         with open(os.path.join(confdir, 'clisnips.conf'), 'w') as fp:
             self.write(fp)
 

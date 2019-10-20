@@ -1,4 +1,5 @@
 from os.path import abspath, dirname, join
+from pathlib import Path
 
 from gi.repository import GObject, Gtk, GtkSource
 
@@ -6,13 +7,13 @@ from .helpers import set_font
 from ..config import styles
 from ..utils import get_luminance
 
-__dir__ = dirname(abspath(__file__))
+__DIR__ = Path(__file__).parent.absolute()
 
 
 class Buffer(GtkSource.Buffer):
 
     def __init__(self):
-        super(Buffer, self).__init__()
+        super().__init__()
         self.set_highlight_matching_brackets(True)
         self.set_highlight_syntax(True)
 
@@ -24,10 +25,10 @@ class SourceView(GtkSource.View):
     }
 
     def __init__(self):
-        super(SourceView, self).__init__()
+        super().__init__()
         self.set_show_line_numbers(True)
-        self.set_tab_width(4)
         self.set_insert_spaces_instead_of_tabs(True)
+        self.set_tab_width(2)
         self.set_indent_on_tab(True)
         self.set_auto_indent(True)
         #
@@ -48,7 +49,7 @@ class SourceView(GtkSource.View):
     def get_text(self):
         buf = self.get_buffer()
         start, end = buf.get_bounds()
-        return buf.get_text(start, end)
+        return buf.get_text(start, end, False)
 
     def set_font(self, font):
         set_font(self, font)
@@ -68,17 +69,17 @@ class SourceView(GtkSource.View):
 class LanguageManager(GtkSource.LanguageManager):
 
     def __init__(self):
-        super(LanguageManager, self).__init__()
+        super().__init__()
         path = self.get_search_path()
-        path.append(join(__dir__, 'resources'))
+        path.append(str(__DIR__ / 'resources' / 'sourceview'))
         self.set_search_path(path)
 
 
 class StyleManager(GtkSource.StyleSchemeManager):
 
     def __init__(self):
-        super(StyleManager, self).__init__()
-        self.append_search_path(join(__dir__, 'resources'))
+        super().__init__()
+        self.append_search_path(str(__DIR__ / 'resources' / 'sourceview'))
 
 
 __language_manager = None
@@ -116,7 +117,7 @@ def get_theme(scheme):
 
 
 def get_default_theme():
-    return get_theme('monokai')
+    return get_theme('one-dark')
     # TODO: adaptive theme
     bgcolor = styles.bgcolor
     lum = get_luminance(bgcolor)

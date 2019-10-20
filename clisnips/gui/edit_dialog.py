@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 from gi.repository import Gtk
 
@@ -16,17 +16,17 @@ except ImportError:
     HAS_GTKSOURCEVIEW = False
 
 
-__DIR__ = os.path.abspath(os.path.dirname(__file__))
+__DIR__ = Path(__file__).parent.absolute()
 
 
 class EditDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'resources', 'edit_dialog.ui')
+    UI_FILE = __DIR__ / 'resources' / 'glade' / 'edit_dialog.glade'
     MAIN_WIDGET = 'edit_dialog'
     WIDGET_IDS = ('desc_entry', 'cmd_textview', 'doc_textview', 'tags_entry')
 
     def __init__(self):
-        super(EditDialog, self).__init__()
+        super().__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
 
         self._setup_textviews()
@@ -87,16 +87,14 @@ class EditDialog(BuildableWidgetDecorator):
             try:
                 tokens = [t for t in fmt_parser.parse(cmd)]
             except ParsingError as err:
-                msg = 'You have an error in your snippet syntax:\n%s'
-                errors.append(msg % str(err))
+                errors.append(f'You have an error in your snippet syntax:\n{err!s}')
         #
         doc = self.doc_textview.get_text().strip()
         if doc:
             try:
                 doc_parser.parse(doc)
             except ParsingError as err:
-                msg = 'You have an error in your documentation syntax:\n%s'
-                errors.append(msg % str(err))
+                errors.append(f'You have an error in your documentation syntax:\n{err!s}')
         #
         if errors:
             ErrorDialog().run('\n'.join(errors))
@@ -109,7 +107,6 @@ class EditDialog(BuildableWidgetDecorator):
             for name in views:
                 view = getattr(self, name)
                 src_view = SourceView()
-                src_view.set_font(styles.font)
                 replace_widget(view, src_view)
                 setattr(self, name, src_view)
             self.cmd_textview.set_syntax('clisnips-cmd')
@@ -118,11 +115,6 @@ class EditDialog(BuildableWidgetDecorator):
             for name in views:
                 view = getattr(self, name)
                 view = SimpleTextView(view)
-                view.set_font(styles.font)
-                view.set_background_color(styles.bgcolor)
-                view.set_text_color(styles.fgcolor)
-                view.set_cursor_color(styles.cursor_color)
-                view.set_padding(6)
                 setattr(self, name, view)
 
     ###########################################################################

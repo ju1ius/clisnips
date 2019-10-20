@@ -11,7 +11,7 @@ class ScrollingPager(OffsetPager):
     SORT_DESC = False
 
     def __init__(self, connection, page_size=100, sort_columns=None):
-        super(ScrollingPager, self).__init__(connection, page_size)
+        super().__init__(connection, page_size)
 
         self._sort_columns = []
         self._id_column = ()
@@ -54,7 +54,7 @@ class ScrollingPager(OffsetPager):
             raise RuntimeError(
                 'You must call set_sort_columns before execute.'
             )
-        super(ScrollingPager, self).execute(params, count_params)
+        super().execute(params, count_params)
         return self
 
     def get_page(self, page):
@@ -113,7 +113,7 @@ class ScrollingPager(OffsetPager):
         return rs
 
     def _count(self):
-        super(ScrollingPager, self)._count()
+        super()._count()
         self._compile_queries()
 
     def _update_cursor(self, resultset):
@@ -141,7 +141,7 @@ class ScrollingPager(OffsetPager):
             return self.SORT_ASC
         if order == 'desc':
             return self.SORT_DESC
-        raise ValueError('Invalid sort order %r' % order)
+        raise ValueError(f'Invalid sort order {order!r}')
 
     def _get_operator(self, direction, order, unique=False):
         if direction == self.BACKWARD:
@@ -225,7 +225,7 @@ class ScrollingPager(OffsetPager):
             if invert:
                 order = not order
             direction = 'ASC' if order == self.SORT_ASC else 'DESC'
-            exprs.append('%s %s' % (name, direction))
+            exprs.append(f'{name} {direction}')
         return ', '.join(exprs)
 
     def _precompile_where_clause(self, direction):
@@ -261,15 +261,11 @@ class ScrollingPager(OffsetPager):
         #      'name': name of the index,
         #      'unique': nonzero if unique index
         #    }, ...]
-        indexes = self._con.execute(
-            'pragma index_list(%s)' % table_name
-        ).fetchall()
+        indexes = self._con.execute(f'pragma index_list({table_name})').fetchall()
         for idx in indexes:
             if idx['unique'] == 0:
                 continue
-            idx_info = self._con.execute(
-                'pragma index_info(%s)' % idx['name']
-            ).fetchone()
+            idx_info = self._con.execute(f'pragma index_info({idx["name"]})').fetchone()
             if idx_info['name'] == column_name:
                 return True
         return False

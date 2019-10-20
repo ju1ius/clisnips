@@ -1,18 +1,22 @@
-#! /usr/bin/env python
-# coding=utf8
+#! /usr/bin/env python3
+
 import os
 import sys
 from os.path import abspath, dirname, join
-import gtk
 
-#gtk.gdk.threads_init()
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('GtkSource', '3.0')
+
+from gi.repository import Gtk
 
 __dir__ = dirname(abspath(__file__))
 sys.path.insert(0, join(__dir__, '..'))
 
 from clisnips.config import config
-from clisnips.database.snippets_db import SnippetsDatabase
 from clisnips.gui.main_dialog import MainDialog
+
+
 
 
 def on_insert_snippet(window, snippet):
@@ -25,7 +29,7 @@ if __name__ == "__main__":
 
     dlg = MainDialog()
     dlg.set_cwd(os.getcwd())
-    dlg.connect('close', gtk.main_quit)
+    dlg.connect('close', Gtk.main_quit)
     dlg.connect('insert-snippet', on_insert_snippet)
     dlg.run()
-    gtk.main()
+    Gtk.main()

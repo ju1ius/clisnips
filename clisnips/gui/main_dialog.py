@@ -1,6 +1,6 @@
-import os
+from pathlib import Path
 
-from gi.repository import GLib, GObject, Gtk
+from gi.repository import GLib, GObject, Gdk, Gtk, Pango
 
 from . import helpers
 from .about_dialog import AboutDialog
@@ -11,10 +11,10 @@ from .open_dialog import CreateDialog, OpenDialog
 from .pager import Pager
 from .state import State as BaseState
 from .strfmt_dialog import StringFormatterDialog
-from ..config import HELP_URI, config, styles
+from ..config import HELP_URI, config
 from ..database.snippets_db import SnippetsDatabase
 
-__DIR__ = os.path.abspath(os.path.dirname(__file__))
+__DIR__ = Path(__file__).parent.absolute()
 
 
 class State(BaseState):
@@ -38,13 +38,13 @@ class Model(Gtk.ListStore):
     COLUMNS = (int, str, str, str, int, int, int, float)
 
     def __init__(self):
-        super(Model, self).__init__(*self.COLUMNS)
+        super().__init__(*self.COLUMNS)
 
 
 class MainDialog(helpers.BuildableWidgetDecorator):
 
     # Constants needed for BuildableWidgetDecorator
-    UI_FILE = os.path.join(__DIR__, 'resources', 'main_dialog.ui')
+    UI_FILE = __DIR__ / 'resources' / 'glade' / 'main_dialog.glade'
     MAIN_WIDGET = 'main_dialog'
     WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
                   'pager_first_btn', 'pager_prev_btn',
@@ -76,28 +76,34 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     SEARCH_TIMEOUT = 300
 
     def __init__(self):
-        super(MainDialog, self).__init__()
+        super().__init__()
+
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_path(str(__DIR__ / 'resources' / 'styles.css'))
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
         self.state = State()
         #self.ui.set_translation_domain(config.PKG_NAME)
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
-        helpers.set_font(self.snip_list, styles.font)
-        helpers.set_background_color(self.snip_list, styles.bgcolor)
-        helpers.set_text_color(self.snip_list, styles.fgcolor)
+        # helpers.set_font(self.snip_list, styles.font)
+        # helpers.set_background_color(self.snip_list, styles.bgcolor)
+        # helpers.set_text_color(self.snip_list, styles.fgcolor)
 
         self.model = Model()
-        for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
+        for i in (Model.COLUMN_CMD, Model.COLUMN_TITLE, Model.COLUMN_TAGS):
             col = Gtk.TreeViewColumn()
             cell = Gtk.CellRendererText()
-            #cell.set_property('font', styles.font)
-            #cell.set_property('background', styles.bgcolor)
-            #cell.set_property('foreground', styles.fgcolor)
             if i == Model.COLUMN_CMD:
-                col.set_property('expand', True)
+                cell.set_property('wrap-mode', Pango.WrapMode.WORD)
             elif i == Model.COLUMN_TITLE:
-                cell.set_property('wrap-width', 300)
-            col.pack_start(cell, False)
+                cell.set_property('wrap-mode', Pango.WrapMode.WORD_CHAR)
+            col.pack_start(cell, expand=False)
             col.add_attribute(cell, 'text', i)
             self.snip_list.append_column(col)
 
@@ -429,8 +435,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         if self._search_timeout:
             GLib.source_remove(self._search_timeout)
-        self._search_timeout = GLib.timeout_add(self.SEARCH_TIMEOUT,
-                                                self._on_search_timeout)
+        self._search_timeout = GLib.timeout_add(self.SEARCH_TIMEOUT, self._on_search_timeout)
 
     def _on_search_timeout(self):
         """

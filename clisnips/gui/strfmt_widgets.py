@@ -1,5 +1,6 @@
 import locale
 import os
+from pathlib import Path
 
 from gi.repository import GLib, GObject, Gio, Gtk
 
@@ -7,9 +8,9 @@ from ..strfmt.doc_nodes import ValueList, ValueRange
 from ..utils import get_num_decimals
 
 
-def _entry_from_doc(doc):
+def _entry_from_doc(field: str, doc):
     if not doc:
-        return Entry()
+        return FlagEntry(field) if field.startswith('-') else Entry()
     typehint = doc.typehint
     valuehint = doc.valuehint
     default = ''
@@ -31,39 +32,35 @@ def _entry_from_doc(doc):
     return Entry(default=default)
 
 
-class Field(Gtk.VBox):
+class Field(Gtk.Box):
 
     __gsignals__ = {
         'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
-    def __init__(self, label, entry):
-        super(Field, self).__init__(spacing=6)
+    def __init__(self, label: str, entry: Gtk.Widget):
+        super().__init__(spacing=6, orientation=Gtk.Orientation.VERTICAL)
         self.label = Gtk.Label()
         self.label.set_alignment(0, 0.5)
         self.label.set_markup(label)
         self.entry = entry
         self.entry.connect('changed', self._on_entry_changed)
-        self.pack_start(self.label, False)
-        self.pack_start(self.entry, False)
+        self.pack_start(self.label, expand=False, fill=True, padding=0)
+        self.pack_start(self.entry, expand=False, fill=False, padding=0)
 
     @classmethod
-    def from_documentation(klass, name, doc=None):
+    def from_documentation(cls, name, doc=None):
         """
         Builds a field instance from a strfmt.doc_nodes.Parameter object.
         """
         if not doc:
-            label = '<b>{}</b>'.format(name)
+            label = f'<b>{name}</b>'
         else:
-            hint = '(<i>%s</i>)' % (doc.typehint) if doc.typehint else ''
+            hint = f'(<i>{doc.typehint}</i>)' if doc.typehint else ''
             text = doc.text.strip() if doc.text else ''
-            label = '<b>{name}</b> {type} {text}'.format(
-                name=doc.name,
-                type=hint,
-                text=text
-            )
-        entry = _entry_from_doc(doc)
-        return klass(label, entry)
+            label = f'<b>{doc.name}</b> {hint} {text}'
+        entry = _entry_from_doc(name, doc)
+        return cls(label, entry)
 
     def set_sensitive(self, sensitive):
         self.entry.set_sensitive(sensitive)
@@ -82,7 +79,7 @@ class Field(Gtk.VBox):
 class Entry(Gtk.Entry):
 
     def __init__(self, default=''):
-        super(Entry, self).__init__()
+        super().__init__()
         if default:
             self.set_text(default)
 
@@ -90,16 +87,16 @@ class Entry(Gtk.Entry):
         return self.get_text()
 
 
-class FlagEntry(Gtk.CheckButton):
+class FlagEntry(Gtk.Switch):
 
     __gsignals__ = {
         'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
     def __init__(self, flag):
-        super(FlagEntry, self).__init__()
+        super().__init__()
         self.flag = flag
-        self.connect('toggled', lambda x: self.emit('changed'))
+        self.connect('state-set', lambda w, s: self.emit('changed'))
 
     def get_value(self):
         return self.flag if self.get_active() else ''
@@ -107,13 +104,14 @@ class FlagEntry(Gtk.CheckButton):
 
 class Select(Gtk.ComboBox):
 
-    def __init__(self, options=[], default=0):
+    def __init__(self, options=None, default=0):
+        super().__init__()
         model = Gtk.ListStore(str)
         for value in options:
             model.append(row=(value,))
-        super(Select, self).__init__(model)
+        self.set_model(model)
         cell = Gtk.CellRendererText()
-        self.pack_start(cell, True)
+        self.pack_start(cell, expand=True)
         self.add_attribute(cell, 'text', 0)
         self.set_active(default)
 
@@ -127,18 +125,18 @@ class Range(Gtk.SpinButton):
     def __init__(self, start, end, step, default):
         adjustment = Gtk.Adjustment(lower=start, upper=end, step_incr=step)
         decimals = get_num_decimals(step)
-        super(Range, self).__init__(adjustment, digits=decimals)
+        super().__init__(adjustment, digits=decimals)
         self.set_snap_to_ticks(True)
         if default is not None:
             self.set_value(default)
 
     def get_value(self):
         if self.get_digits() == 0:
-            return super(Range, self).get_value_as_int()
-        return super(Range, self).get_value()
+            return super().get_value_as_int()
+        return super().get_value()
 
 
-class PathEntry(Gtk.HBox):
+class PathEntry(Gtk.Box):
 
     __gsignals__ = {
         'changed': (GObject.SignalFlags.RUN_LAST, None, ())
@@ -153,52 +151,48 @@ class PathEntry(Gtk.HBox):
     MODE_DIR = 'dir'
 
     def __init__(self, cwd=None, mode=None, default=''):
-        super(PathEntry, self).__init__(spacing=6)
+        super().__init__(spacing=6)
+        self.set_orientation(Gtk.Orientation.VERTICAL)
         self._filechooser = None
+        self._cwd: Path = Path(cwd) if cwd is not None else Path.cwd()
         self._mode = mode or self.MODE_FILE
         self.show_files = self._mode in (self.MODE_PATH, self.MODE_FILE)
+        self._completion_timeout = 0
+
+        # setup text entry
         self._entry = Gtk.Entry()
         if default:
             self._entry.set_text(default)
-        self._setup_completion()
-        self._completion_timeout = 0
-        self.set_cwd(cwd)
-
-    def get_value(self):
-        return self._entry.get_text()
-
-    def set_cwd(self, cwd=None):
-        self._cwd = cwd if cwd is not None else os.getcwd()
-        if self._filechooser:
-            self._filechooser.set_current_folder(self._cwd)
-
-    def _setup_completion(self):
-        # setup text entry
+        self.pack_start(self._entry, expand=True, fill=True, padding=0)
         self._entry.connect("changed", self._on_entry_changed)
-        self.pack_start(self._entry, True, True, 0)
-        # setup completion
-        self._completion = Gtk.EntryCompletion()
-        self._model = Gtk.ListStore(*self.COLUMNS)
-        self._completion.set_model(self._model)
-        pixbuf_cell = Gtk.CellRendererPixbuf()
-        self._completion.pack_start(pixbuf_cell, False, True, 0)
-        self._completion.add_attribute(pixbuf_cell, 'gicon', self.COLUMN_ICON)
-        self._completion.set_text_column(self.COLUMN_TEXT)
-        self._entry.set_completion(self._completion)
+
         # setup filechooser
         if self._mode in (self.MODE_FILE, self.MODE_DIR):
             self._filechooser = Gtk.FileChooserButton('')
             if self._mode == self.MODE_FILE:
                 title = 'Select a file'
                 action = Gtk.FileChooserAction.OPEN
-            elif self._mode == self.MODE_DIR:
+            else:
                 title = 'Select a folder'
                 action = Gtk.FileChooserAction.SELECT_FOLDER
             self._filechooser.set_title(title)
             self._filechooser.set_action(action)
-            self._filechooser.connect('file-set',
-                                      self._on_filechooser_file_set)
-            self.pack_start(self._filechooser, False, True, 0)
+            self._filechooser.set_current_folder(str(self._cwd))
+            self._filechooser.connect('file-set', self._on_filechooser_file_set)
+            self.pack_start(self._filechooser, expand=False, fill=True, padding=0)
+
+        # setup completion
+        self._completion = PathCompletion(self._cwd, self.show_files)
+        self._entry.set_completion(self._completion)
+
+    def get_value(self):
+        return self._entry.get_text()
+
+    def set_cwd(self, cwd=None):
+        self._cwd = Path(cwd) if cwd is not None else Path.cwd()
+        self._completion.set_cwd(self._cwd)
+        if self._filechooser:
+            self._filechooser.set_current_folder(str(self._cwd))
 
     def _on_entry_changed(self, entry):
         if self._completion_timeout:
@@ -218,43 +212,106 @@ class PathEntry(Gtk.HBox):
         self.emit('changed')
 
         text = self._entry.get_text()
-        if not text:
-            return False
-        self._completion.set_model(None)
-        self._model.clear()
-        for filepath, filetype in self._get_completions(text):
-            gicon = Gio.content_type_get_icon(filetype)
-            self._model.append((gicon, filepath))
-        self._completion.set_model(self._model)
+        if text:
+            self._completion.get_matches(text)
         return False
 
     def _get_completions(self, text):
-        dirname, basename = os.path.split(text)
-        if dirname and dirname[0] == '~':
-            realpath = os.path.expanduser(dirname)
-        elif dirname and dirname[0] == '/':
-            realpath = dirname
-        else:
-            realpath = os.path.join(self._cwd, dirname)
-        if not os.path.exists(realpath):
+        path = Path(text).expanduser()
+        if not path.is_absolute():
+            path = self._cwd / path
+        if not path.parent.exists():
             return
-        for fn, ft in self._listdir(realpath):
-            if fn.startswith(basename):
-                yield (os.path.join(dirname, fn), ft)
+        for fp in path.parent.glob(f'{path.name}*'):
+            if fp.is_dir():
+                yield fp, 'inode/directory'
+            elif self.show_files and fp.is_file():
+                ft, uncertain = Gio.content_type_guess(str(fp))
+                yield fp, ft
+        # yield from self._glob(path.parent, f'{path.name}*')
 
-    def _listdir(self, path):
+    def _glob(self, path: Path, pattern: str):
         dirs, files = [], []
-        for fn in os.listdir(path):
-            fp = os.path.join(path, fn)
-            if os.path.isdir(fp):
-                dirs.append((fn, 'inode/directory'))
-            elif self.show_files and os.path.isfile(fp):
-                ft = Gio.content_type_guess(fp)
-                files.append((fn, ft))
+        for fp in path.glob(pattern):
+            if fp.is_dir():
+                dirs.append((fp, 'inode/directory'))
+            elif self.show_files and fp.is_file():
+                ft, uncertain = Gio.content_type_guess(str(fp))
+                files.append((fp, ft))
         dirs = sorted(dirs, key=self._sort)
+        print(dirs, files)
         if self.show_files:
-            return dirs + sorted(files, key=self._sort)
-        return dirs
+            yield from iter(dirs + sorted(files, key=self._sort))
+        yield from iter(dirs)
 
     def _sort(self, item):
-        return locale.strxfrm(item[0])
+        return locale.strxfrm(str(item[0]))
+
+
+class PathCompletion(Gtk.EntryCompletion):
+
+    COLUMN_ICON, COLUMN_NAME, COLUMN_PATH = range(3)
+    COLUMNS = (Gio.Icon, str, str)
+
+    def __init__(self, cwd, show_files=True):
+        super().__init__()
+        self._cwd = cwd
+        self._show_files = show_files
+        self.set_model(Gtk.ListStore(*self.COLUMNS))
+        self.set_match_func(self._match_func, {'foo': 'bar'})
+        pixbuf_cell = Gtk.CellRendererPixbuf()
+        self.pack_start(pixbuf_cell, expand=False)
+        self.add_attribute(pixbuf_cell, 'gicon', self.COLUMN_ICON)
+        text_cell = Gtk.CellRendererText()
+        self.pack_start(text_cell, expand=False)
+        self.add_attribute(text_cell, 'text', self.COLUMN_NAME)
+        # self.set_text_column(self.COLUMN_NAME)
+        # self.connect('match-selected', self._on_match_selected)
+
+    def set_cwd(self, cwd):
+        self._cwd = Path(cwd) if cwd is not None else Path.cwd()
+
+    def get_matches(self, text: str):
+        model = self.get_model()
+        model.clear()
+        for name, path, mime_type in self._get_completions(text):
+            model.append((
+                Gio.content_type_get_icon(mime_type),
+                name,
+                path
+            ))
+
+    def _get_completions(self, text):
+        path = os.path.expanduser(text)
+        if not os.path.isabs(path):
+            path = os.path.join(self._cwd, path)
+        dirname, basename = os.path.split(path)
+        if not os.path.exists(dirname):
+            return
+        if path.endswith('/') and os.path.isdir(path):
+            entries = os.scandir(path)
+        else:
+            entries = (f for f in os.scandir(dirname) if f.name.lower().startswith(basename.lower()))
+        for entry in sorted(entries, key=self._sort_entries):
+            if entry.is_dir():
+                yield entry.name, entry.path, 'inode/directory'
+            elif self._show_files and entry.is_file():
+                ft, uncertain = Gio.content_type_guess(entry.path)
+                yield entry.name, entry.path, ft
+
+    @staticmethod
+    def _match_func(completion, key, tree_iter, data=None):
+        # print(f'Match func: {key} ({self.get_entry().get_text()})')
+        return True
+
+    def do_match_selected(self, model, tree_iter):
+        path = model.get_value(tree_iter, self.COLUMN_PATH)
+        entry: Gtk.Entry = self.get_entry()
+        entry.set_text(path)
+        entry.set_position(len(path))
+
+        return True
+
+    @staticmethod
+    def _sort_entries(entry):
+        return locale.strxfrm(entry.name)

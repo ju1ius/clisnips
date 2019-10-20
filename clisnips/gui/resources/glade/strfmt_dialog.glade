@@ -2,7 +2,7 @@
 <!-- Generated with glade 3.22.1 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkDialog" id="main_dialog">
+  <object class="GtkDialog" id="strfmt_dialog">
     <property name="can_focus">False</property>
     <property name="border_width">12</property>
     <property name="modal">True</property>
@@ -80,8 +80,8 @@
         <child>
           <object class="GtkBox" id="vbox1">
             <property name="visible">True</property>
-            <property name="orientation">vertical</property>
             <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
             <property name="spacing">6</property>
             <child>
               <object class="GtkLabel" id="title_lbl">
@@ -116,8 +116,8 @@
             <child>
               <object class="GtkBox" id="box1">
                 <property name="visible">True</property>
-                <property name="orientation">vertical</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">6</property>
                 <child>
                   <object class="GtkLabel" id="label1">
@@ -143,8 +143,8 @@
                     <child>
                       <object class="GtkBox" id="fields_vbox">
                         <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
                         <property name="can_focus">False</property>
+                        <property name="orientation">vertical</property>
                         <property name="spacing">6</property>
                         <child>
                           <placeholder/>
@@ -169,8 +169,8 @@
             <child>
               <object class="GtkBox" id="vbox2">
                 <property name="visible">True</property>
-                <property name="orientation">vertical</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <property name="spacing">6</property>
                 <child>
                   <object class="GtkLabel" id="output_lbl">
@@ -196,8 +196,8 @@
                     <child>
                       <object class="GtkBox" id="box2">
                         <property name="visible">True</property>
-                        <property name="orientation">vertical</property>
                         <property name="can_focus">False</property>
+                        <property name="orientation">vertical</property>
                         <property name="spacing">6</property>
                         <child>
                           <object class="GtkExpander" id="expander1">
@@ -212,8 +212,8 @@
                                 <child>
                                   <object class="GtkBox" id="box3">
                                     <property name="visible">True</property>
-                                    <property name="orientation">vertical</property>
                                     <property name="can_focus">False</property>
+                                    <property name="orientation">vertical</property>
                                     <property name="spacing">6</property>
                                     <child>
                                       <object class="GtkLabel" id="fmtstr_lbl">

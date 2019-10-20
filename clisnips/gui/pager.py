@@ -102,7 +102,5 @@ class Pager(object):
         page = self._current_pager.current_page
         num_pages = len(self._current_pager)
         self.curpage_lbl.set_text(str(page))
-        infos = 'page %s of %s (%s rows)' % (
-            page, num_pages, self._current_pager.total_rows
-        )
+        infos = f'page {page} of {num_pages} ({self._current_pager.total_rows} rows)'
         self.infos_lbl.set_text(infos)

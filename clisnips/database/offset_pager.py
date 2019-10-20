@@ -54,7 +54,7 @@ class OffsetPager(object):
 
     def set_count_query(self, query, params=()):
         self._executed = False
-        self._count_query = 'SELECT COUNT(*) FROM (%s)' % query
+        self._count_query = f'SELECT COUNT(*) FROM ({query})'
         self._count_query_params = params
         return self
 
@@ -84,7 +84,7 @@ class OffsetPager(object):
         query = 'SELECT * FROM ({query}) LIMIT {page_size} {offset}'.format(
             query=self._query,
             page_size=self._page_size,
-            offset='' if page == 1 else 'OFFSET %s' % offset
+            offset='' if page == 1 else f'OFFSET {offset}'
         )
         cursor = self._con.execute(query, self._query_params)
         return cursor.fetchall()
@@ -106,7 +106,7 @@ class OffsetPager(object):
 
     def _count(self):
         if not self._count_query:
-            query = 'SELECT COUNT(*) FROM (%s)' % self._query
+            query = f'SELECT COUNT(*) FROM ({self._query})'
             params = self._query_params
         else:
             query = self._count_query

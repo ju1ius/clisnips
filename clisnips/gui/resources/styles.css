@@ -1,0 +1,84 @@
+
+@define-color theme-black #282c34;
+@define-color theme-red #e06c75;
+@define-color theme-green #98c379;
+@define-color theme-yellow #e5c07b;
+@define-color theme-cyan #61afef;
+@define-color theme-magenta #c678dd;
+@define-color theme-teal #56b6c2;
+@define-color theme-grey #abb2bf;
+
+@define-color theme-black-muted #3e4452;
+@define-color theme-red-muted #be5046;
+@define-color theme-green-muted #98c379;
+@define-color theme-yellow-muted #d19a66;
+@define-color theme-cyan-muted #61afef;
+@define-color theme-magenta-muted #c678dd;
+@define-color theme-teal-muted #56b6c2;
+@define-color theme-grey-muted #5c6370;
+
+@define-color theme-background-color @theme-black;
+@define-color theme-foreground-color @theme-grey;
+
+@define-color theme-caret-color #aaa;
+@define-color theme-caret-color-inverted #111;
+
+
+@define-color text-color-info    @theme-cyan;
+@define-color text-color-success @theme-green;
+@define-color text-color-warning @theme-yellow;
+@define-color text-color-error   @theme-red;
+
+@define-color background-color-info    @theme-cyan-muted;
+@define-color background-color-success @theme-red-muted;
+@define-color background-color-warning @theme-yellow-muted;
+@define-color background-color-error   @theme-red-muted;
+
+/**
+ * Snippets list
+ */
+#main_dialog .snip_list {
+  background-color: @theme-background-color;
+  color: @theme-foreground-color;
+  font-family: monospace;
+  border: 1px solid #2e3138;
+}
+#main_dialog .snip_list :selected {
+  outline: none;
+  border: 1px solid @theme-grey-muted;
+}
+
+/**
+ * Default textviews
+ */
+textview {
+  padding: 4px;
+  font-family: monospace;
+}
+
+textview:not(.sourceview) {
+  background-color: @theme-background-color;
+  color: @theme-foreground-color;
+  caret-color: @text-caret-color;
+}
+
+textview:not(.sourceview) text {
+  background-color: @theme-background-color;
+  color: @theme-foreground-color;
+}
+
+textview:not(.sourceview) text selection {
+  background-color: @theme-foreground-color;
+  color: @theme-background-color;
+}
+
+textview:not(.sourceview).inverted, textview:not(.sourceview).inverted text {
+  background-color: @theme-foreground-color;
+  color: @theme-background-color;
+  caret-color: @theme-caret-color-inverted;
+}
+
+textview:not(.sourceview).inverted text selection {
+  background-color: @theme-background-color;
+  color: @theme-foreground-color;
+}

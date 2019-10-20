@@ -17,10 +17,9 @@ value:          T_STAR? (T_STRING | digit)
 digit:          T_INTEGER | T_FLOAT
 """
 
-from ..exceptions import ParsingError
-from .doc_tokens import *
-from .doc_nodes import *
 from .doc_lexer import Lexer
+from .doc_nodes import *
+from .doc_tokens import *
 
 
 def _to_number(string):
@@ -30,7 +29,7 @@ def _to_number(string):
 
 
 class LLkParser(object):
-#{{{
+
     def __init__(self, lexer, k=2):
         self._K = k
         self.lexer = lexer
@@ -88,16 +87,15 @@ class LLkParser(object):
         raise ParsingError(
             'Unexpected token: {} (expected {})'.format(token, expected)
         )
-#}}}
 
 
 class Parser(LLkParser):
 
     def __init__(self, lexer):
-        super(Parser, self).__init__(lexer, 2)
+        super().__init__(lexer, 2)
 
     def parse(self):
-#{{{
+
         self.reset()
         self._auto_field_count = -1
         self._has_numeric_field = False
@@ -108,13 +106,12 @@ class Parser(LLkParser):
         for block in self._code():
             self._ast.code_blocks.append(block)
         return self._ast
-#}}}
 
     def _text(self):
         """
         T_TEXT*
         """
-#{{{
+
         text = []
         while True:
             t = self._lookahead()
@@ -124,26 +121,24 @@ class Parser(LLkParser):
             else:
                 break
         return ''.join(text)
-#}}}
 
     def _param_list(self):
         """
         param_doc*
         """
-#{{{
+
         while True:
             t = self._lookahead()
             if t.type == T_LBRACE:
                 yield self._param_doc()
             else:
                 break
-#}}}
 
     def _code(self):
         """
         T_CODEBLOCK*
         """
-# {{{
+
         code_blocks = []
         while self._lookahead_type() == T_CODEMARK:
             self._match(T_CODEMARK)
@@ -151,24 +146,20 @@ class Parser(LLkParser):
             try:
                 block = CodeBlock(code)
             except SyntaxError as err:
-                msg = 'Syntax error in code block: %r' % code
-                msg += '\n' + str(err)
-                raise ParsingError(msg)
+                raise ParsingError(f'Syntax error in code block: {code!r} \n{err!s}')
             except TypeError as err:
-                msg = 'Null bytes in code block: %r' % code
-                raise ParsingError(msg)
+                raise ParsingError(f'Null bytes in code block: {code!r}')
             else:
                 code_blocks.append(block)
             self._match(T_CODEMARK)
         return code_blocks
-# }}}
 
     def _param_doc(self):
         """
         T_LBRACE param_id T_RBRACE
         typehint? valuehint? doctext?
         """
-#{{{
+
         typehint, valuehint, text = None, None, None
         self._match(T_LBRACE)
         param = self._param_id()
@@ -188,10 +179,9 @@ class Parser(LLkParser):
         if token.type == T_TEXT:
             param.text = self._text()
         return param
-#}}}
 
     def _param_id(self):
-# {{{
+
         # no identifier, try automatic numbering
         if self._lookahead_type() == T_RBRACE:
             if self._has_numeric_field:
@@ -214,24 +204,22 @@ class Parser(LLkParser):
                 )
             self._has_numeric_field = True
         return Parameter(token.value)
-# }}}
 
     def _typehint(self):
         """
         T_LPAREN T_IDENTIFIER T_RPAREN
         """
-#{{{
+
         self._match(T_LPAREN)
         hint = self._match(T_IDENTIFIER).value
         self._match(T_RPAREN)
         return hint 
-#}}}
 
     def _valuehint(self):
         """
         T_LBRACK (value_list | value_range) T_RBRACK
         """
-#{{{
+
         self._match(T_LBRACK)
         token = self._lookahead()
         if (
@@ -243,13 +231,12 @@ class Parser(LLkParser):
             valuehint = self._value_list()
         self._match(T_RBRACK)
         return valuehint
-#}}}
 
     def _value_list(self):
         """
         value (T_COMMA value)*
         """
-#{{{
+
         values = []
         default, count = 0, 0
         initial = self._value()
@@ -266,13 +253,12 @@ class Parser(LLkParser):
             else:
                 break
         return ValueList(values, default)
-#}}}
 
     def _value(self):
         """
         T_STAR? (T_STRING | digit)
         """
-#{{{
+
         is_default = False
         token = self._match(T_STAR, T_STRING, T_INTEGER, T_FLOAT)
         if token.type == T_STAR:
@@ -282,13 +268,12 @@ class Parser(LLkParser):
             return {'value': token.value, 'default': is_default}
         else:
             return {'value': _to_number(token.value), 'default': is_default}
-#}}}
 
     def _value_range(self):
         """
         digit T_COLON digit (T_COLON digit)? (T_STAR digit)?
         """
-#{{{
+
         start = self._digit().value
         self._match(T_COLON)
         end = self._digit().value
@@ -307,7 +292,6 @@ class Parser(LLkParser):
             _to_number(step) if step is not None else step,
             _to_number(default) if default is not None else default,
         )
-#}}}
 
     def _digit(self):
         return self._match(T_INTEGER, T_FLOAT)

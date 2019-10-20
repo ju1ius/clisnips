@@ -175,7 +175,7 @@ class Process(multiprocessing.Process):
 
     def __init__(self, target, args=(), kwargs=None, queue=None):
         self.stopevent = multiprocessing.Event()
-        super(Process, self).__init__(target=target, args=args, kwargs=kwargs)
+        super().__init__(target=target, args=args, kwargs=kwargs)
         if queue:
             self.set_queue(queue)
 
@@ -187,7 +187,7 @@ class Process(multiprocessing.Process):
         self.queue = queue
 
     def stop(self):
-        print("Stopping process %s" % self.pid)
+        print(f"Stopping process {self.pid}")
         self.stopevent.set()
         # allow garbage collection
         if self.queue:
@@ -196,7 +196,7 @@ class Process(multiprocessing.Process):
     def kill(self):
         self.stop()
         if self.is_alive():
-            print('Killing process %s' % self.pid)
+            print(f'Killing process {self.pid}')
             try:
                 os.killpg(self.pid, signal.SIGKILL)
             except OSError as err:
@@ -207,7 +207,7 @@ class Process(multiprocessing.Process):
             raise RuntimeError(
                 'Process must be associated with a progress.MessageQueue'
             )
-        print("Starting process %s" % self.pid)
+        print(f"Starting process {self.pid}")
         # pass the queue object to the function object
         self._target.message_queue = self.queue
         self.queue.start()
@@ -306,7 +306,7 @@ class Worker(object):
 class ProgressDialog(Gtk.MessageDialog):
 
     def __init__(self, message='', parent=None):
-        super(ProgressDialog, self).__init__(
+        super().__init__(
             parent=parent,
             flags=Gtk.DialogFlags.MODAL,
             type=Gtk.MessageType.INFO,
@@ -320,7 +320,7 @@ class ProgressDialog(Gtk.MessageDialog):
 
         self.progressbar = Gtk.ProgressBar()
         self.progressbar.set_pulse_step(0.05)
-        self.get_message_area().pack_end(self.progressbar, True, True, 0)
+        self.get_message_area().pack_end(self.progressbar, expand=True, fill=True, padding=0)
 
         # SIGNALS
         self.connect("destroy", self.on_close)
@@ -343,7 +343,7 @@ class ProgressDialog(Gtk.MessageDialog):
         #Gdk.threads_enter()
         self.apply_btn.set_sensitive(False)
         self.worker.start()
-        response = super(ProgressDialog, self).run()
+        response = super().run()
         #Gdk.threads_leave()
         return response
 
