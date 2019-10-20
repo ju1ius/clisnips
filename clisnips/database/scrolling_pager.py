@@ -1,8 +1,5 @@
-from __future__ import division
-import math
 
-
-from offset_pager import OffsetPager
+from .offset_pager import OffsetPager
 
 
 class ScrollingPager(OffsetPager):
@@ -147,12 +144,14 @@ class ScrollingPager(OffsetPager):
         raise ValueError('Invalid sort order %r' % order)
 
     def _get_operator(self, direction, order, unique=False):
-        if direction == self.FORWARD:
-            operator = '<' if order == self.SORT_DESC else '>'
-        elif direction == self.BACKWARD:
+        if direction == self.BACKWARD:
             operator = '>' if order == self.SORT_DESC else '<'
+        else:
+            operator = '<' if order == self.SORT_DESC else '>'
+
         if not unique:
             operator += '='
+
         return operator
 
     def _compile_queries(self):

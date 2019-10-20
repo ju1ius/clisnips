@@ -17,8 +17,6 @@ value:          T_STAR? (T_STRING | digit)
 digit:          T_INTEGER | T_FLOAT
 """
 
-from collections import OrderedDict
-
 from ..exceptions import ParsingError
 from .doc_tokens import *
 from .doc_nodes import *
@@ -36,13 +34,16 @@ class LLkParser(object):
     def __init__(self, lexer, k=2):
         self._K = k
         self.lexer = lexer
+        self.tokenstream = None
+        self.position = 0
+        self._buffer = []
 
     def reset(self):
         self.lexer.reset()
         self.tokenstream = iter(self.lexer)
         self.position = 0
-        self._buffer = [None for i in xrange(self._K)]
-        for i in xrange(self._K):
+        self._buffer = [None for i in range(self._K)]
+        for i in range(self._K):
             self._consume()
 
     def _match(self, *types):

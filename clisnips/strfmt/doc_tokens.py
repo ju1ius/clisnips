@@ -18,7 +18,7 @@
 
 __TOKEN_NAMES = {}
 
-for k, v in dict(vars()).iteritems():
+for k, v in dict(vars()).items():
     if k.startswith('T_'):
         __TOKEN_NAMES[v] = k
 del k, v

@@ -1,23 +1,20 @@
-from __future__ import print_function
 import os
-import time
 
-import gobject
 import glib
+import gobject
 import gtk
 
-from ..config import config, styles, HELP_URI
 from . import helpers
-from .edit_dialog import EditDialog
-from .strfmt_dialog import StringFormatterDialog
-from .import_export import ImportDialog, ExportDialog
-from .open_dialog import OpenDialog, CreateDialog
-from .error_dialog import ErrorDialog
 from .about_dialog import AboutDialog
-from ..database.snippets_db import SnippetsDatabase
+from .edit_dialog import EditDialog
+from .error_dialog import ErrorDialog
+from .import_export import ExportDialog, ImportDialog
+from .open_dialog import CreateDialog, OpenDialog
 from .pager import Pager
 from .state import State as BaseState
-
+from .strfmt_dialog import StringFormatterDialog
+from ..config import HELP_URI, config, styles
+from ..database.snippets_db import SnippetsDatabase
 
 __DIR__ = os.path.abspath(os.path.dirname(__file__))
 

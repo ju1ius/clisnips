@@ -1,9 +1,7 @@
 import re
 from collections import deque
-import inspect
 
-from doc_tokens import *
-
+from .doc_tokens import *
 
 _PATTERN_TYPE = type(re.compile("", 0))
 _RE_CACHE = {}

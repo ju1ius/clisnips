@@ -16,7 +16,7 @@ from clisnips.gui.main_dialog import MainDialog
 
 
 def on_insert_snippet(window, snippet):
-    print 'CliSnips::insert-snippet "%s"' % snippet
+    print('CliSnips::insert-snippet "%s"' % snippet)
 
 
 if __name__ == "__main__":

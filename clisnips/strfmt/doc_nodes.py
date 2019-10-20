@@ -1,4 +1,3 @@
-from collections import OrderedDict
 
 from ..utils import get_num_decimals
 from ..exceptions import ParsingError
@@ -8,7 +7,7 @@ class Documentation(object):
 
     def __init__(self):
         self.header = ''
-        self.parameters = OrderedDict()
+        self.parameters = dict()
         self.code_blocks = []
 
     def __str__(self):

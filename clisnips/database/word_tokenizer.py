@@ -1,8 +1,6 @@
 """
 Unicode words SQLite FTS tokenizer 
 """
-from __future__ import print_function, unicode_literals
-
 import sys
 import ctypes
 from ctypes import POINTER, CFUNCTYPE
@@ -45,17 +43,17 @@ class _TokenizerModule(ctypes.Structure):
 
 class _Tokenizer(ctypes.Structure):
     _fields_ = [
-        ("pModule", POINTER(_TokenizerModule)),
-        ("t", ctypes.py_object)
+        ('pModule', POINTER(_TokenizerModule)),
+        ('t', ctypes.py_object)
     ]
 
 
 class _TokenizerCursor(ctypes.Structure):
     _fields_ = [
-        ("pTokenizer", POINTER(_Tokenizer)),
-        ("nodes", ctypes.py_object),
-        ("offset", ctypes.c_int),
-        ("pos", ctypes.c_int)
+        ('pTokenizer', POINTER(_Tokenizer)),
+        ('nodes', ctypes.py_object),
+        ('offset', ctypes.c_int),
+        ('pos', ctypes.c_int)
     ]
 
 
@@ -95,12 +93,12 @@ _xNext = CFUNCTYPE(
 )
 
 _TokenizerModule._fields_ = [
-    ("iVersion", ctypes.c_int),
-    ("xCreate", _xCreate),
-    ("xDestroy", _xDestroy),
-    ("xOpen", _xOpen),
-    ("xClose", _xClose),
-    ("xNext", _xNext)
+    ('iVersion', ctypes.c_int),
+    ('xCreate', _xCreate),
+    ('xDestroy', _xDestroy),
+    ('xOpen', _xOpen),
+    ('xClose', _xClose),
+    ('xNext', _xNext)
 ]
 
 
@@ -181,8 +179,7 @@ def _make_tokenizer_module():
         del(cursors[ctypes.addressof(pCursor[0])])
         return SQLITE_OK
 
-    def xnext(pCursor, ppToken, pnBytes,
-              piStartOffset, piEndOffset, piPosition):
+    def xnext(pCursor, ppToken, pnBytes, piStartOffset, piEndOffset, piPosition):
         '''
         Retrieve the next token from the tokenizer cursor pCursor.
         This method should either return:

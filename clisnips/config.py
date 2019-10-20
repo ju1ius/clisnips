@@ -1,10 +1,12 @@
 import os
 import os.path
-import sys
-from StringIO import StringIO
-import ConfigParser
-from .utils import (parse_font, parse_color,
-                    get_contrast_fgcolor, interpolate_colors)
+import configparser
+from .utils import (
+    parse_font,
+    parse_color,
+    get_contrast_fgcolor,
+    interpolate_colors
+)
 
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']
@@ -116,11 +118,11 @@ del pub, _prop
 styles = _Styles()
 
 
-class _Parser(ConfigParser.RawConfigParser, object):
+class _Parser(configparser.RawConfigParser, object):
 
     def __init__(self):
         super(_Parser, self).__init__()
-        self.readfp(StringIO(DEFAULTS))
+        self.read_string(DEFAULTS)
         self._read_configs()
 
     def _read_configs(self):
