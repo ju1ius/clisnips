@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import gi
+
 gi.require_versions({
     'GLib': '2.0',
     'Gio': '2.0',
@@ -10,8 +11,8 @@ gi.require_versions({
 })
 from gi.repository import Gtk, Gio, Gdk, GLib
 
-from clisnips.gui.app_window import MainDialog
-
+from .app_window import MainDialog
+from ..config import Config
 
 __DIR__ = Path(__file__).absolute().parent
 
@@ -26,6 +27,7 @@ class Application(Gtk.Application):
         self.window = None
         self._resource_path = __DIR__ / 'resources'
         self._css_provider = Gtk.CssProvider()
+        self._config = Config()
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
@@ -37,7 +39,7 @@ class Application(Gtk.Application):
     def do_activate(self):
         Gtk.Application.do_activate(self)
         if not self.window:
-            self.window = MainDialog(self)
+            self.window = MainDialog(self, self._config)
             self.window.connect('insert-snippet', self.on_insert_snippet)
             self.window.run()
         self.window.present()
@@ -56,8 +58,7 @@ class Application(Gtk.Application):
     def send_snippet(self, snippet):
         bus: Gio.DBusConnection = self.get_dbus_connection()
         bus.emit_signal(
-            None,
-            # 'me.ju1ius.clisnips',
+            None,  # broadcast to all listeners
             self.get_dbus_object_path(),
             'me.ju1ius.clisnips',
             'insert_snippet',
@@ -78,12 +79,9 @@ class Application(Gtk.Application):
             )
 
     def _load_stylesheets(self):
+        screen = Gdk.Screen.get_default()
         self._css_provider.load_from_path(str(self._resource_path / 'styles.css'))
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(),
-            self._css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
+        Gtk.StyleContext.add_provider_for_screen(screen, self._css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def _add_action(self, name, callback, parameter_type=None):
         action = Gio.SimpleAction.new(name, parameter_type)

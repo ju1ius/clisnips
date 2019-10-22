@@ -1,6 +1,8 @@
 import os
 import os.path
 import configparser
+from pathlib import Path
+
 from .utils import (
     parse_font,
     parse_color,
@@ -48,19 +50,29 @@ page_size: 100
 _DIFF_INS_BG_BASE = '#2ba143'  # green
 _DIFF_DEL_BG_BASE = '#d13b2e'  # red
 
-HOME = os.path.expanduser('~')
+HOME = Path('~').expanduser()
 
-XDG_CONFIG_HOME = (os.environ.get('XDG_CONFIG_HOME')
-                   or os.path.join(HOME, '.config'))
-XDG_CONFIG_DIRS = ([XDG_CONFIG_HOME]
-                   + (os.environ.get('XDG_CONFIG_DIRS')
-                   or '/etc/xdg').split(':'))
 
-XDG_DATA_HOME = (os.environ.get('XDG_DATA_HOME')
-                 or os.path.join(HOME, '.local', 'share'))
-XDG_DATA_DIRS = ([XDG_DATA_HOME]
-                 + (os.environ.get('XDG_DATA_DIRS')
-                    or '/usr/local/share:/usr/share').split(':'))
+def _xdg_config_home():
+    home = os.environ.get('XDG_CONFIG_HOME')
+    if not home:
+        return HOME / '.config'
+
+
+def _xdg_config_dirs():
+    dirs = (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':')
+    return [_xdg_config_home()] + [Path(d) for d in dirs]
+
+
+def _xdg_data_home():
+    home = os.environ.get('XDG_DATA_HOME')
+    if not home:
+        return HOME / '.local' / 'share'
+
+
+def _xdg_data_dirs():
+    dirs = (os.environ.get('XDG_DATA_DIRS') or '/usr/local/share:/usr/share').split(':')
+    return [_xdg_data_home()] + [Path(d) for d in dirs]
 
 
 class _Styles(object):
@@ -118,7 +130,7 @@ del pub, _prop
 styles = _Styles()
 
 
-class _Parser(configparser.RawConfigParser, object):
+class Config(configparser.RawConfigParser):
 
     def __init__(self):
         super().__init__()
@@ -126,9 +138,9 @@ class _Parser(configparser.RawConfigParser, object):
         self._read_configs()
 
     def _read_configs(self):
-        for confdir in reversed(XDG_CONFIG_DIRS):
-            path = os.path.join(confdir, 'clisnips', 'clisnips.conf')
-            if os.path.exists(path):
+        for confdir in reversed(_xdg_config_dirs()):
+            path = confdir / 'clisnips' / 'clisnips.conf'
+            if path.exists():
                 self.read(path)
 
     @property
@@ -136,12 +148,10 @@ class _Parser(configparser.RawConfigParser, object):
         path = self.get('Database', 'path')
         if path == ':memory:':
             return path
-        return os.path.abspath(os.path.expanduser(path))
+        return Path(path).expanduser().absolute()
 
     @database_path.setter
     def database_path(self, value):
-        if value != ':memory:':
-            value = os.path.abspath(os.path.expanduser(value))
         self.set('Database', 'path', value)
 
     @property
@@ -161,13 +171,12 @@ class _Parser(configparser.RawConfigParser, object):
         self.set('Pager', 'page_size', str(value))
 
     def save(self):
-        confdir = os.path.join(XDG_CONFIG_HOME, 'clisnips')
-        if not os.path.isdir(confdir):
-            try:
-                os.makedirs(confdir)
-            except OSError as why:
-                raise RuntimeError(f'Could not create config directory {confdir}: {why}')
-        with open(os.path.join(confdir, 'clisnips.conf'), 'w') as fp:
+        conf_dir = _xdg_config_home() / 'clisnips'
+        try:
+            conf_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as why:
+            raise RuntimeError(f'Could not create config directory {conf_dir}: {why}')
+        with open(conf_dir / 'clisnips.conf', 'w') as fp:
             self.write(fp)
 
 
@@ -178,4 +187,4 @@ pager = {
 
 database_path = None
 
-config = _Parser()
+config = Config()

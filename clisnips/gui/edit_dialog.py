@@ -4,7 +4,6 @@ from gi.repository import Gtk
 
 from .error_dialog import ErrorDialog
 from .helpers import BuildableWidgetDecorator, SimpleTextView, replace_widget
-from ..config import styles
 # validation
 from ..exceptions import ParsingError
 from ..strfmt import doc_parser, fmt_parser

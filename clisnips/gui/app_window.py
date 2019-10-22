@@ -11,7 +11,7 @@ from .open_dialog import CreateDialog, OpenDialog
 from .pager import Pager
 from .state import State as BaseState
 from .strfmt_dialog import StringFormatterDialog
-from ..config import HELP_URI, config
+from ..config import HELP_URI
 from ..database.snippets_db import SnippetsDatabase
 
 __DIR__ = Path(__file__).parent.absolute()
@@ -75,18 +75,15 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # Delay before a search operation is fired.
     SEARCH_TIMEOUT = 300
 
-    def __init__(self, app: Gtk.Application):
+    def __init__(self, app: Gtk.Application, config):
         super().__init__()
-
+        self._config = config
         self.state = State()
+
         #self.ui.set_translation_domain(config.PKG_NAME)
         self.widget.set_application(application=app)
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
-
-        # helpers.set_font(self.snip_list, styles.font)
-        # helpers.set_background_color(self.snip_list, styles.bgcolor)
-        # helpers.set_text_color(self.snip_list, styles.fgcolor)
 
         self.model = Model()
         for i in (Model.COLUMN_CMD, Model.COLUMN_TITLE, Model.COLUMN_TAGS):
@@ -102,7 +99,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
         self.db = None
         self.pager = None
-        self.set_database(config.database_path)
+        self.set_database(self._config.database_path)
 
         self._search_timeout = 0
 
@@ -136,28 +133,21 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.strfmt_dialog.set_cwd(cwd)
 
     def set_database(self, db_file):
-        old_db = None
-        # FIXME:  don't call __len__ !
-        if self.db is not None:
-            old_db = self.db.db_file
-            self.db.close()
+        old_db = self.db
         try:
-            self.db = SnippetsDatabase(db_file).open()
+            self.db = SnippetsDatabase.open(db_file)
         except:
-            if old_db:
-                self.set_database(old_db)
             raise
-        else:
-            if db_file != old_db:
-                config.database_path = db_file
-                if db_file != ':memory:':
-                    config.save()
-            self.pager = Pager(self.ui, self.db,
-                               page_size=config.pager_page_size)
-            self.pager.set_sort_columns([
-                (config.pager_sort_column, 'DESC'),
-                ('id', 'ASC', True)
-            ])
+        if old_db:
+            old_db.close()
+        if db_file != ':memory:':
+            self._config.database_path = db_file
+            self._config.save()
+        self.pager = Pager(self.ui, self.db, page_size=self._config.pager_page_size)
+        self.pager.set_sort_columns([
+            (self._config.pager_sort_column, 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
     def emit(self, *args):
         """
@@ -514,8 +504,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         ])
 
     def _change_sort_columns(self, columns):
-        config.pager_sort_column = columns[0][0]
-        config.save()
+        self._config.pager_sort_column = columns[0][0]
+        self._config.save()
         self.pager.set_sort_columns(columns)
         if self.pager.mode == Pager.MODE_SEARCH:
             search = self.get_search_text()
