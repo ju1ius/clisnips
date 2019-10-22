@@ -50,7 +50,7 @@ class ImportDialog(Gtk.FileChooserDialog):
         xml_filter = Gtk.FileFilter()
         xml_filter.set_name('CliSnips XML')
         xml_filter.add_custom(
-            Gtk.FileFilterFlags.DISPLAY_NAME | Gtk.FileFilterFlags.MIME_TYPE,
+            Gtk.FileFilterFlags.FILENAME | Gtk.FileFilterFlags.MIME_TYPE,
             _clisnips_xml_filter
         )
         self.add_filter(xml_filter)
@@ -58,7 +58,7 @@ class ImportDialog(Gtk.FileChooserDialog):
         cc2_filter = Gtk.FileFilter()
         cc2_filter.set_name('CliCompanion 2')
         cc2_filter.add_custom(
-            Gtk.FileFilterFlags.DISPLAY_NAME | Gtk.FileFilterFlags.MIME_TYPE,
+            Gtk.FileFilterFlags.FILENAME | Gtk.FileFilterFlags.MIME_TYPE,
             _cc2_filter
         )
         self.add_filter(cc2_filter)

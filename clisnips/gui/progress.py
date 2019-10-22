@@ -244,16 +244,15 @@ class BlockingProcess(Process):
 class Worker(object):
 
     @classmethod
-    def from_job(kls, job, args=(), kwargs=None):
+    def from_job(cls, job, args=(), kwargs=None):
         queue = MessageQueue()
         if inspect.isgeneratorfunction(job) or inspect.isgenerator(job):
             process = Process(job, args=args, kwargs=kwargs, queue=queue)
             listener = Listener(queue)
         else:
-            process = BlockingProcess(job, args=args, kwargs=kwargs,
-                                      queue=queue)
+            process = BlockingProcess(job, args=args, kwargs=kwargs, queue=queue)
             listener = IndeterminateListener(queue)
-        return kls(process, listener, queue)
+        return cls(process, listener, queue)
 
     def __init__(self, process, listener, queue):
         self.queue = queue
