@@ -32,10 +32,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 DEFAULTS = '''
 [Default]
-font: monospace 10
-bg_color: #282c34
-fg_color: #abb2bf
-cursor_color: yellow
 
 [Database]
 path: ~/.config/clisnips/snippets.sqlite
@@ -75,21 +71,11 @@ def _xdg_data_dirs():
     return [_xdg_data_home()] + [Path(d) for d in dirs]
 
 
-class _Styles(object):
+class _Styles:
 
     def __init__(self):
-        self._font = 'monospace 10'
         self._bgcolor = parse_color('#282c34')
         self._fgcolor = parse_color('#abb2bf')
-        self._cursor_color = parse_color('yellow')
-
-    @property
-    def font(self):
-        return self._font
-
-    @font.setter
-    def font(self, value):
-        self._font = parse_font(value)
 
     @property
     def diff_insert_bg(self):
