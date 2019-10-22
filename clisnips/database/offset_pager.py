@@ -1,12 +1,9 @@
-import math
+from math import ceil
 
 
-class OffsetPager(object):
+class OffsetPager:
 
     def __init__(self, connection, page_size=100):
-        """
-        
-        """
         self._con = connection
         self._current_page = 1
         self._num_pages = 1
@@ -113,7 +110,7 @@ class OffsetPager(object):
             params = self._count_query_params
         count = self._con.execute(query, params).fetchone()[0]
         self._total_size = count
-        self._num_pages = int(math.ceil(count / self._page_size))
+        self._num_pages = int(ceil(count / self._page_size))
 
     def _check_executed(self):
         if not self._executed:

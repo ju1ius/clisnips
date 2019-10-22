@@ -15,7 +15,7 @@ class MainDialogTest(GtkTestCase):
     @classmethod
     def setUpClass(cls):
         config.database_path = ':memory:'
-        db = SnippetsDatabase(config.database_path).open()
+        db = SnippetsDatabase.open(config.database_path)
         for row in fixtures:
             db.insert(row)
 
