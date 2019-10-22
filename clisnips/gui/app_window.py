@@ -44,8 +44,8 @@ class Model(Gtk.ListStore):
 class MainDialog(helpers.BuildableWidgetDecorator):
 
     # Constants needed for BuildableWidgetDecorator
-    UI_FILE = __DIR__ / 'resources' / 'glade' / 'main_dialog.glade'
-    MAIN_WIDGET = 'main_dialog'
+    UI_FILE = __DIR__ / 'resources' / 'glade' / 'app_window.glade'
+    MAIN_WIDGET = 'app_window'
     WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
                   'pager_first_btn', 'pager_prev_btn',
                   'pager_next_btn', 'pager_last_btn',
@@ -75,19 +75,12 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # Delay before a search operation is fired.
     SEARCH_TIMEOUT = 300
 
-    def __init__(self):
+    def __init__(self, app: Gtk.Application):
         super().__init__()
-
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_path(str(__DIR__ / 'resources' / 'styles.css'))
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(),
-            css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
 
         self.state = State()
         #self.ui.set_translation_domain(config.PKG_NAME)
+        self.widget.set_application(application=app)
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
@@ -276,18 +269,18 @@ class MainDialog(helpers.BuildableWidgetDecorator):
 
     def show_row_context_menu(self):
         menu = Gtk.Menu()
-        for sid, cb in ((Gtk.STOCK_APPLY, self.on_apply_btn_clicked),
-                        (Gtk.STOCK_PROPERTIES, self.on_show_btn_clicked)):
+        for sid, cb in (('_Apply', self.on_apply_btn_clicked),
+                        ('_Properties', self.on_show_btn_clicked)):
             self._add_context_menu_item(menu, sid, cb)
         menu.append(Gtk.SeparatorMenuItem())
         for sid, cb in ((Gtk.STOCK_EDIT, self.on_edit_btn_clicked),
-                        (Gtk.STOCK_DELETE, self.on_delete_btn_clicked)):
+                        ('_Delete', self.on_delete_btn_clicked)):
             self._add_context_menu_item(menu, sid, cb)
         menu.show_all()
-        menu.popup(None, None, None, 3, 0)
+        menu.popup(None, None, None, None, 3, 0)
 
     def _add_context_menu_item(self, menu, stock_id, cb):
-        item = Gtk.ImageMenuItem(stock_id)
+        item = Gtk.MenuItem.new_with_mnemonic(stock_id)
         item.connect('activate', cb)
         menu.append(item)
 

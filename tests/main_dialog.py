@@ -14,7 +14,7 @@ __dir__ = dirname(abspath(__file__))
 sys.path.insert(0, join(__dir__, '..'))
 
 from clisnips.config import config
-from clisnips.gui.main_dialog import MainDialog
+from clisnips.gui.app_window import MainDialog
 
 
 

@@ -2,7 +2,7 @@ import os
 
 from clisnips import config
 from clisnips.database.snippets_db import SnippetsDatabase
-from clisnips.gui.main_dialog import MainDialog
+from clisnips.gui.app_window import MainDialog
 from .gui_testcase import GtkTestCase
 
 fixtures = [

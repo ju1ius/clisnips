@@ -37,13 +37,13 @@
 /**
  * Snippets list
  */
-#main_dialog .snip_list {
+#app_window .snip_list {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
   font-family: monospace;
   border: 1px solid #2e3138;
 }
-#main_dialog .snip_list :selected {
+#app_window .snip_list :selected {
   outline: none;
   border: 1px solid @theme-grey-muted;
 }

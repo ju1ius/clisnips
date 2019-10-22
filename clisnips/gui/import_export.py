@@ -1,7 +1,39 @@
 from gi.repository import Gtk
 
 from .progress import ProgressDialog
+from ..database.snippets_db import SnippetsDatabase
 from ..exporters.clisnips import Exporter
+
+
+def _import_snippets(db: SnippetsDatabase, filename: str, type: str):
+    if type == 'CliCompanion 2':
+        from ..importers.clicompanion import Importer
+    else:
+        from ..importers.clisnips import Importer
+
+    def _task(fn):
+        Importer(db).process(fn)
+
+    dlg = ProgressDialog(f'Importing snippets from {filename}')
+    dlg.run(_task, filename)
+
+
+def _export_snippets(db: SnippetsDatabase, filename: str):
+    exporter = Exporter(db)
+
+    def _task(fn):
+        exporter.export(fn)
+
+    dlg = ProgressDialog(f'Exporting snippets to {filename}')
+    dlg.run(_task, filename)
+
+
+def _clisnips_xml_filter(info: Gtk.FileFilterInfo):
+    return info.filename.endswith('.clisnips') or info.mime_type == 'application/xml'
+
+
+def _cc2_filter(info: Gtk.FileFilterInfo):
+    return info.filename.endswith('.config') and info.mime_type == 'text/plain'
 
 
 class ImportDialog(Gtk.FileChooserDialog):
@@ -18,16 +50,16 @@ class ImportDialog(Gtk.FileChooserDialog):
         xml_filter = Gtk.FileFilter()
         xml_filter.set_name('CliSnips XML')
         xml_filter.add_custom(
-            Gtk.FILE_FILTER_DISPLAY_NAME | Gtk.FILE_FILTER_MIME_TYPE,
-            self.xml_filter_func
+            Gtk.FileFilterFlags.DISPLAY_NAME | Gtk.FileFilterFlags.MIME_TYPE,
+            _clisnips_xml_filter
         )
         self.add_filter(xml_filter)
 
         cc2_filter = Gtk.FileFilter()
         cc2_filter.set_name('CliCompanion 2')
         cc2_filter.add_custom(
-            Gtk.FILE_FILTER_DISPLAY_NAME | Gtk.FILE_FILTER_MIME_TYPE,
-            self.cc2_filter_func
+            Gtk.FileFilterFlags.DISPLAY_NAME | Gtk.FileFilterFlags.MIME_TYPE,
+            _cc2_filter
         )
         self.add_filter(cc2_filter)
 
@@ -38,28 +70,8 @@ class ImportDialog(Gtk.FileChooserDialog):
             return
         name = self.get_filename()
         type = self.get_filter().get_name()
-        self._import(db, name, type)
+        _import_snippets(db, name, type)
         self.destroy()
-
-    def _import(self, db, filename, type):
-        if type == 'CliCompanion 2':
-            from ..importers.clicompanion import Importer
-        else:
-            from ..importers.clisnips import Importer
-
-        def _task(filename):
-            Importer(db).process(filename)
-
-        msg = f'Importing snippets from {filename}'
-        dlg = ProgressDialog(msg).run(_task, filename)
-
-    def xml_filter_func(self, filter_info):
-        path, uri, name, mimetype = filter_info
-        return name.endswith('.clisnips') or mimetype == 'application/xml'
-
-    def cc2_filter_func(self, filter_info):
-        path, uri, name, mimetype = filter_info
-        return name.endswith('.config') and mimetype == 'text/plain'
 
 
 class ExportDialog(Gtk.FileChooserDialog):
@@ -80,14 +92,5 @@ class ExportDialog(Gtk.FileChooserDialog):
             self.destroy()
             return
         filename = self.get_filename()
-        self._export(db, filename)
+        _export_snippets(db, filename)
         self.destroy()
-
-    def _export(self, db, filename):
-        exporter = Exporter(db)
-
-        def _task(filename):
-            exporter.export(filename)
-
-        msg = f'Exporting snippets to {filename}'
-        dlg = ProgressDialog(msg).run(_task, filename)
