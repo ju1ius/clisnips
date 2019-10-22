@@ -1,39 +1,5 @@
 from gi.repository import GObject, Gtk, Pango
 
-from ..utils import parse_color, parse_font
-
-
-# ========== Fonts & Colors helpers
-
-
-def set_font(widget, font):
-    desc = parse_font(font)
-    widget.modify_font(desc)
-
-
-def set_background_color(widget, color, state=Gtk.StateFlags.NORMAL):
-    color = parse_color(color)
-    widget.modify_base(state, color)
-    widget.modify_bg(state, color)
-
-
-def set_text_color(widget, color, state=Gtk.StateFlags.NORMAL):
-    color = parse_color(color)
-    widget.modify_fg(state, color)
-    widget.modify_text(state, color)
-
-
-def set_cursor_color(widget, primary, secondary=None):
-    primary = parse_color(primary)
-    if secondary:
-        secondary = parse_color(secondary)
-    else:
-        secondary = primary
-    widget.modify_cursor(primary, secondary)
-
-
-# ========== Widgets helpers
-
 
 def replace_widget(old, new):
     parent = old.get_parent()
@@ -150,10 +116,6 @@ class SimpleTextView(WidgetDecorator):
         start, end = buf.get_bounds()
         return buf.get_text(start, end, False)
 
-    def set_font(self, spec):
-        set_font(self.widget, spec)
-        self.set_tab_width(self._tab_width, force=True)
-
     def set_tab_width(self, width, force=False):
         if width < 1:
             return
@@ -169,30 +131,6 @@ class SimpleTextView(WidgetDecorator):
 
     def get_tab_width(self):
         return self._tab_width
-
-    def set_background_color(self, spec):
-        set_background_color(self.widget, spec)
-        self._update_background(spec)
-
-    def set_text_color(self, spec):
-        set_text_color(self.widget, spec)
-
-    def set_cursor_color(self, primary, secondary=None):
-        set_cursor_color(self.widget, primary, secondary)
-
-    def set_padding(self, padding):
-        for win in ('left', 'right', 'top', 'bottom'):
-            self.widget.set_border_window_size(self.WINDOWS[win], padding)
-        self._update_background()
-
-    def _update_background(self, color=None):
-        if not color:
-            context = self.widget.get_style_context()
-            color = context.get_background_color(Gtk.StateFlags.NORMAL)
-        for win in ('left', 'right', 'top', 'bottom'):
-            win = self.widget.get_window(self.WINDOWS[win])
-            if win:
-                set_background_color(win, color)
 
     def _calculate_tab_size(self, tab_width, tab_char):
         tab_str = tab_char * tab_width

@@ -1,11 +1,6 @@
-from os.path import abspath, dirname, join
 from pathlib import Path
 
 from gi.repository import GObject, Gtk, GtkSource
-
-from .helpers import set_font
-from ..config import styles
-from ..utils import get_luminance
 
 __DIR__ = Path(__file__).parent.absolute()
 
@@ -50,9 +45,6 @@ class SourceView(GtkSource.View):
         buf = self.get_buffer()
         start, end = buf.get_bounds()
         return buf.get_text(start, end, False)
-
-    def set_font(self, font):
-        set_font(self, font)
 
     def set_syntax(self, syntax):
         lang = get_syntax(syntax)
@@ -118,11 +110,3 @@ def get_theme(scheme):
 
 def get_default_theme():
     return get_theme('one-dark')
-    # TODO: adaptive theme
-    bgcolor = styles.bgcolor
-    lum = get_luminance(bgcolor)
-    if lum > 0.5:
-        # light background
-        return get_theme('solarizedlight')
-    # dark background
-    return get_theme('solarizeddark')

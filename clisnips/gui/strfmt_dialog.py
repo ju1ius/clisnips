@@ -60,8 +60,8 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         del_bg, del_fg = styles.diff_delete_bg, styles.diff_delete_fg
         for tv in ('output_textview', 'fmtstr_textview'):
             textview = getattr(self, tv)
-            textview.create_tag('diff_insert', weight=700, background_gdk=ins_bg, foreground_gdk=ins_fg)
-            textview.create_tag('diff_delete', weight=700, background_gdk=del_bg, foreground_gdk=del_fg)
+            textview.create_tag('diff_insert', weight=700, background_rgba=ins_bg, foreground_rgba=ins_fg)
+            textview.create_tag('diff_delete', weight=700, background_rgba=del_bg, foreground_rgba=del_fg)
 
         # signals
         self.connect_signals()
