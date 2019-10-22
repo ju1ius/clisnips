@@ -3,7 +3,8 @@
 - [ ] Parser
     - [x] Handle command-line flags (-h, -R, -i, etc...)
 - [ ] Database
-    - [ ] Maintenace operations (rebuild index, optimize, integrity check, etc...)
+    - [x] Maintenace operations (rebuild index, optimize, integrity check, etc...)
+    - [x] Upgrade to FTS5 and remove word_tokenizer
 - [x] Import/Export
     - [x] Export popularity, timestamps, etc
 - [ ] Preferences

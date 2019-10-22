@@ -38,22 +38,17 @@ class ScrollingPager(OffsetPager):
             unique = l > 2 and col[2]
             if unique:
                 if self._id_column:
-                    raise RuntimeError(
-                        'You can add only one unique sort column.'
-                    )
+                    raise RuntimeError('You can add only one unique sort column.')
                 self._id_column = (name, order)
                 continue
             self._sort_columns.append((name, order))
         if not self._id_column:
-            raise RuntimeError('You must add an unique sort column.'
-                               'Consider adding ("rowid", "ASC", True)')
+            raise RuntimeError('You must add an unique sort column. Consider adding ("rowid", "ASC", True)')
         return self
 
     def execute(self, params=(), count_params=()):
         if not self._id_column:
-            raise RuntimeError(
-                'You must call set_sort_columns before execute.'
-            )
+            raise RuntimeError('You must call set_sort_columns before execute.')
         super().execute(params, count_params)
         return self
 
@@ -155,68 +150,45 @@ class ScrollingPager(OffsetPager):
         return operator
 
     def _compile_queries(self):
-        fwd_ordderby = self._compile_orderby_clause()
-        bwd_ordderby = self._compile_orderby_clause(invert=True)
-        # we have to compute the number of remainig rows
-        # on the last page
+        fwd_orderby = self._compile_orderby_clause()
+        bwd_orderby = self._compile_orderby_clause(invert=True)
+        # we have to compute the number of remaining rows on the last page
         remaining_rows = self._total_size % self._page_size
         if remaining_rows == 0:
             last_page_size = self._page_size
         else:
             last_page_size = remaining_rows
         # query for self.first()
-        self._first_query = '''
-            SELECT * FROM ({user_query})
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            order_clause=fwd_ordderby,
-            page_size=self._page_size
-        )
+        self._first_query = f'''
+            SELECT * FROM ({self._query})
+            ORDER BY {fwd_orderby}
+            LIMIT {self._page_size}
+        '''
         # query for self.last()
-        self._last_query = '''
-            SELECT * FROM ({user_query})
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            order_clause=bwd_ordderby,
-            page_size=last_page_size
-        )
+        self._last_query = f'''
+            SELECT * FROM ({self._query})
+            ORDER BY {bwd_orderby}
+            LIMIT {last_page_size}
+        '''
         # query for self.next()
-        self._next_fmt = '''
-            SELECT * FROM ({user_query})
-            {where_clause}
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            where_clause=self._precompile_where_clause(self.FORWARD),
-            order_clause=fwd_ordderby,
-            page_size=self._page_size
-        )
+        self._next_fmt = f'''
+            SELECT * FROM ({self._query})
+            {self._precompile_where_clause(self.FORWARD)}
+            ORDER BY {fwd_orderby}
+            LIMIT {self._page_size}
+        '''
         # query for self.previous()
-        self._prev_fmt = '''
-            SELECT * FROM ({user_query})
-            {where_clause}
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            where_clause=self._precompile_where_clause(self.BACKWARD),
-            order_clause=bwd_ordderby,
-            page_size=self._page_size
-        )
-        self._get_page_fmt = '''
-            SELECT * FROM ({user_query})
-            ORDER BY {order_clause}
-            LIMIT {page_size} OFFSET {{offset}}
-        '''.format(
-            user_query=self._query,
-            order_clause=fwd_ordderby,
-            page_size=self._page_size
-        )
+        self._prev_fmt = f'''
+            SELECT * FROM ({self._query})
+            {self._precompile_where_clause(self.BACKWARD)}
+            ORDER BY {bwd_orderby}
+            LIMIT {self._page_size}
+        '''
+        self._get_page_fmt = f'''
+            SELECT * FROM ({self._query})
+            ORDER BY {fwd_orderby}
+            LIMIT {self._page_size} OFFSET {{offset}}
+        '''
 
     def _compile_orderby_clause(self, invert=False):
         sort_columns = self._sort_columns + [self._id_column]
@@ -238,17 +210,17 @@ class ScrollingPager(OffsetPager):
             op1 = self._get_operator(direction, order, False)
             op2 = self._get_operator(direction, order, True)
             key = value_fmt % (cursor, name)
-            #last_index = self._cursor[cursor][name]
+            # last_index = self._cursor[cursor][name]
             exprs_1.append(comp_fmt.format(col=name, op=op1, value=key))
             exprs_2.append(comp_fmt.format(col=name, op=op2, value=key))
         # add unique column
         name, order = self._id_column
         operator = self._get_operator(direction, order, True)
         key = value_fmt % (cursor, name)
-        #last_index = self._cursor[cursor][name]
+        # last_index = self._cursor[cursor][name]
         expr = comp_fmt.format(col=name, op=operator, value=key)
         if not self._sort_columns:
-            return 'WHERE ({expr})'.format(expr=expr)
+            return f'WHERE ({expr})'
         exprs_2.append(expr)
         return 'WHERE (({expr_1}) AND ({expr_2}))'.format(
             expr_1=' AND '.join(exprs_1),

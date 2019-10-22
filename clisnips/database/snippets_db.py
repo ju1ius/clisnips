@@ -1,22 +1,19 @@
 import os
+import sqlite3
 import stat
 import time
-import sqlite3
 from pathlib import Path
-
-from . import word_tokenizer
-
 
 __DIR__ = Path(__file__).absolute().parent
 
-SCHEMA_FILE = __DIR__ / 'schema.sql'
-with open(SCHEMA_FILE, 'r') as fp:
-    SCHEMA_QUERY = fp.read()
 
 SECONDS_TO_DAYS = float(60 * 60 * 24)
 # ranking decreases much faster for older items
 # when gravity is increased
 GRAVITY = 1.2
+
+with open(__DIR__ / 'schema.sql', 'r') as fp:
+    SCHEMA_QUERY = fp.read()
 
 
 def ranking_function(created: int, last_used: int, num_used: int) -> float:
@@ -33,7 +30,6 @@ class SnippetsDatabase:
     COLUMN_CMD = 'cmd'
     COLUMN_TAGS = 'tag'
     COLUMN_DOC = 'doc'
-    COLUMN_INDEX = 'docid'
 
     def __init__(self, connection: sqlite3.Connection):
         self.connection = connection
@@ -49,10 +45,9 @@ class SnippetsDatabase:
             db_file.parent.mkdir(mode=0o755, parents=True, exists_ok=True)
             os.mknod(db_file, 0o644 | stat.S_IFREG)
         cx = sqlite3.connect(db_file)
-        cx.create_function('rank', 3, ranking_function)
-        word_tokenizer.register(cx)
-        cx.executescript(SCHEMA_QUERY)
         cx.row_factory = sqlite3.Row
+        cx.create_function('rank', 3, ranking_function)
+        cx.executescript(SCHEMA_QUERY)
 
         return cls(cx)
 
@@ -117,18 +112,18 @@ class SnippetsDatabase:
 
     @staticmethod
     def get_search_query():
-        return ('SELECT i.docid, s.rowid AS id, '
-                's.title, s.cmd, s.tag, '
-                's.created_at, s.last_used_at, s.usage_count, s.ranking '
-                'FROM snippets s JOIN snippets_index i ON i.docid = s.rowid '
-                'WHERE snippets_index MATCH :term')
+        return f'''
+            SELECT i.rowid as docid, s.rowid AS id, s.created_at, s.last_used_at, s.usage_count, s.ranking
+            FROM snippets s JOIN snippets_index i ON i.rowid = s.rowid
+            WHERE snippets_index MATCH :term
+        '''
 
     @staticmethod
     def get_search_count_query():
-        return 'SELECT docid FROM snippets_index WHERE snippets_index MATCH :term'
+        return f'SELECT rowid FROM snippets_index WHERE snippets_index MATCH :term'
 
     def search(self, term):
-        query = 'SELECT docid AS id FROM snippets_index WHERE snippets_index MATCH :term'
+        query = f'SELECT rowid AS id FROM snippets_index WHERE snippets_index MATCH :term'
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
         except sqlite3.OperationalError as err:
