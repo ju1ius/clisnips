@@ -19,4 +19,5 @@
 - [ ] Replace FileChooserButton by Button + FileChooserDialog
 
 - [ ] Gtk3 port
-    - [ ] Use CSS / StyleContext API
+    - [x] Use CSS / StyleContext API
+    - [ ] Migrate to Gio.Action API
