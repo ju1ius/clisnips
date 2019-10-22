@@ -1,7 +1,7 @@
 from ..database.scrolling_pager import ScrollingPager
 
 
-class Pager(object):
+class Pager:
 
     MODE_LIST = 1
     MODE_SEARCH = 2

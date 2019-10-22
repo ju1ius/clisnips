@@ -5,6 +5,7 @@
 - [ ] Database
     - [x] Maintenace operations (rebuild index, optimize, integrity check, etc...)
     - [x] Upgrade to FTS5 and remove word_tokenizer
+    - [x] Backup / dump
 - [x] Import/Export
     - [x] Export popularity, timestamps, etc
 - [ ] Preferences

@@ -2,6 +2,7 @@ import os
 import sqlite3
 import stat
 import time
+from os import PathLike
 from pathlib import Path
 
 __DIR__ = Path(__file__).absolute().parent
@@ -39,10 +40,10 @@ class SnippetsDatabase:
         self._num_rows = 0
 
     @classmethod
-    def open(cls, db_file=':memory:'):
+    def open(cls, db_file: PathLike = ':memory:'):
         db_file = Path(db_file)
         if db_file.name != ':memory:' and not db_file.is_file():
-            db_file.parent.mkdir(mode=0o755, parents=True, exists_ok=True)
+            db_file.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
             os.mknod(db_file, 0o644 | stat.S_IFREG)
         cx = sqlite3.connect(db_file)
         cx.row_factory = sqlite3.Row
@@ -84,6 +85,15 @@ class SnippetsDatabase:
         with self.connection:
             self.cursor.execute(query)
 
+    def backup(self, to: sqlite3.Connection, progress=None):
+        with to:
+            self.connection.backup(to, pages=1, progress=progress)
+
+    def dump(self, to: PathLike):
+        with open(to, 'w') as fp:
+            for line in self.connection.iterdump():
+                fp.write(f'{line}\n')
+
     def __iter__(self):
         return self.iter('*')
 
@@ -113,7 +123,9 @@ class SnippetsDatabase:
     @staticmethod
     def get_search_query():
         return f'''
-            SELECT i.rowid as docid, s.rowid AS id, s.created_at, s.last_used_at, s.usage_count, s.ranking
+            SELECT i.rowid as docid, s.rowid AS id,
+            s.title, s.cmd, s.tag,
+            s.created_at, s.last_used_at, s.usage_count, s.ranking
             FROM snippets s JOIN snippets_index i ON i.rowid = s.rowid
             WHERE snippets_index MATCH :term
         '''
