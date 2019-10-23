@@ -71,7 +71,7 @@
         <title>Show files that have changed between two commits</title>
         <command>git diff --name-status {--oneline} {SHA1} {SHA2}</command>
         <tag>git,diff</tag>
-        <doc>
+        <doc><![CDATA[
 Each file is listed alongside a 1-letter status code:
 <tt>
 <b>M</b> modified      File has been modified
@@ -84,13 +84,14 @@ Each file is listed alongside a 1-letter status code:
 
 {SHA1} (string)
 {SHA2} (string)
+]]>
         </doc>
     </snippet>
     <snippet>
         <title>Show a log with a short summary of what have changed in each commit.</title>
         <command>git log --oneline --name-status {SHA1} {SHA2}</command>
         <tag>git,log</tag>
-        <doc>
+        <doc><![CDATA[
 Each file is listed alongside a 1-letter status code:
 <tt>
 <b>M</b> modified      File has been modified
@@ -103,7 +104,7 @@ Each file is listed alongside a 1-letter status code:
 
 {SHA1} (string)
 {SHA2} (string)
-        </doc>
+        ]]></doc>
     </snippet>
     <snippet>
         <title>Show divergent commits between two branches</title>
@@ -115,7 +116,6 @@ In other words, show everything that is unique to {branch_a}, relatively to {bra
     {branch_b} (string) ["master"]
         </doc>
     </snippet>
-
 
     <!-- System Info -->
 
@@ -196,13 +196,6 @@ In other words, show everything that is unique to {branch_a}, relatively to {bra
 {outfile} (path) The output file path.
 {quality} (string) ["screen", "ebook", *"printer", "prepress"]
     PDF quality from "screen" (lowest) to "prepress" (highest)</doc>
-    </snippet>
-
-    <snippet>
-        <title></title>
-        <command></command>
-        <tag></tag>
-        <doc></doc>
     </snippet>
 
 </snippets>
