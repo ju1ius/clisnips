@@ -19,9 +19,9 @@ __DIR__ = Path(__file__).parent.absolute()
 
 
 class StrfmtDialogState(State):
-    NORMAL_EDITING = 0x01
-    DIRECT_EDITING = 0x02
-    DIRECT_EDITING_DIRTY = 0x04
+    NORMAL_EDITING = 1 << 0
+    DIRECT_EDITING = 1 << 1
+    DIRECT_EDITING_DIRTY = 1 << 2
 
 
 class StringFormatterDialog(BuildableWidgetDecorator):
@@ -43,7 +43,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         # the string used for diffing and advanced editing
         self.diff_string = ''
         self.fields = OrderedDict()
-        self.cwd = os.path.expanduser('~')
+        self.cwd = Path('~').expanduser()
         # state manager
         self.state = StrfmtDialogState()
         self.state.connect('enter-state', self.on_enter_state)
@@ -69,8 +69,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             'update_timeout': 0,
             'output_changed': self.output_textview.connect('changed', self.on_output_changed)
         }
-        self.output_textview.handler_block(
-            self.handlers['output_changed'])
+        self.output_textview.handler_block(self.handlers['output_changed'])
         # diff
         self.differ = InlineMyersSequenceMatcher()
 

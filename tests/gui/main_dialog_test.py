@@ -2,7 +2,7 @@ import os
 
 from clisnips import config
 from clisnips.database.snippets_db import SnippetsDatabase
-from clisnips.gui.app_window import MainDialog
+from clisnips.gui.app_window import AppWindow
 from .gui_testcase import GtkTestCase
 
 fixtures = [
@@ -20,7 +20,7 @@ class MainDialogTest(GtkTestCase):
             db.insert(row)
 
     def setUp(self):
-        self._window = MainDialog()
+        self._window = AppWindow()
         self._window.set_cwd(os.getcwd())
         self._window.run()
 

@@ -14,7 +14,7 @@ __dir__ = dirname(abspath(__file__))
 sys.path.insert(0, join(__dir__, '..'))
 
 from clisnips.config import config
-from clisnips.gui.app_window import MainDialog
+from clisnips.gui.app_window import AppWindow
 
 
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     config.database_path = join(__dir__, 'tmp.sqlite')
 
-    dlg = MainDialog()
+    dlg = AppWindow()
     dlg.set_cwd(os.getcwd())
     dlg.connect('close', Gtk.main_quit)
     dlg.connect('insert-snippet', on_insert_snippet)

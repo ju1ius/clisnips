@@ -41,7 +41,7 @@ class Model(Gtk.ListStore):
         super().__init__(*self.COLUMNS)
 
 
-class MainDialog(helpers.BuildableWidgetDecorator):
+class AppWindow(helpers.BuildableWidgetDecorator):
 
     # Constants needed for BuildableWidgetDecorator
     UI_FILE = __DIR__ / 'resources' / 'glade' / 'app_window.glade'
@@ -475,7 +475,10 @@ class MainDialog(helpers.BuildableWidgetDecorator):
             self.load_snippets()
 
     def on_export_menuitem_activate(self, menuitem):
-        ExportDialog().run(self.db)
+        try:
+            ExportDialog().run(self.db)
+        except Exception as err:
+            ErrorDialog().run(err)
 
     # ===== Display Menu
 
@@ -518,9 +521,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # ===== Help Menu
 
     def on_helplink_menuitem_activate(self, menuitem):
-        Gtk.show_uri(Gdk.Screen.get_default(),
-                     HELP_URI,
-                     int(GLib.get_current_time()))
+        Gtk.show_uri(Gdk.Screen.get_default(), HELP_URI, int(GLib.get_current_time()))
 
     def on_about_menuitem_activate(self, menuitem):
         dlg = AboutDialog()
