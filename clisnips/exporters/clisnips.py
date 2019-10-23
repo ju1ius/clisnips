@@ -19,14 +19,14 @@ class Exporter(object):
             root.appendChild(snip)
         doc.appendChild(root)
         with open(filepath, 'w') as fp:
-            xml = doc.toprettyxml(encoding='utf-8', indent='    ')
+            xml = doc.toprettyxml(indent='  ')
             fp.write(xml)
 
     def _create_snippet(self, doc, row):
         snip = doc.createElement('snippet')
-        snip.setAttribute('created-at', row['created_at'])
-        snip.setAttribute('last-used-at', row['last_used_at'])
-        snip.setAttribute('usage-count', row['usage_count'])
+        snip.setAttribute('created-at', str(row['created_at']))
+        snip.setAttribute('last-used-at', str(row['last_used_at']))
+        snip.setAttribute('usage-count', str(row['usage_count']))
         self.add_field(doc, snip, 'title', row['title'])
         self.add_field(doc, snip, 'command', row['cmd'])
         self.add_field(doc, snip, 'tag', row['tag'])
