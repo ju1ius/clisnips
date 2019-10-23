@@ -1,76 +1,41 @@
-import gobject
-import gtk
-import pango
-
-from ..utils import parse_font, parse_color
-
-
-# ========== Fonts & Colors helpers
-
-
-def set_font(widget, font):
-    desc = parse_font(font)
-    widget.modify_font(desc)
-
-
-def set_background_color(widget, color, state=gtk.STATE_NORMAL):
-    color = parse_color(color)
-    widget.modify_base(state, color)
-    widget.modify_bg(state, color)
-
-
-def set_text_color(widget, color, state=gtk.STATE_NORMAL):
-    color = parse_color(color)
-    widget.modify_fg(state, color)
-    widget.modify_text(state, color)
-
-
-def set_cursor_color(widget, primary, secondary=None):
-    primary = parse_color(primary)
-    if secondary:
-        secondary = parse_color(secondary)
-    else:
-        secondary = primary
-    widget.modify_cursor(primary, secondary)
-
-
-# ========== Widgets helpers
+from gi.repository import GObject, Gtk, Pango
 
 
 def replace_widget(old, new):
     parent = old.get_parent()
     if parent is not None:
-        props = []
-        for pspec in parent.list_child_properties():
-            props.append(pspec.name)
-            props.append(parent.child_get_property(old, pspec.name))
+        props = {p.name: parent.child_get_property(old, p.name) for p in parent.list_child_properties()}
         parent.remove(old)
-        parent.add_with_properties(new, *props)
-    if old.flags() & gtk.VISIBLE:
+        parent.add(new)
+        for name, value in props.items():
+            parent.child_set_property(new, name, value)
+    if old.get_property('visible'):
         new.show()
     else:
         new.hide()
     return new
 
 
-class BuildableWidgetDecorator(gobject.GObject):
+class BuildableWidgetDecorator(GObject.GObject):
 
     WIDGET_IDS = ()
     UI_FILE = None
     MAIN_WIDGET = None
 
     def __init__(self):
-        gobject.GObject.__init__(self)
-        self.ui = gtk.Builder()
-        self.ui.add_from_file(self.UI_FILE)
+        GObject.GObject.__init__(self)
+        self.ui = Gtk.Builder()
+        self.ui.add_from_file(str(self.UI_FILE))
         self.widget = self.ui.get_object(self.MAIN_WIDGET)
+        self.widget.set_name(self.MAIN_WIDGET)
         if self.WIDGET_IDS:
             self.add_ui_widgets(*self.WIDGET_IDS)
 
     def add_ui_widget(self, name):
         widget = self.ui.get_object(name)
         if not widget:
-            raise RuntimeError('No widget found with name "%s"' % name)
+            raise RuntimeError(f'No widget found with name "{name}"')
+        widget.get_style_context().add_class(name)
         setattr(self, name, widget)
 
     def add_ui_widgets(self, *names):
@@ -84,10 +49,10 @@ class BuildableWidgetDecorator(gobject.GObject):
         return getattr(self.widget, name)
 
 
-class WidgetDecorator(gobject.GObject):
+class WidgetDecorator(GObject.GObject):
 
     def __init__(self, widget):
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
         self.widget = widget
 
     def __getattr__(self, name):
@@ -97,20 +62,20 @@ class WidgetDecorator(gobject.GObject):
 class SimpleTextView(WidgetDecorator):
 
     WINDOWS = {
-        'widget': gtk.TEXT_WINDOW_WIDGET,
-        'text': gtk.TEXT_WINDOW_TEXT,
-        'left': gtk.TEXT_WINDOW_LEFT,
-        'right': gtk.TEXT_WINDOW_RIGHT,
-        'top': gtk.TEXT_WINDOW_TOP,
-        'bottom': gtk.TEXT_WINDOW_BOTTOM
+        'widget': Gtk.TextWindowType.WIDGET,
+        'text': Gtk.TextWindowType.TEXT,
+        'left': Gtk.TextWindowType.LEFT,
+        'right': Gtk.TextWindowType.RIGHT,
+        'top': Gtk.TextWindowType.TOP,
+        'bottom': Gtk.TextWindowType.BOTTOM
     }
 
     __gsignals__ = {
-        'changed': gobject.signal_query('changed', gtk.TextBuffer)[3:]
+        'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
     def __init__(self, widget):
-        super(SimpleTextView, self).__init__(widget)
+        super().__init__(widget)
         self._tab_width = 4
         self.set_tab_width(self._tab_width, force=True)
         self.buffer.connect('changed', self._on_buffer_changed)
@@ -127,11 +92,11 @@ class SimpleTextView(WidgetDecorator):
 
     def apply_tag(self, tag, start, end):
         # convert offsets to iter
-        if not isinstance(start, gtk.TextIter):
+        if not isinstance(start, Gtk.TextIter):
             start = self.buffer.get_iter_at_offset(start)
-        if not isinstance(end, gtk.TextIter):
+        if not isinstance(end, Gtk.TextIter):
             end = self.buffer.get_iter_at_offset(end)
-        if isinstance(tag, gtk.TextTag):
+        if isinstance(tag, Gtk.TextTag):
             self.buffer.apply_tag(tag, start, end)
         else:
             self.buffer.apply_tag_by_name(str(tag), start, end)
@@ -149,11 +114,7 @@ class SimpleTextView(WidgetDecorator):
     def get_text(self):
         buf = self.widget.get_buffer()
         start, end = buf.get_bounds()
-        return buf.get_text(start, end)
-
-    def set_font(self, spec):
-        set_font(self.widget, spec)
-        self.set_tab_width(self._tab_width, force=True)
+        return buf.get_text(start, end, False)
 
     def set_tab_width(self, width, force=False):
         if width < 1:
@@ -163,37 +124,13 @@ class SimpleTextView(WidgetDecorator):
         tab_size = self._calculate_tab_size(width, ' ')
         if not tab_size:
             return
-        tab_array = pango.TabArray(1, True)
-        tab_array.set_tab(0, pango.TAB_LEFT, tab_size)
+        tab_array = Pango.TabArray(1, True)
+        tab_array.set_tab(0, Pango.TabAlign.LEFT, tab_size)
         self.widget.set_tabs(tab_array)
         self._tab_width = width
 
     def get_tab_width(self):
         return self._tab_width
-
-    def set_background_color(self, spec):
-        set_background_color(self.widget, spec)
-        self._update_background(spec)
-
-    def set_text_color(self, spec):
-        set_text_color(self.widget, spec)
-
-    def set_cursor_color(self, primary, secondary=None):
-        set_cursor_color(self.widget, primary, secondary)
-
-    def set_padding(self, padding):
-        for win in ('left', 'right', 'top', 'bottom'):
-            self.widget.set_border_window_size(self.WINDOWS[win], padding)
-        self._update_background()
-
-    def _update_background(self, color=None):
-        if not color:
-            style = self.widget.get_style()
-            color = style.bg[gtk.STATE_NORMAL]
-        for win in ('left', 'right', 'top', 'bottom'):
-            win = self.widget.get_window(self.WINDOWS[win])
-            if win:
-                set_background_color(win, color)
 
     def _calculate_tab_size(self, tab_width, tab_char):
         tab_str = tab_char * tab_width

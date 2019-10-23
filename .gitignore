@@ -1,4 +1,5 @@
 *~
+/.idea
 *.ui#
 *.bak
 *.sqlite

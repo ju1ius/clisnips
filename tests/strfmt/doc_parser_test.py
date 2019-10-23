@@ -16,7 +16,7 @@ class DocParserTest(unittest.TestCase):
         """
         doc = parse(text)
         self.assertEqual(doc.header, text)
-        self.assertListEqual(doc.parameters.values(), [])
+        self.assertListEqual(list(doc.parameters.values()), [])
 
     def testParseParameter(self):
         text = 'Global doc\n{par1} (file) Param doc'

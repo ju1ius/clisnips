@@ -1,8 +1,5 @@
-from __future__ import division
-import math
 
-
-from offset_pager import OffsetPager
+from .offset_pager import OffsetPager
 
 
 class ScrollingPager(OffsetPager):
@@ -14,7 +11,7 @@ class ScrollingPager(OffsetPager):
     SORT_DESC = False
 
     def __init__(self, connection, page_size=100, sort_columns=None):
-        super(ScrollingPager, self).__init__(connection, page_size)
+        super().__init__(connection, page_size)
 
         self._sort_columns = []
         self._id_column = ()
@@ -41,23 +38,18 @@ class ScrollingPager(OffsetPager):
             unique = l > 2 and col[2]
             if unique:
                 if self._id_column:
-                    raise RuntimeError(
-                        'You can add only one unique sort column.'
-                    )
+                    raise RuntimeError('You can add only one unique sort column.')
                 self._id_column = (name, order)
                 continue
             self._sort_columns.append((name, order))
         if not self._id_column:
-            raise RuntimeError('You must add an unique sort column.'
-                               'Consider adding ("rowid", "ASC", True)')
+            raise RuntimeError('You must add an unique sort column. Consider adding ("rowid", "ASC", True)')
         return self
 
     def execute(self, params=(), count_params=()):
         if not self._id_column:
-            raise RuntimeError(
-                'You must call set_sort_columns before execute.'
-            )
-        super(ScrollingPager, self).execute(params, count_params)
+            raise RuntimeError('You must call set_sort_columns before execute.')
+        super().execute(params, count_params)
         return self
 
     def get_page(self, page):
@@ -116,7 +108,7 @@ class ScrollingPager(OffsetPager):
         return rs
 
     def _count(self):
-        super(ScrollingPager, self)._count()
+        super()._count()
         self._compile_queries()
 
     def _update_cursor(self, resultset):
@@ -144,80 +136,59 @@ class ScrollingPager(OffsetPager):
             return self.SORT_ASC
         if order == 'desc':
             return self.SORT_DESC
-        raise ValueError('Invalid sort order %r' % order)
+        raise ValueError(f'Invalid sort order {order!r}')
 
     def _get_operator(self, direction, order, unique=False):
-        if direction == self.FORWARD:
-            operator = '<' if order == self.SORT_DESC else '>'
-        elif direction == self.BACKWARD:
+        if direction == self.BACKWARD:
             operator = '>' if order == self.SORT_DESC else '<'
+        else:
+            operator = '<' if order == self.SORT_DESC else '>'
+
         if not unique:
             operator += '='
+
         return operator
 
     def _compile_queries(self):
-        fwd_ordderby = self._compile_orderby_clause()
-        bwd_ordderby = self._compile_orderby_clause(invert=True)
-        # we have to compute the number of remainig rows
-        # on the last page
+        fwd_orderby = self._compile_orderby_clause()
+        bwd_orderby = self._compile_orderby_clause(invert=True)
+        # we have to compute the number of remaining rows on the last page
         remaining_rows = self._total_size % self._page_size
         if remaining_rows == 0:
             last_page_size = self._page_size
         else:
             last_page_size = remaining_rows
         # query for self.first()
-        self._first_query = '''
-            SELECT * FROM ({user_query})
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            order_clause=fwd_ordderby,
-            page_size=self._page_size
-        )
+        self._first_query = f'''
+            SELECT * FROM ({self._query})
+            ORDER BY {fwd_orderby}
+            LIMIT {self._page_size}
+        '''
         # query for self.last()
-        self._last_query = '''
-            SELECT * FROM ({user_query})
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            order_clause=bwd_ordderby,
-            page_size=last_page_size
-        )
+        self._last_query = f'''
+            SELECT * FROM ({self._query})
+            ORDER BY {bwd_orderby}
+            LIMIT {last_page_size}
+        '''
         # query for self.next()
-        self._next_fmt = '''
-            SELECT * FROM ({user_query})
-            {where_clause}
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            where_clause=self._precompile_where_clause(self.FORWARD),
-            order_clause=fwd_ordderby,
-            page_size=self._page_size
-        )
+        self._next_fmt = f'''
+            SELECT * FROM ({self._query})
+            {self._precompile_where_clause(self.FORWARD)}
+            ORDER BY {fwd_orderby}
+            LIMIT {self._page_size}
+        '''
         # query for self.previous()
-        self._prev_fmt = '''
-            SELECT * FROM ({user_query})
-            {where_clause}
-            ORDER BY {order_clause}
-            LIMIT {page_size}
-        '''.format(
-            user_query=self._query,
-            where_clause=self._precompile_where_clause(self.BACKWARD),
-            order_clause=bwd_ordderby,
-            page_size=self._page_size
-        )
-        self._get_page_fmt = '''
-            SELECT * FROM ({user_query})
-            ORDER BY {order_clause}
-            LIMIT {page_size} OFFSET {{offset}}
-        '''.format(
-            user_query=self._query,
-            order_clause=fwd_ordderby,
-            page_size=self._page_size
-        )
+        self._prev_fmt = f'''
+            SELECT * FROM ({self._query})
+            {self._precompile_where_clause(self.BACKWARD)}
+            ORDER BY {bwd_orderby}
+            LIMIT {self._page_size}
+        '''
+        self._get_page_fmt = f'''
+            SELECT * FROM ({self._query})
+            ORDER BY {fwd_orderby}
+            LIMIT {self._page_size} OFFSET {{offset}}
+        '''
 
     def _compile_orderby_clause(self, invert=False):
         sort_columns = self._sort_columns + [self._id_column]
@@ -226,7 +197,7 @@ class ScrollingPager(OffsetPager):
             if invert:
                 order = not order
             direction = 'ASC' if order == self.SORT_ASC else 'DESC'
-            exprs.append('%s %s' % (name, direction))
+            exprs.append(f'{name} {direction}')
         return ', '.join(exprs)
 
     def _precompile_where_clause(self, direction):
@@ -239,17 +210,17 @@ class ScrollingPager(OffsetPager):
             op1 = self._get_operator(direction, order, False)
             op2 = self._get_operator(direction, order, True)
             key = value_fmt % (cursor, name)
-            #last_index = self._cursor[cursor][name]
+            # last_index = self._cursor[cursor][name]
             exprs_1.append(comp_fmt.format(col=name, op=op1, value=key))
             exprs_2.append(comp_fmt.format(col=name, op=op2, value=key))
         # add unique column
         name, order = self._id_column
         operator = self._get_operator(direction, order, True)
         key = value_fmt % (cursor, name)
-        #last_index = self._cursor[cursor][name]
+        # last_index = self._cursor[cursor][name]
         expr = comp_fmt.format(col=name, op=operator, value=key)
         if not self._sort_columns:
-            return 'WHERE ({expr})'.format(expr=expr)
+            return f'WHERE ({expr})'
         exprs_2.append(expr)
         return 'WHERE (({expr_1}) AND ({expr_2}))'.format(
             expr_1=' AND '.join(exprs_1),
@@ -262,15 +233,11 @@ class ScrollingPager(OffsetPager):
         #      'name': name of the index,
         #      'unique': nonzero if unique index
         #    }, ...]
-        indexes = self._con.execute(
-            'pragma index_list(%s)' % table_name
-        ).fetchall()
+        indexes = self._con.execute(f'pragma index_list({table_name})').fetchall()
         for idx in indexes:
             if idx['unique'] == 0:
                 continue
-            idx_info = self._con.execute(
-                'pragma index_info(%s)' % idx['name']
-            ).fetchone()
+            idx_info = self._con.execute(f'pragma index_info({idx["name"]})').fetchone()
             if idx_info['name'] == column_name:
                 return True
         return False

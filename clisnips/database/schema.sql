@@ -16,9 +16,9 @@ CREATE TABLE IF NOT EXISTS snippets(
 
 -- Snippets search index
 
-CREATE VIRTUAL TABLE IF NOT EXISTS snippets_index USING fts4(
-    tokenize=unicode_words,
-    content="snippets",
+CREATE VIRTUAL TABLE IF NOT EXISTS snippets_index USING fts5(
+    tokenize = "unicode61 remove_diacritics 2 tokenchars '-_'",
+    content = "snippets",
     title,
     tag
 );
@@ -38,13 +38,13 @@ CREATE INDEX IF NOT EXISTS snip_ranking_idx ON snippets(ranking DESC);
 CREATE TRIGGER IF NOT EXISTS snippets_bu
 BEFORE UPDATE ON snippets
 BEGIN
-    DELETE FROM snippets_index WHERE docid=OLD.rowid;
+    DELETE FROM snippets_index WHERE rowid=OLD.rowid;
 END;
 
 CREATE TRIGGER IF NOT EXISTS snippets_bd
 BEFORE DELETE ON snippets
 BEGIN
-    DELETE FROM snippets_index WHERE docid=OLD.rowid;
+    DELETE FROM snippets_index WHERE rowid=OLD.rowid;
 END;
 
 CREATE TRIGGER IF NOT EXISTS snippets_au
@@ -57,9 +57,7 @@ BEGIN
         NEW.usage_count
     ) WHERE rowid = NEW.rowid;
     -- Update search index
-    INSERT INTO snippets_index(docid, title, tag) VALUES(
-        NEW.rowid, NEW.title, NEW.tag
-    );
+    INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
 END;
 
 CREATE TRIGGER IF NOT EXISTS snippets_ai
@@ -72,9 +70,7 @@ BEGIN
         NEW.usage_count
     ) WHERE rowid = NEW.rowid;
     -- Update search index
-    INSERT INTO snippets_index(docid, title, tag) VALUES(
-        NEW.rowid, NEW.title, NEW.tag
-    );
+    INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
 END;
 
 

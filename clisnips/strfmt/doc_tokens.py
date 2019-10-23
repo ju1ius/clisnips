@@ -18,7 +18,7 @@
 
 __TOKEN_NAMES = {}
 
-for k, v in dict(vars()).iteritems():
+for k, v in dict(vars()).items():
     if k.startswith('T_'):
         __TOKEN_NAMES[v] = k
 del k, v
@@ -50,13 +50,11 @@ class Token(object):
         self.startpos = self.endpos = None
 
     def __str__(self):
-        return ('{s.name} {s.value!r} on line {s.startline}, '
-                'column {s.startcol}').format(s=self)
+        return f'{self.name} {self.value!r} on line {self.startline}, column {self.startcol}'
 
     def __repr__(self):
         pos = ''
         if self.startpos is not None:
-            pos = '%s->%s' % (self.startpos, self.endpos)
-        return ('<Token {s.name} @ {pos} '
-                '({s.startline},{s.startcol})->({s.endline},'
-                '{s.endcol}) : {s.value!r}>').format(s=self, pos=pos)
+            pos = f'{self.startpos}->{self.endpos}'
+        return (f'<Token {self.name} @ {pos} '
+                f'({self.startline},{self.startcol})->({self.endline},{self.endcol}) : {self.value!r}>')

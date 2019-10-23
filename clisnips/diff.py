@@ -1,22 +1,11 @@
-### Copyright (C) 2009 Piotr Piastucki <the_leech@users.berlios.de>
+"""
+Diff code extracted from meld
+(©) 2009 Piotr Piastucki <the_leech@users.berlios.de>
+License: GPLv2
+"""
 
-### This program is free software; you can redistribute it and/or modify
-### it under the terms of the GNU General Public License as published by
-### the Free Software Foundation; either version 2 of the License, or
-### (at your option) any later version.
-
-### This program is distributed in the hope that it will be useful,
-### but WITHOUT ANY WARRANTY; without even the implied warranty of
-### MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-### GNU General Public License for more details.
-
-### You should have received a copy of the GNU General Public License
-### along with this program; if not, write to the Free Software
-### Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-### USA.
-
-import collections
-import difflib
+from collections import namedtuple
+from difflib import SequenceMatcher
 
 
 def find_common_prefix(a, b):
@@ -55,15 +44,15 @@ def find_common_suffix(a, b):
     return 0
 
 
-DiffChunk = collections.namedtuple('DiffChunk',
-                                   'tag, start_a, end_a, start_b, end_b')
+DiffChunk = namedtuple('DiffChunk', 'tag, start_a, end_a, start_b, end_b')
 
 
-class MyersSequenceMatcher(difflib.SequenceMatcher):
+class MyersSequenceMatcher(SequenceMatcher):
 
     def __init__(self, isjunk=None, a="", b=""):
         if isjunk is not None:
             raise NotImplementedError('isjunk is not supported yet')
+        super().__init__()
         self.a = a
         self.b = b
         self.matching_blocks = self.opcodes = None
@@ -88,7 +77,7 @@ class MyersSequenceMatcher(difflib.SequenceMatcher):
         return self.matching_blocks
 
     def get_opcodes(self):
-        opcodes = difflib.SequenceMatcher.get_opcodes(self)
+        opcodes = SequenceMatcher.get_opcodes(self)
         return [DiffChunk._make(chunk) for chunk in opcodes]
 
     def get_difference_opcodes(self):
@@ -354,7 +343,7 @@ class InlineMyersSequenceMatcher(MyersSequenceMatcher):
 class SyncPointMyersSequenceMatcher(MyersSequenceMatcher):
 
     def __init__(self, isjunk=None, a="", b="", syncpoints=None):
-        MyersSequenceMatcher.__init__(self, isjunk, a, b)
+        super().__init__(isjunk, a, b)
         self.isjunk = isjunk
         self.syncpoints = syncpoints
 
@@ -387,7 +376,7 @@ class SyncPointMyersSequenceMatcher(MyersSequenceMatcher):
                     bj = matching_blocks[l][1]
                     bl = matching_blocks[l][2]
                     if (aj + bl == ai and bj + bl == bi and
-                            blocks[0][0] == 0 and blocks[0][1] == 0):
+                        blocks[0][0] == 0 and blocks[0][1] == 0):
                         block = blocks.pop(0)
                         matching_blocks[l] = (aj, bj, bl + block[2])
                 for x, y, l in blocks[:-1]:
@@ -419,7 +408,7 @@ class SyncPointMyersSequenceMatcher(MyersSequenceMatcher):
                     tag = 'insert'
                 if tag:
                     opcodes.append((tag, i, ai, j, bj))
-                i, j = ai+size, bj+size
+                i, j = ai + size, bj + size
                 # the list of matching blocks is terminated by a
                 # sentinel with size 0
                 if size:

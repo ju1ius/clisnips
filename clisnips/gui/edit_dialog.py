@@ -1,13 +1,12 @@
-import os
+from pathlib import Path
 
-import gtk
+from gi.repository import Gtk
 
-from ..config import styles
+from .error_dialog import ErrorDialog
 from .helpers import BuildableWidgetDecorator, SimpleTextView, replace_widget
 # validation
 from ..exceptions import ParsingError
 from ..strfmt import doc_parser, fmt_parser
-from .error_dialog import ErrorDialog
 
 HAS_GTKSOURCEVIEW = True
 try:
@@ -16,17 +15,17 @@ except ImportError:
     HAS_GTKSOURCEVIEW = False
 
 
-__DIR__ = os.path.abspath(os.path.dirname(__file__))
+__DIR__ = Path(__file__).parent.absolute()
 
 
 class EditDialog(BuildableWidgetDecorator):
 
-    UI_FILE = os.path.join(__DIR__, 'resources', 'edit_dialog.ui')
+    UI_FILE = __DIR__ / 'resources' / 'glade' / 'edit_dialog.glade'
     MAIN_WIDGET = 'edit_dialog'
     WIDGET_IDS = ('desc_entry', 'cmd_textview', 'doc_textview', 'tags_entry')
 
     def __init__(self):
-        super(EditDialog, self).__init__()
+        super().__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
 
         self._setup_textviews()
@@ -41,7 +40,7 @@ class EditDialog(BuildableWidgetDecorator):
             self.populate_fields(data)
         response = self.widget.run()
         if not self._editable:
-            return gtk.RESPONSE_REJECT
+            return Gtk.ResponseType.REJECT
         return response
 
     def set_editable(self, editable):
@@ -87,16 +86,14 @@ class EditDialog(BuildableWidgetDecorator):
             try:
                 tokens = [t for t in fmt_parser.parse(cmd)]
             except ParsingError as err:
-                msg = 'You have an error in your snippet syntax:\n%s'
-                errors.append(msg % str(err))
+                errors.append(f'You have an error in your snippet syntax:\n{err!s}')
         #
         doc = self.doc_textview.get_text().strip()
         if doc:
             try:
                 doc_parser.parse(doc)
             except ParsingError as err:
-                msg = 'You have an error in your documentation syntax:\n%s'
-                errors.append(msg % str(err))
+                errors.append(f'You have an error in your documentation syntax:\n{err!s}')
         #
         if errors:
             ErrorDialog().run('\n'.join(errors))
@@ -109,7 +106,6 @@ class EditDialog(BuildableWidgetDecorator):
             for name in views:
                 view = getattr(self, name)
                 src_view = SourceView()
-                src_view.set_font(styles.font)
                 replace_widget(view, src_view)
                 setattr(self, name, src_view)
             self.cmd_textview.set_syntax('clisnips-cmd')
@@ -118,11 +114,6 @@ class EditDialog(BuildableWidgetDecorator):
             for name in views:
                 view = getattr(self, name)
                 view = SimpleTextView(view)
-                view.set_font(styles.font)
-                view.set_background_color(styles.bgcolor)
-                view.set_text_color(styles.fgcolor)
-                view.set_cursor_color(styles.cursor_color)
-                view.set_padding(6)
                 setattr(self, name, view)
 
     ###########################################################################
@@ -133,15 +124,15 @@ class EditDialog(BuildableWidgetDecorator):
         if not self._editable:
             self.widget.hide()
             return False
-        if response_id == gtk.RESPONSE_ACCEPT:
+        if response_id == Gtk.ResponseType.ACCEPT:
             if not self._validate():
                 self.widget.stop_emission('response')
                 return False
             self.widget.hide()
-        elif response_id == gtk.RESPONSE_REJECT:
+        elif response_id == Gtk.ResponseType.REJECT:
             self.reset_fields()
             self.widget.hide()
-        elif response_id == gtk.RESPONSE_DELETE_EVENT:
+        elif response_id == Gtk.ResponseType.DELETE_EVENT:
             self.reset_fields()
             self.widget.hide()
             return True

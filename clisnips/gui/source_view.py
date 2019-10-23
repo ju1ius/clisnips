@@ -1,36 +1,29 @@
-from os.path import abspath, dirname, join
+from pathlib import Path
 
-import gobject
-import gtk
-import gtksourceview2
+from gi.repository import GObject, Gtk, GtkSource
 
-from ..config import styles
-from ..utils import get_luminance
-from .helpers import set_font
+__DIR__ = Path(__file__).parent.absolute()
 
 
-__dir__ = dirname(abspath(__file__))
-
-
-class Buffer(gtksourceview2.Buffer):
+class Buffer(GtkSource.Buffer):
 
     def __init__(self):
-        super(Buffer, self).__init__()
+        super().__init__()
         self.set_highlight_matching_brackets(True)
         self.set_highlight_syntax(True)
 
 
-class SourceView(gtksourceview2.View):
+class SourceView(GtkSource.View):
 
     __gsignals__ = {
-        'changed': gobject.signal_query('changed', gtk.TextBuffer)[3:]
+        'changed': GObject.signal_query('changed', Gtk.TextBuffer)[3:]
     }
 
     def __init__(self):
-        super(SourceView, self).__init__()
+        super().__init__()
         self.set_show_line_numbers(True)
-        self.set_tab_width(4)
         self.set_insert_spaces_instead_of_tabs(True)
+        self.set_tab_width(2)
         self.set_indent_on_tab(True)
         self.set_auto_indent(True)
         #
@@ -51,10 +44,7 @@ class SourceView(gtksourceview2.View):
     def get_text(self):
         buf = self.get_buffer()
         start, end = buf.get_bounds()
-        return buf.get_text(start, end)
-
-    def set_font(self, font):
-        set_font(self, font)
+        return buf.get_text(start, end, False)
 
     def set_syntax(self, syntax):
         lang = get_syntax(syntax)
@@ -68,20 +58,20 @@ class SourceView(gtksourceview2.View):
         self.emit('changed')
 
 
-class LanguageManager(gtksourceview2.LanguageManager):
+class LanguageManager(GtkSource.LanguageManager):
 
     def __init__(self):
-        super(LanguageManager, self).__init__()
+        super().__init__()
         path = self.get_search_path()
-        path.append(join(__dir__, 'resources'))
+        path.append(str(__DIR__ / 'resources' / 'sourceview'))
         self.set_search_path(path)
 
 
-class StyleManager(gtksourceview2.StyleSchemeManager):
+class StyleManager(GtkSource.StyleSchemeManager):
 
     def __init__(self):
-        super(StyleManager, self).__init__()
-        self.append_search_path(join(__dir__, 'resources'))
+        super().__init__()
+        self.append_search_path(str(__DIR__ / 'resources' / 'sourceview'))
 
 
 __language_manager = None
@@ -119,12 +109,4 @@ def get_theme(scheme):
 
 
 def get_default_theme():
-    return get_theme('monokai')
-    # TODO: adaptive theme
-    bgcolor = styles.bgcolor
-    lum = get_luminance(bgcolor)
-    if lum > 0.5:
-        # light background
-        return get_theme('solarizedlight')
-    # dark background
-    return get_theme('solarizeddark')
+    return get_theme('one-dark')

@@ -1,10 +1,10 @@
 import unittest
 
-import gtk
+from gi.repository import Gtk
 
 
 class GtkTestCase(unittest.TestCase):
 
     def _refresh_gui(self):
-        while gtk.events_pending():
-            gtk.main_iteration(block=False)
+        while Gtk.events_pending():
+            Gtk.main_iteration_do(blocking=False)

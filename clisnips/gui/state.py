@@ -1,10 +1,10 @@
 import inspect
 from operator import itemgetter
 
-import gobject
+from gi.repository import GObject
 
 
-class State(gobject.GObject):
+class State(GObject.GObject):
     """
     A state object for applications
     """
@@ -13,24 +13,24 @@ class State(gobject.GObject):
 
     __gsignals__ = {
         'set-state': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_INT,)
+            (GObject.TYPE_INT,)
         ),
         'enter-state': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_INT,)
+            (GObject.TYPE_INT,)
         ),
         'leave-state': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_INT,)
+            (GObject.TYPE_INT,)
         )
     }
 
     def __init__(self):
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
         self._mask = self.INITIAL
         self._states = None
 

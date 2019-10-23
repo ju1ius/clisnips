@@ -1,24 +1,18 @@
-from collections import OrderedDict
 
 from ..utils import get_num_decimals
-from ..exceptions import ParsingError
 
 
 class Documentation(object):
 
     def __init__(self):
         self.header = ''
-        self.parameters = OrderedDict()
+        self.parameters = dict()
         self.code_blocks = []
 
     def __str__(self):
         code = '\n'.join(str(c) for c in self.code_blocks)
         params = '\n'.join(str(p) for p in self.parameters.values())
-        return (
-            str(self.header)
-            + params
-            + code
-        )
+        return f'{self.header!s}{params}{code}'
 
     def __repr__(self):
         return str(self)
@@ -33,10 +27,7 @@ class Parameter(object):
         self.text = text
 
     def __str__(self):
-        return '{%s} (%s) %s "%s"' % (
-            self.name, self.typehint,
-            self.valuehint, self.text
-        )
+        return f'{{{self.name}}} ({self.typehint}) {self.valuehint} "{self.text}"'
 
     def __repr__(self):
         return str(self)
@@ -63,9 +54,7 @@ class ValueRange(object):
         return float('0.' + '0' * (n - 1) + '1')
 
     def __str__(self):
-        return '[%s..%s:%s*%s]' % (
-            self.start, self.end, self.step, self.default
-        )
+        return '[%s..%s:%s*%s]' % (self.start, self.end, self.step, self.default)
 
     def __repr__(self):
         return str(self)
@@ -108,7 +97,7 @@ class CodeBlock(object):
         exec(self._bytecode, _vars)
 
     def __str__(self):
-        return '```\n{code}\n```'.format(code=self.code)
+        return f'```\n{self.code}\n```'
 
     def __repr__(self):
         return str(self)

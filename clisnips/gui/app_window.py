@@ -1,25 +1,20 @@
-from __future__ import print_function
-import os
-import time
+from pathlib import Path
 
-import gobject
-import glib
-import gtk
+from gi.repository import GLib, GObject, Gdk, Gtk, Pango
 
-from ..config import config, styles, HELP_URI
 from . import helpers
-from .edit_dialog import EditDialog
-from .strfmt_dialog import StringFormatterDialog
-from .import_export import ImportDialog, ExportDialog
-from .open_dialog import OpenDialog, CreateDialog
-from .error_dialog import ErrorDialog
 from .about_dialog import AboutDialog
-from ..database.snippets_db import SnippetsDatabase
+from .edit_dialog import EditDialog
+from .error_dialog import ErrorDialog
+from .import_export import ExportDialog, ImportDialog
+from .open_dialog import CreateDialog, OpenDialog
 from .pager import Pager
 from .state import State as BaseState
+from .strfmt_dialog import StringFormatterDialog
+from ..config import HELP_URI
+from ..database.snippets_db import SnippetsDatabase
 
-
-__DIR__ = os.path.abspath(os.path.dirname(__file__))
+__DIR__ = Path(__file__).parent.absolute()
 
 
 class State(BaseState):
@@ -27,7 +22,7 @@ class State(BaseState):
     SEARCHING = 1 << 1
 
 
-class Model(gtk.ListStore):
+class Model(Gtk.ListStore):
 
     (
         COLUMN_ID,
@@ -43,14 +38,14 @@ class Model(gtk.ListStore):
     COLUMNS = (int, str, str, str, int, int, int, float)
 
     def __init__(self):
-        super(Model, self).__init__(*self.COLUMNS)
+        super().__init__(*self.COLUMNS)
 
 
 class MainDialog(helpers.BuildableWidgetDecorator):
 
     # Constants needed for BuildableWidgetDecorator
-    UI_FILE = os.path.join(__DIR__, 'resources', 'main_dialog.ui')
-    MAIN_WIDGET = 'main_dialog'
+    UI_FILE = __DIR__ / 'resources' / 'glade' / 'app_window.glade'
+    MAIN_WIDGET = 'app_window'
     WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
                   'pager_first_btn', 'pager_prev_btn',
                   'pager_next_btn', 'pager_last_btn',
@@ -61,18 +56,18 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # Signals emited by this dialog
     __gsignals__ = {
         'insert-snippet': (
-            gobject.SIGNAL_RUN_LAST,
-            gobject.TYPE_NONE,
-            (gobject.TYPE_STRING,)
+            GObject.SignalFlags.RUN_LAST,
+            None,
+            (GObject.TYPE_STRING,)
         ),
         'insert-snippet-dialog': (
-            gobject.SIGNAL_RUN_LAST,
-            gobject.TYPE_NONE,
+            GObject.SignalFlags.RUN_LAST,
+            None,
             ()
         ),
         'close': (
-            gobject.SIGNAL_RUN_LAST,
-            gobject.TYPE_NONE,
+            GObject.SignalFlags.RUN_LAST,
+            None,
             ()
         )
     }
@@ -80,35 +75,31 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # Delay before a search operation is fired.
     SEARCH_TIMEOUT = 300
 
-    def __init__(self):
-        super(MainDialog, self).__init__()
+    def __init__(self, app: Gtk.Application, config):
+        super().__init__()
+        self._config = config
         self.state = State()
+
         #self.ui.set_translation_domain(config.PKG_NAME)
+        self.widget.set_application(application=app)
         self.widget.connect("destroy-event", self.on_destroy)
         self.widget.connect("delete-event", self.on_destroy)
 
-        helpers.set_font(self.snip_list, styles.font)
-        helpers.set_background_color(self.snip_list, styles.bgcolor)
-        helpers.set_text_color(self.snip_list, styles.fgcolor)
-
         self.model = Model()
-        for i in (Model.COLUMN_TITLE, Model.COLUMN_TAGS, Model.COLUMN_CMD):
-            col = gtk.TreeViewColumn()
-            cell = gtk.CellRendererText()
-            #cell.set_property('font', styles.font)
-            #cell.set_property('background', styles.bgcolor)
-            #cell.set_property('foreground', styles.fgcolor)
+        for i in (Model.COLUMN_CMD, Model.COLUMN_TITLE, Model.COLUMN_TAGS):
+            col = Gtk.TreeViewColumn()
+            cell = Gtk.CellRendererText()
             if i == Model.COLUMN_CMD:
-                col.set_property('expand', True)
+                cell.set_property('wrap-mode', Pango.WrapMode.WORD)
             elif i == Model.COLUMN_TITLE:
-                cell.set_property('wrap-width', 300)
-            col.pack_start(cell, False)
+                cell.set_property('wrap-mode', Pango.WrapMode.WORD_CHAR)
+            col.pack_start(cell, expand=False)
             col.add_attribute(cell, 'text', i)
             self.snip_list.append_column(col)
 
         self.db = None
         self.pager = None
-        self.set_database(config.database_path)
+        self.set_database(self._config.database_path)
 
         self._search_timeout = 0
 
@@ -142,34 +133,27 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         self.strfmt_dialog.set_cwd(cwd)
 
     def set_database(self, db_file):
-        old_db = None
-        # FIXME:  don't call __len__ !
-        if self.db is not None:
-            old_db = self.db.db_file
-            self.db.close()
+        old_db = self.db
         try:
-            self.db = SnippetsDatabase(db_file).open()
+            self.db = SnippetsDatabase.open(db_file)
         except:
-            if old_db:
-                self.set_database(old_db)
             raise
-        else:
-            if db_file != old_db:
-                config.database_path = db_file
-                if db_file != ':memory:':
-                    config.save()
-            self.pager = Pager(self.ui, self.db,
-                               page_size=config.pager_page_size)
-            self.pager.set_sort_columns([
-                (config.pager_sort_column, 'DESC'),
-                ('id', 'ASC', True)
-            ])
+        if old_db:
+            old_db.close()
+        if db_file != ':memory:':
+            self._config.database_path = db_file
+            self._config.save()
+        self.pager = Pager(self.ui, self.db, page_size=self._config.pager_page_size)
+        self.pager.set_sort_columns([
+            (self._config.pager_sort_column, 'DESC'),
+            ('id', 'ASC', True)
+        ])
 
     def emit(self, *args):
         """
         Ensures signals are emitted in the main thread
         """
-        glib.idle_add(gobject.GObject.emit, self, *args)
+        GLib.idle_add(GObject.GObject.emit, self, *args)
 
     def load_snippets(self):
         """
@@ -245,7 +229,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         except Exception as err:
             ErrorDialog().run(err)
         else:
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 output = self.strfmt_dialog.get_output()
                 self.db.use_snippet(row['id'])
                 self.emit('insert-snippet', output)
@@ -274,19 +258,19 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         return row
 
     def show_row_context_menu(self):
-        menu = gtk.Menu()
-        for sid, cb in ((gtk.STOCK_APPLY, self.on_apply_btn_clicked),
-                        (gtk.STOCK_PROPERTIES, self.on_show_btn_clicked)):
+        menu = Gtk.Menu()
+        for sid, cb in (('_Apply', self.on_apply_btn_clicked),
+                        ('_Properties', self.on_show_btn_clicked)):
             self._add_context_menu_item(menu, sid, cb)
-        menu.append(gtk.SeparatorMenuItem())
-        for sid, cb in ((gtk.STOCK_EDIT, self.on_edit_btn_clicked),
-                        (gtk.STOCK_DELETE, self.on_delete_btn_clicked)):
+        menu.append(Gtk.SeparatorMenuItem())
+        for sid, cb in ((Gtk.STOCK_EDIT, self.on_edit_btn_clicked),
+                        ('_Delete', self.on_delete_btn_clicked)):
             self._add_context_menu_item(menu, sid, cb)
         menu.show_all()
-        menu.popup(None, None, None, 3, 0)
+        menu.popup(None, None, None, None, 3, 0)
 
     def _add_context_menu_item(self, menu, stock_id, cb):
-        item = gtk.ImageMenuItem(stock_id)
+        item = Gtk.MenuItem.new_with_mnemonic(stock_id)
         item.connect('activate', cb)
         menu.append(item)
 
@@ -378,7 +362,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         """
         try:
             response = self.edit_dialog.run()
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 data = self.edit_dialog.get_data()
                 self.insert_row(data)
         except Exception as error:
@@ -397,7 +381,7 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         try:
             row = self.db.get(model.get_value(it, Model.COLUMN_ID))
             response = self.edit_dialog.run(row)
-            if response == gtk.RESPONSE_ACCEPT:
+            if response == Gtk.ResponseType.ACCEPT:
                 data = self.edit_dialog.get_data()
                 self.update_row(it, data)
         except Exception as error:
@@ -433,9 +417,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         Queues a request for a search operation.
         """
         if self._search_timeout:
-            glib.source_remove(self._search_timeout)
-        self._search_timeout = glib.timeout_add(self.SEARCH_TIMEOUT,
-                                                self._on_search_timeout)
+            GLib.source_remove(self._search_timeout)
+        self._search_timeout = GLib.timeout_add(self.SEARCH_TIMEOUT, self._on_search_timeout)
 
     def _on_search_timeout(self):
         """
@@ -521,8 +504,8 @@ class MainDialog(helpers.BuildableWidgetDecorator):
         ])
 
     def _change_sort_columns(self, columns):
-        config.pager_sort_column = columns[0][0]
-        config.save()
+        self._config.pager_sort_column = columns[0][0]
+        self._config.save()
         self.pager.set_sort_columns(columns)
         if self.pager.mode == Pager.MODE_SEARCH:
             search = self.get_search_text()
@@ -535,9 +518,9 @@ class MainDialog(helpers.BuildableWidgetDecorator):
     # ===== Help Menu
 
     def on_helplink_menuitem_activate(self, menuitem):
-        gtk.show_uri(gtk.gdk.screen_get_default(),
+        Gtk.show_uri(Gdk.Screen.get_default(),
                      HELP_URI,
-                     int(glib.get_current_time()))
+                     int(GLib.get_current_time()))
 
     def on_about_menuitem_activate(self, menuitem):
         dlg = AboutDialog()

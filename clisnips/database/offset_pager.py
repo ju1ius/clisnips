@@ -1,15 +1,9 @@
-from __future__ import division
-import math
-
-import gobject
+from math import ceil
 
 
-class OffsetPager(object):
+class OffsetPager:
 
     def __init__(self, connection, page_size=100):
-        """
-        
-        """
         self._con = connection
         self._current_page = 1
         self._num_pages = 1
@@ -57,7 +51,7 @@ class OffsetPager(object):
 
     def set_count_query(self, query, params=()):
         self._executed = False
-        self._count_query = 'SELECT COUNT(*) FROM (%s)' % query
+        self._count_query = f'SELECT COUNT(*) FROM ({query})'
         self._count_query_params = params
         return self
 
@@ -87,7 +81,7 @@ class OffsetPager(object):
         query = 'SELECT * FROM ({query}) LIMIT {page_size} {offset}'.format(
             query=self._query,
             page_size=self._page_size,
-            offset='' if page == 1 else 'OFFSET %s' % offset
+            offset='' if page == 1 else f'OFFSET {offset}'
         )
         cursor = self._con.execute(query, self._query_params)
         return cursor.fetchall()
@@ -109,14 +103,14 @@ class OffsetPager(object):
 
     def _count(self):
         if not self._count_query:
-            query = 'SELECT COUNT(*) FROM (%s)' % self._query
+            query = f'SELECT COUNT(*) FROM ({self._query})'
             params = self._query_params
         else:
             query = self._count_query
             params = self._count_query_params
         count = self._con.execute(query, params).fetchone()[0]
         self._total_size = count
-        self._num_pages = int(math.ceil(count / self._page_size))
+        self._num_pages = int(ceil(count / self._page_size))
 
     def _check_executed(self):
         if not self._executed:

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<style-scheme id="one-dark" _name="One Dark" version="1.0">
+  <author>Julius Bobinus</author>
+  <_description>Atom One Dark based theme.</_description>
+
+  <color name="theme-black" value="#282c34"/>
+  <color name="theme-red" value="#e06c75"/>
+  <color name="theme-green" value="#98c379"/>
+  <color name="theme-yellow" value="#e5c07b"/>
+  <color name="theme-cyan" value="#61afef"/>
+  <color name="theme-magenta" value="#c678dd"/>
+  <color name="theme-teal" value="#56b6c2"/>
+  <color name="theme-grey" value="#abb2bf"/>
+
+  <color name="theme-black-muted" value="#3e4452"/>
+  <color name="theme-red-muted" value="#be5046"/>
+  <color name="theme-green-muted" value="#98c379"/>
+  <color name="theme-yellow-muted" value="#d19a66"/>
+  <color name="theme-cyan-muted" value="#61afef"/>
+  <color name="theme-magenta-muted" value="#c678dd"/>
+  <color name="theme-teal-muted" value="#56b6c2"/>
+  <color name="theme-grey-muted" value="#5c6370"/>
+
+  <color name="line_highlight" value="#2c313a"/>
+  <color name="selection_color" value="#b6bdc8"/>
+  <color name="error_color" value="#efefef"/>
+
+  <!-- Global Settings -->
+
+  <style name="text" foreground="theme-grey" background="theme-black"/>
+  <style name="cursor" foreground="theme-cyan"/>
+  <style name="current-line" background="line_highlight"/>
+  <style name="line-numbers" foreground="theme-grey-muted" background="theme-black"/>
+  <style name="selection" foreground="theme-grey-muted" background="selection_color"/>
+
+  <!-- Bracket Matching -->
+
+  <style name="bracket-match" foreground="theme-black" background="theme-magenta"/>
+  <style name="bracket-mismatch" background="error_color"/>
+  <style name="search-match" foreground="theme-grey-muted" background="theme-grey"/>
+
+  <!-- Base syntax colors -->
+
+  <style name="def:string" foreground="theme-green"/>
+  <style name="def:character" foreground="theme-green"/>
+  <style name="def:special-char" foreground="theme-green"/>
+  <style name="def:number" foreground="theme-yellow"/>
+  <style name="def:decimal" foreground="theme-yellow"/>
+  <style name="def:floating-point" foreground="theme-yellow"/>
+  <style name="def:complex" foreground="theme-yellow"/>
+  <style name="def:base-n-integer" foreground="theme-yellow"/>
+  <style name="def:boolean" foreground="theme-yellow"/>
+
+  <style name="def:builtin" foreground="theme-magenta"/>
+  <style name="def:keyword" foreground="theme-magenta"/>
+  <style name="def:function" foreground="theme-cyan"/>
+  <style name="def:type" foreground="theme-magenta"/>
+  <style name="def:preprocessor" foreground="theme-magenta"/>
+  <style name="def:identifier" foreground="theme-magenta"/>
+  <style name="def:operator" foreground="theme-magenta"/>
+  <style name="def:statement" foreground="theme-magenta"/>
+
+  <style name="def:constant" foreground="theme-yellow"/>
+  <style name="def:special-constant" foreground="theme-magenta"/>
+  <style name="def:error" foreground="error_color" background="theme-black"/>
+
+  <!-- Comments -->
+
+  <style name="def:comment" foreground="theme-grey-muted"/>
+  <style name="def:shebang" foreground="theme-yellow"/>
+  <style name="def:doc-comment-element" foreground="theme-grey-muted"/>
+  <style name="def:note" foreground="theme-grey-muted"/>
+
+</style-scheme>

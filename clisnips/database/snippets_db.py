@@ -1,53 +1,61 @@
 import os
+import sqlite3
 import stat
 import time
-import sqlite3
+from os import PathLike
+from pathlib import Path
 
-from . import word_tokenizer
+__DIR__ = Path(__file__).absolute().parent
 
-
-__DIR__ = os.path.abspath(os.path.dirname(__file__))
-
-DB_FILE = os.path.join(__DIR__, 'snippets.sqlite')
-
-SCHEMA_FILE = os.path.join(__DIR__, 'schema.sql')
-with open(SCHEMA_FILE, 'r') as fp:
-    SCHEMA_QUERY = fp.read()
 
 SECONDS_TO_DAYS = float(60 * 60 * 24)
 # ranking decreases much faster for older items
 # when gravity is increased
 GRAVITY = 1.2
 
+with open(__DIR__ / 'schema.sql', 'r') as fp:
+    SCHEMA_QUERY = fp.read()
 
-def ranking_function(created, last_used, num_used):
+
+def ranking_function(created: int, last_used: int, num_used: int) -> float:
     now = time.time()
     age = (now - created) / SECONDS_TO_DAYS
     last_used = (now - last_used) / SECONDS_TO_DAYS
     return num_used / pow(last_used / age, GRAVITY)
 
 
-class SnippetsDatabase(object):
+class SnippetsDatabase:
 
     COLUMN_ID = 'rowid'
     COLUMN_TITLE = 'title'
     COLUMN_CMD = 'cmd'
     COLUMN_TAGS = 'tag'
     COLUMN_DOC = 'doc'
-    COLUMN_INDEX = 'docid'
 
-    def __init__(self, db_file=None):
-        self.db_file = db_file or DB_FILE
-        self.connection = None
-        self.cursor = None
+    def __init__(self, connection: sqlite3.Connection):
+        self.connection = connection
+        self.cursor = connection.cursor()
+        self.closed = False
         self.block_size = 1024
         self._num_rows = 0
-        self.closed = True
 
-    def get_connection(self):
+    @classmethod
+    def open(cls, db_file: PathLike = ':memory:'):
+        db_file = Path(db_file)
+        if db_file.name != ':memory:' and not db_file.is_file():
+            db_file.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+            os.mknod(db_file, 0o644 | stat.S_IFREG)
+        cx = sqlite3.connect(db_file)
+        cx.row_factory = sqlite3.Row
+        cx.create_function('rank', 3, ranking_function)
+        cx.executescript(SCHEMA_QUERY)
+
+        return cls(cx)
+
+    def get_connection(self) -> sqlite3.Connection:
         return self.connection
 
-    def get_cursor(self):
+    def get_cursor(self) -> sqlite3.Cursor:
         return self.cursor
 
     def save(self):
@@ -61,22 +69,6 @@ class SnippetsDatabase(object):
             self.connection.close()
             self.closed = True
 
-    def open(self):
-        if (
-            not self.db_file == ':memory:'
-            and not os.path.isfile(self.db_file)
-        ):
-            os.mknod(self.db_file, 0o755 | stat.S_IFREG)
-        if self.closed or not isinstance(self.connection, sqlite3.Connection):
-            self.connection = sqlite3.connect(self.db_file)
-            self.connection.create_function('rank', 3, ranking_function)
-            word_tokenizer.register(self.connection)
-            self.connection.executescript(SCHEMA_QUERY)
-            self.connection.row_factory = sqlite3.Row
-            self.cursor = self.connection.cursor()
-        self.closed = False
-        return self
-
     def __len__(self):
         if not self._num_rows:
             self.cursor.execute('SELECT COUNT(rowid) AS count FROM snippets')
@@ -89,10 +81,18 @@ class SnippetsDatabase(object):
             self.cursor.execute(query)
 
     def optimize_index(self):
-        query = ('INSERT INTO snippets_index(snippets_index) '
-                 'VALUES("optimize")')
+        query = 'INSERT INTO snippets_index(snippets_index) VALUES("optimize")'
         with self.connection:
             self.cursor.execute(query)
+
+    def backup(self, to: sqlite3.Connection, progress=None):
+        with to:
+            self.connection.backup(to, pages=1, progress=progress)
+
+    def dump(self, to: PathLike):
+        with open(to, 'w') as fp:
+            for line in self.connection.iterdump():
+                fp.write(f'{line}\n')
 
     def __iter__(self):
         return self.iter('*')
@@ -109,31 +109,33 @@ class SnippetsDatabase(object):
                     yield row
 
     def get(self, rowid):
-        query = ('SELECT rowid AS id, * FROM snippets WHERE rowid = :id')
+        query = 'SELECT rowid AS id, * FROM snippets WHERE rowid = :id'
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
-    def get_listing_query(self):
-        return ('SELECT rowid AS id, title, cmd, tag, '
-                'created_at, last_used_at, usage_count, ranking '
-                'FROM snippets')
+    @staticmethod
+    def get_listing_query():
+        return 'SELECT rowid AS id, title, cmd, tag, created_at, last_used_at, usage_count, ranking FROM snippets'
 
-    def get_listing_count_query(self):
+    @staticmethod
+    def get_listing_count_query():
         return 'SELECT rowid FROM snippets'
 
-    def get_search_query(self):
-        return ('SELECT i.docid, s.rowid AS id, '
-                's.title, s.cmd, s.tag, '
-                's.created_at, s.last_used_at, s.usage_count, s.ranking '
-                'FROM snippets s JOIN snippets_index i ON i.docid = s.rowid '
-                'WHERE snippets_index MATCH :term')
+    @staticmethod
+    def get_search_query():
+        return f'''
+            SELECT i.rowid as docid, s.rowid AS id,
+            s.title, s.cmd, s.tag,
+            s.created_at, s.last_used_at, s.usage_count, s.ranking
+            FROM snippets s JOIN snippets_index i ON i.rowid = s.rowid
+            WHERE snippets_index MATCH :term
+        '''
 
-    def get_search_count_query(self):
-        return ('SELECT docid FROM snippets_index '
-                'WHERE snippets_index MATCH :term')
+    @staticmethod
+    def get_search_count_query():
+        return f'SELECT rowid FROM snippets_index WHERE snippets_index MATCH :term'
 
     def search(self, term):
-        query = ('SELECT docid AS id FROM snippets_index '
-                 'WHERE snippets_index MATCH :term')
+        query = f'SELECT rowid AS id FROM snippets_index WHERE snippets_index MATCH :term'
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
         except sqlite3.OperationalError as err:
@@ -141,8 +143,7 @@ class SnippetsDatabase(object):
         return rows
 
     def insert(self, data):
-        query = ('INSERT INTO snippets(title, cmd, doc, tag) '
-                 'VALUES(:title, :cmd, :doc, :tag)')
+        query = 'INSERT INTO snippets(title, cmd, doc, tag) VALUES(:title, :cmd, :doc, :tag)'
         with self.connection:
             self.cursor.execute(query, data)
             if self.cursor.rowcount > 0:
@@ -167,9 +168,7 @@ class SnippetsDatabase(object):
             return self.cursor.lastrowid
 
     def update(self, data):
-        query = ('UPDATE snippets '
-                 'SET title = :title, cmd = :cmd, doc = :doc, tag = :tag '
-                 'WHERE rowid = :id')
+        query = 'UPDATE snippets SET title = :title, cmd = :cmd, doc = :doc, tag = :tag WHERE rowid = :id'
         with self.connection:
             self.cursor.execute(query, data)
             return self.cursor.rowcount
@@ -183,8 +182,7 @@ class SnippetsDatabase(object):
 
     def use_snippet(self, rowid):
         query = ('UPDATE snippets '
-                 'SET last_used_at = strftime("%s", "now"), '
-                 'usage_count = usage_count + 1 '
+                 'SET last_used_at = strftime("%s", "now"), usage_count = usage_count + 1 '
                  'WHERE rowid = :id')
         with self.connection:
             self.cursor.execute(query, {'id': rowid})

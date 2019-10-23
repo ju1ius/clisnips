@@ -1,19 +1,13 @@
-import os
-import signal
+import inspect
 import multiprocessing
 import multiprocessing.queues
+import os
+import signal
 import threading
-import inspect
 
-import glib
-import gobject
-import gtk
+from gi.repository import GLib, GObject, Gtk
 
 from .error_dialog import ErrorDialog
-
-
-gtk.gdk.threads_init()
-
 
 (
     START,
@@ -27,6 +21,9 @@ gtk.gdk.threads_init()
 
 
 class MessageQueue(multiprocessing.queues.Queue):
+
+    def __init__(self):
+        super().__init__(0, ctx=multiprocessing)
 
     def start(self):
         self.put((START,))
@@ -50,81 +47,79 @@ class MessageQueue(multiprocessing.queues.Queue):
         self.put((CANCEL,))
 
 
-class Listener(gobject.GObject):
-
+class Listener(GObject.GObject):
     __gsignals__ = {
         'start': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         ),
         'finish': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         ),
         'update': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_FLOAT,)
+            (GObject.TYPE_FLOAT,)
         ),
         'pulse': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         ),
         'message': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_STRING,)
+            (GObject.TYPE_STRING,)
         ),
         'error': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
-            (gobject.TYPE_PYOBJECT,)
+            (GObject.TYPE_PYOBJECT,)
         ),
         'cancel': (
-            gobject.SIGNAL_RUN_LAST,
+            GObject.SignalFlags.RUN_LAST,
             None,
             ()
         )
     }
 
     def __init__(self, queue=None):
-        gobject.GObject.__init__(self)
+        GObject.GObject.__init__(self)
+        self._queue = None
         if queue:
             self.set_queue(queue)
-        self.stopevent = multiprocessing.Event()
-        self.thread = threading.Thread(target=self.run, args=())
+        self._stop_event = multiprocessing.Event()
+        self._thread = threading.Thread(target=self.run, args=())
 
     def set_queue(self, queue):
         if not isinstance(queue, MessageQueue):
-            raise RuntimeError(
-                'Listener must be associated with a progress.MessageQueue'
-            )
-        self.queue = queue
+            raise RuntimeError('Listener must be associated with a progress.MessageQueue')
+        self._queue = queue
 
     def emit(self, *args):
         """Ensures signals are emitted in the main thread"""
-        glib.idle_add(gobject.GObject.emit, self, *args)
+        GLib.idle_add(GObject.GObject.emit, self, *args)
 
     def start(self):
-        self.thread.start()
+        self._thread.start()
 
     def stop(self):
-        self.stopevent.set()
+        self._stop_event.set()
         # allow garbage collection
-        if self.queue:
-            self.queue = None
+        if self._queue:
+            self._queue = None
 
     def join(self):
-        self.thread.join()
+        self._thread.join()
 
     def run(self):
-        while not self.stopevent.is_set():
+        while not self._stop_event.is_set():
             # Listen for results on the queue and process them accordingly
             try:
-                data = self.queue.get()
+                data = self._queue.get()
             except:
                 continue
             msg_t = data[0]
@@ -145,16 +140,16 @@ class Listener(gobject.GObject):
                 self.emit('message', data[1])
 
 
-gobject.type_register(Listener)
+GObject.type_register(Listener)
 
 
 class IndeterminateListener(Listener):
 
     def run(self):
-        while not self.stopevent.is_set():
+        while not self._stop_event.is_set():
             # Listen for results on the queue and process them accordingly
             try:
-                data = self.queue.get(True, 0.1)
+                data = self._queue.get(True, 0.1)
             except:
                 self.emit('pulse')
                 continue
@@ -177,86 +172,86 @@ class IndeterminateListener(Listener):
 class Process(multiprocessing.Process):
 
     def __init__(self, target, args=(), kwargs=None, queue=None):
-        self.stopevent = multiprocessing.Event()
-        super(Process, self).__init__(target=target, args=args, kwargs=kwargs)
+        super().__init__(target=target, args=args, kwargs=kwargs)
+        self._stop_event = multiprocessing.Event()
+        self._queue = None
         if queue:
             self.set_queue(queue)
 
     def set_queue(self, queue):
         if not isinstance(queue, MessageQueue):
-            raise RuntimeError(
-                'Process must be associated with a progress.MessageQueue'
-            )
-        self.queue = queue
+            raise RuntimeError('Process must be associated with a progress.MessageQueue')
+        self._queue = queue
 
     def stop(self):
-        print("Stopping process %s" % self.pid)
-        self.stopevent.set()
+        print(f"Stopping process {self.pid}")
+        self._stop_event.set()
         # allow garbage collection
-        if self.queue:
-            self.queue = None
+        if self._queue:
+            self._queue = None
+            self._target.message_queue = None
 
     def kill(self):
         self.stop()
         if self.is_alive():
-            print('Killing process %s' % self.pid)
+            print(f'Killing process {self.pid}')
             try:
                 os.killpg(self.pid, signal.SIGKILL)
             except OSError as err:
                 os.kill(self.pid, signal.SIGKILL)
 
     def run(self):
-        if not isinstance(self.queue, MessageQueue):
-            raise RuntimeError(
-                'Process must be associated with a progress.MessageQueue'
-            )
-        print("Starting process %s" % self.pid)
+        if not isinstance(self._queue, MessageQueue):
+            raise RuntimeError('Process must be associated with a progress.MessageQueue')
+        print(f"Starting process {self.pid}")
         # pass the queue object to the function object
-        self._target.message_queue = self.queue
-        self.queue.start()
-        self.queue.update(0.0)
+        self._target.message_queue = self._queue
+        self._queue.start()
+        self._queue.update(0.0)
         try:
             self._do_run_task()
         except KeyboardInterrupt as e:
             print("Process catched KeyboardInterrupt")
-            self.queue.cancel()
+            self._queue.cancel()
         except Exception as e:
-            self.queue.error(e)
+            self._queue.error(e)
         finally:
-            self.queue.finish()
-            self.queue.close()
+            self._queue.finish()
+            self._queue.close()
 
     def _do_run_task(self):
         for msg in self._target(*self._args, **self._kwargs):
             if isinstance(msg, float):
-                self.queue.update(msg)
+                self._queue.update(msg)
             elif isinstance(msg, str):
-                self.queue.message(msg)
-            if self.stopevent.is_set():
-                self.queue.cancel()
+                self._queue.message(msg)
+            if self._stop_event.is_set():
+                self._queue.cancel()
                 print("Cancelled process %s" % self.pid)
                 break
 
 
 class BlockingProcess(Process):
 
+    def __init__(self, target, args=(), kwargs=None, queue=None):
+        super().__init__(target, args, kwargs, queue)
+
     def _do_run_task(self):
         self._target(*self._args, **self._kwargs)
 
 
-class Worker(object):
+class Worker:
 
     @classmethod
-    def from_job(kls, job, args=(), kwargs=None):
+    def from_job(cls, job, args=(), kwargs=None):
         queue = MessageQueue()
         if inspect.isgeneratorfunction(job) or inspect.isgenerator(job):
             process = Process(job, args=args, kwargs=kwargs, queue=queue)
             listener = Listener(queue)
         else:
-            process = BlockingProcess(job, args=args, kwargs=kwargs,
-                                      queue=queue)
+            process = BlockingProcess(job, args=args, kwargs=kwargs, queue=queue)
             listener = IndeterminateListener(queue)
-        return kls(process, listener, queue)
+        return cls(process, listener, queue)
 
     def __init__(self, process, listener, queue):
         self.queue = queue
@@ -306,24 +301,24 @@ class Worker(object):
         self.cleanup()
 
 
-class ProgressDialog(gtk.MessageDialog):
+class ProgressDialog(Gtk.MessageDialog):
 
     def __init__(self, message='', parent=None):
-        super(ProgressDialog, self).__init__(
+        super().__init__(
             parent=parent,
-            flags=gtk.DIALOG_MODAL,
-            type=gtk.MESSAGE_INFO,
+            flags=Gtk.DialogFlags.MODAL,
+            type=Gtk.MessageType.INFO,
             message_format=message
         )
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
 
-        self.add_button(gtk.STOCK_APPLY, gtk.RESPONSE_APPLY)
-        self.apply_btn = self.get_widget_for_response(gtk.RESPONSE_APPLY)
+        self.add_button(Gtk.STOCK_APPLY, Gtk.ResponseType.APPLY)
+        self.apply_btn = self.get_widget_for_response(Gtk.ResponseType.APPLY)
 
-        self.progressbar = gtk.ProgressBar()
+        self.progressbar = Gtk.ProgressBar()
         self.progressbar.set_pulse_step(0.05)
-        self.get_message_area().pack_end(self.progressbar, True, True, 0)
+        self.get_message_area().pack_end(self.progressbar, expand=True, fill=True, padding=0)
 
         # SIGNALS
         self.connect("destroy", self.on_close)
@@ -343,11 +338,9 @@ class ProgressDialog(gtk.MessageDialog):
         listener.connect("finish", self._on_finish)
         listener.connect("error", self._on_error)
         #
-        #gtk.gdk.threads_enter()
         self.apply_btn.set_sensitive(False)
         self.worker.start()
-        response = super(ProgressDialog, self).run()
-        #gtk.gdk.threads_leave()
+        response = super().run()
         return response
 
     def _close(self):
@@ -376,12 +369,11 @@ class ProgressDialog(gtk.MessageDialog):
     def _on_error(self, listener, err):
         self._close()
 
-        def _err():
-            gtk.gdk.threads_enter()
+        def _cb():
             ErrorDialog().run(err)
-            gtk.gdk.threads_leave()
+            return False
 
-        glib.idle_add(_err)
+        GLib.idle_add(_cb)
 
     def _on_finish(self, listener):
         self.progressbar.set_fraction(1.0)
