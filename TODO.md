@@ -1,25 +1,25 @@
 - [ ] Documentation !!!
 - [x] Allow communication with terminal via dbus.
-- [ ] Parser
+-  Parser
     - [x] Handle command-line flags (-h, -R, -i, etc...)
-- [ ] Database
+- Database
     - [x] Maintenace operations (rebuild index, optimize, integrity check, etc...)
     - [x] Upgrade to FTS5 and remove word_tokenizer
     - [x] Backup / dump
 - [x] Import/Export
     - [x] Export popularity, timestamps, etc
-- [ ] Preferences
+- Preferences
     - [x] store independent config file (use configparser)
     - [x] sort columns
     - [x] page size
     - [x] db file path
-- [ ] Provide a default xml file to import on install, with a useful set of snippets.
+- Provide a default xml file to import on install, with a useful set of snippets.
     - [x] tar
     - [ ] git
     - [ ] find
     - [ ] apt
 - [ ] Replace FileChooserButton by Button + FileChooserDialog
-
 - [ ] Gtk3 port
     - [x] Use CSS / StyleContext API
     - [ ] Migrate to Gio.Action API
+    - [ ] load user CSS from XDG_CONFIG_HOME

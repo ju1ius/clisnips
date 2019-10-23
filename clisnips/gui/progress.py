@@ -48,7 +48,6 @@ class MessageQueue(multiprocessing.queues.Queue):
 
 
 class Listener(GObject.GObject):
-
     __gsignals__ = {
         'start': (
             GObject.SignalFlags.RUN_LAST,
@@ -234,6 +233,9 @@ class Process(multiprocessing.Process):
 
 class BlockingProcess(Process):
 
+    def __init__(self, target, args=(), kwargs=None, queue=None):
+        super().__init__(target, args, kwargs, queue)
+
     def _do_run_task(self):
         self._target(*self._args, **self._kwargs)
 
@@ -366,7 +368,12 @@ class ProgressDialog(Gtk.MessageDialog):
 
     def _on_error(self, listener, err):
         self._close()
-        GLib.idle_add(lambda: ErrorDialog().run(err))
+
+        def _cb():
+            ErrorDialog().run(err)
+            return False
+
+        GLib.idle_add(_cb)
 
     def _on_finish(self, listener):
         self.progressbar.set_fraction(1.0)
