@@ -1,6 +1,6 @@
 from gi.repository import Gtk
 
-from ..config import VERSION, AUTHORS, LICENSE
+from ..config import AUTHORS, LICENSE, VERSION
 
 
 class AboutDialog(Gtk.AboutDialog):

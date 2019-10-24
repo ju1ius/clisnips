@@ -1,30 +1,34 @@
+from gi.repository import Gtk
+
+from .buildable import Buildable
 from ..database.scrolling_pager import ScrollingPager
 
 
+@Buildable()
 class Pager:
 
     MODE_LIST = 1
     MODE_SEARCH = 2
 
+    first_btn = Buildable.Child('pager_first_btn')
+    next_btn = Buildable.Child('pager_next_btn')
+    prev_btn = Buildable.Child('pager_prev_btn')
+    last_btn = Buildable.Child('pager_last_btn')
+    curpage_lbl = Buildable.Child('pager_curpage_lbl')
+    infos_lbl = Buildable.Child('pager_info_lbl')
+
     def __init__(self, ui, db, page_size):
         self._page_size = page_size
-        self.snips_pager = ScrollingPager(db.connection, page_size)
-        self.snips_pager.set_query(db.get_listing_query())
-        self.snips_pager.set_count_query(db.get_listing_count_query())
+        self.list_pager = ScrollingPager(db.connection, page_size)
+        self.list_pager.set_query(db.get_listing_query())
+        self.list_pager.set_count_query(db.get_listing_count_query())
 
         self.search_pager = ScrollingPager(db.connection, page_size)
         self.search_pager.set_query(db.get_search_query())
         self.search_pager.set_count_query(db.get_search_count_query())
 
         self._mode = self.MODE_LIST
-        self._current_pager = self.snips_pager
-
-        self.first_btn = ui.get_object('pager_first_btn')
-        self.next_btn = ui.get_object('pager_next_btn')
-        self.prev_btn = ui.get_object('pager_prev_btn')
-        self.last_btn = ui.get_object('pager_last_btn')
-        self.curpage_lbl = ui.get_object('pager_curpage_lbl')
-        self.infos_lbl = ui.get_object('pager_info_lbl')
+        self._current_pager = self.list_pager
 
     @property
     def mode(self):
@@ -37,7 +41,7 @@ class Pager:
             self._current_pager = self.search_pager
         else:
             self._mode = self.MODE_LIST
-            self._current_pager = self.snips_pager
+            self._current_pager = self.list_pager
 
     @property
     def page_size(self):
@@ -48,12 +52,12 @@ class Pager:
         self.set_page_size(size)
 
     def set_sort_columns(self, columns):
-        self.snips_pager.set_sort_columns(columns)
+        self.list_pager.set_sort_columns(columns)
         self.search_pager.set_sort_columns(columns)
 
     def set_page_size(self, size):
         self._page_size = size
-        self.snips_pager.set_page_size(size)
+        self.list_pager.set_page_size(size)
         self.search_pager.set_page_size(size)
 
     def execute(self, params=(), count_params=()):
@@ -102,5 +106,5 @@ class Pager:
         page = self._current_pager.current_page
         num_pages = len(self._current_pager)
         self.curpage_lbl.set_text(str(page))
-        infos = f'page {page} of {num_pages} ({self._current_pager.total_rows} rows)'
+        infos = f'page {page} of {num_pages} ({self._current_pager.total_rows} snippets)'
         self.infos_lbl.set_text(infos)

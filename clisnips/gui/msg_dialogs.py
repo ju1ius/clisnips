@@ -22,20 +22,20 @@ class BaseDialog(Gtk.MessageDialog):
 
 class InfoDialog(BaseDialog):
 
-    def __init__(self):
-        super().__init__(type=Gtk.MessageType.INFO)
+    def __init__(self, **kwargs):
+        super().__init__(type=Gtk.MessageType.INFO, **kwargs)
 
 
 class WarningDialog(BaseDialog):
 
-    def __init__(self):
-        super().__init__(type=Gtk.MessageType.WARNING)
+    def __init__(self, **kwargs):
+        super().__init__(type=Gtk.MessageType.WARNING, **kwargs)
 
 
 class QuestionDialog(BaseDialog):
 
-    def __init__(self):
-        super().__init__(type=Gtk.MessageType.WARNING, buttons=Gtk.ButtonsType.YES_NO)
+    def __init__(self, **kwargs):
+        super().__init__(type=Gtk.MessageType.WARNING, buttons=Gtk.ButtonsType.YES_NO, **kwargs)
 
 
 def dialog(cls, primary, secondary='', **kwargs):

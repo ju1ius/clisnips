@@ -13,6 +13,7 @@ from gi.repository import Gtk, Gio, Gdk, GLib
 
 from .app_window import AppWindow
 from ..config import Config
+from .about_dialog import AboutDialog
 
 __DIR__ = Path(__file__).absolute().parent
 
@@ -48,7 +49,13 @@ class Application(Gtk.Application):
     def do_startup(self):
         Gtk.Application.do_startup(self)
         self._add_action('quit', self.on_quit)
+        self._add_action('open', self.on_import)
+        self._add_action('new', self.on_import)
+        self._add_action('import', self.on_import)
+        self._add_action('export', self.on_export)
+        self._add_action('about', self.on_about)
         self._add_action('set-cwd', self.on_set_cwd, GLib.VariantType('s'))
+        self._load_menus()
         self._load_stylesheets()
 
     def do_command_line(self, cli: Gio.ApplicationCommandLine):
@@ -69,6 +76,17 @@ class Application(Gtk.Application):
     def on_quit(self, action, param):
         self.window.destroy()
         self.quit()
+
+    def on_import(self, action, param):
+        pass
+
+    def on_export(self, action, param):
+        pass
+
+    def on_about(self, actio, param):
+        dlg = AboutDialog()
+        dlg.run()
+        dlg.destroy()
 
     def on_set_cwd(self, action, cwd: GLib.Variant):
         print(f'set-cwd: {cwd}')
@@ -91,6 +109,11 @@ class Application(Gtk.Application):
         screen = Gdk.Screen.get_default()
         self._css_provider.load_from_path(str(self._resource_path / 'styles.css'))
         Gtk.StyleContext.add_provider_for_screen(screen, self._css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+    def _load_menus(self):
+        ui = Gtk.Builder()
+        ui.add_from_file(str(self._resource_path / 'glade' / 'menus.glade'))
+        self.set_app_menu(ui.get_object('app-menu'))
 
     def _add_action(self, name, callback, parameter_type=None):
         action = Gio.SimpleAction.new(name, parameter_type)

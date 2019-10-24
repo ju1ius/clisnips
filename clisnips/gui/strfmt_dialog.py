@@ -1,4 +1,3 @@
-import os
 import string
 from collections import OrderedDict
 from pathlib import Path
@@ -6,10 +5,11 @@ from pathlib import Path
 from gi.repository import GLib, Gtk
 
 from . import msg_dialogs
+from .buildable import Buildable
 from .error_dialog import ErrorDialog
-from .helpers import BuildableWidgetDecorator, SimpleTextView
 from .state import State
 from .strfmt_widgets import Field
+from .text_view import SimpleTextView
 from ..config import styles
 from ..diff import InlineMyersSequenceMatcher
 from ..exceptions import ParsingError
@@ -24,17 +24,24 @@ class StrfmtDialogState(State):
     DIRECT_EDITING_DIRTY = 1 << 2
 
 
-class StringFormatterDialog(BuildableWidgetDecorator):
+@Buildable.from_file(__DIR__ / 'resources' / 'glade' / 'strfmt_dialog.glade')
+class StringFormatterDialog:
 
-    UI_FILE = __DIR__ / 'resources' / 'glade' / 'strfmt_dialog.glade'
-    MAIN_WIDGET = 'strfmt_dialog'
-    WIDGET_IDS = ('title_lbl', 'doc_lbl', 'fields_vbox',
-                  'fmtstr_lbl', 'fmtstr_textview',
-                  'output_edit_cb', 'output_textview')
     UPDATE_TIMEOUT = 200
 
-    def __init__(self):
+    _dialog: Gtk.Dialog = Buildable.Child('strfmt_dialog')
+    title_lbl: Gtk.Label = Buildable.Child()
+    doc_lbl: Gtk.Label = Buildable.Child()
+    fields_vbox: Gtk.Box = Buildable.Child()
+    fmtstr_lbl: Gtk.Label = Buildable.Child()
+    fmtstr_textview: Gtk.TextView = Buildable.Child()
+    output_edit_cb: Gtk.CheckButton = Buildable.Child()
+    output_textview: Gtk.TextView = Buildable.Child()
+
+    def __init__(self, transient_for=None):
         super().__init__()
+        self._dialog.set_transient_for(transient_for)
+
         self.formatter = string.Formatter()
         # Parsed Documentation AST
         self._doc_tree = None
@@ -64,7 +71,6 @@ class StringFormatterDialog(BuildableWidgetDecorator):
             textview.create_tag('diff_delete', weight=700, background_rgba=del_bg, foreground_rgba=del_fg)
 
         # signals
-        self.connect_signals()
         self.handlers = {
             'update_timeout': 0,
             'output_changed': self.output_textview.connect('changed', self.on_output_changed)
@@ -110,7 +116,7 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         self.set_fields(field_names)
         # Ensure CWD is set on all fields
         self.set_cwd(self.cwd)
-        return self.widget.run()
+        return self._dialog.run()
 
     # ==================== State management ==================== #
 
@@ -224,6 +230,17 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         if old_state == StrfmtDialogState.DIRECT_EDITING:
             self.toggle_direct_editing(False)
 
+    def on_field_change(self, widget):
+        self.state -= StrfmtDialogState.DIRECT_EDITING_DIRTY
+        if self.handlers['update_timeout']:
+            GLib.source_remove(self.handlers['update_timeout'])
+        self.handlers['update_timeout'] = GLib.timeout_add(self.UPDATE_TIMEOUT, self.update_preview)
+
+    def on_output_changed(self, widget):
+        self.state += StrfmtDialogState.DIRECT_EDITING_DIRTY
+        self._update_diffs(widget.get_text())
+
+    @Buildable.Callback()
     def on_output_edit_cb_toggled(self, widget):
         editable = widget.get_active()
         if editable:
@@ -231,30 +248,22 @@ class StringFormatterDialog(BuildableWidgetDecorator):
         else:
             self.state.leave(StrfmtDialogState.DIRECT_EDITING)
 
-    def on_output_changed(self, widget):
-        self.state += StrfmtDialogState.DIRECT_EDITING_DIRTY
-        self._update_diffs(widget.get_text())
-
+    @Buildable.Callback()
     def on_reset_btn_clicked(self, widget):
         # reset output to format string
         self.output_textview.set_text(self.fmtstr_lbl.get_text())
         # then update with fields contents
         self.update_preview()
 
-    def on_field_change(self, widget):
-        self.state -= StrfmtDialogState.DIRECT_EDITING_DIRTY
-        if self.handlers['update_timeout']:
-            GLib.source_remove(self.handlers['update_timeout'])
-        self.handlers['update_timeout'] = GLib.timeout_add(self.UPDATE_TIMEOUT, self.update_preview)
-
+    @Buildable.Callback()
     def on_main_dialog_response(self, widget, response_id):
         if response_id == Gtk.ResponseType.ACCEPT:
-            self.widget.hide()
+            self._dialog.hide()
         elif response_id == Gtk.ResponseType.REJECT:
             self.reset_fields()
-            self.widget.hide()
+            self._dialog.hide()
         elif response_id == Gtk.ResponseType.DELETE_EVENT:
             self.reset_fields()
-            self.widget.hide()
+            self._dialog.hide()
             return True
         return False

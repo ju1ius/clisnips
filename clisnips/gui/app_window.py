@@ -2,8 +2,8 @@ from pathlib import Path
 
 from gi.repository import GLib, GObject, Gdk, Gtk, Pango
 
-from . import helpers
 from .about_dialog import AboutDialog
+from .buildable import Buildable
 from .edit_dialog import EditDialog
 from .error_dialog import ErrorDialog
 from .import_export import ExportDialog, ImportDialog
@@ -41,17 +41,21 @@ class Model(Gtk.ListStore):
         super().__init__(*self.COLUMNS)
 
 
-class AppWindow(helpers.BuildableWidgetDecorator):
+@Buildable.from_file(__DIR__ / 'resources' / 'glade' / 'test.glade')
+class AppWindow(GObject.GObject):
 
-    # Constants needed for BuildableWidgetDecorator
-    UI_FILE = __DIR__ / 'resources' / 'glade' / 'app_window.glade'
-    MAIN_WIDGET = 'app_window'
-    WIDGET_IDS = ('menubar', 'search_entry', 'snip_list',
-                  'pager_first_btn', 'pager_prev_btn',
-                  'pager_next_btn', 'pager_last_btn',
-                  'pager_curpage_lbl',
-                  'cancel_btn', 'apply_btn',
-                  'add_btn', 'edit_btn', 'delete_btn')
+    window: Gtk.ApplicationWindow = Buildable.Child('app_window')
+    search_entry: Gtk.SearchEntry = Buildable.Child()
+    snip_list: Gtk.TreeView = Buildable.Child()
+    pager_first_btn: Gtk.Button = Buildable.Child()
+    pager_prev_btn: Gtk.Button = Buildable.Child()
+    pager_next_btn: Gtk.Button = Buildable.Child()
+    pager_last_btn: Gtk.Button = Buildable.Child()
+    pager_curpage_lbl: Gtk.Label = Buildable.Child()
+    add_btn: Gtk.Button = Buildable.Child()
+    edit_btn: Gtk.Button = Buildable.Child()
+    delete_btn: Gtk.Button = Buildable.Child()
+    apply_btn: Gtk.Button = Buildable.Child()
 
     # Signals emited by this dialog
     __gsignals__ = {
@@ -72,20 +76,19 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         )
     }
 
-    # Delay before a search operation is fired.
-    SEARCH_TIMEOUT = 300
-
     def __init__(self, app: Gtk.Application, config):
-        super().__init__()
+        GObject.GObject.__init__(self)
+        self.window.set_application(application=app)
+
+        app.lookup_action('open').connect('activate', self.on_open_action_activate)
+        app.lookup_action('new').connect('activate', self.on_new_action_activate)
+        app.lookup_action('import').connect('activate', self.on_import_action_activate)
+        app.lookup_action('export').connect('activate', self.on_export_action_activate)
+
         self._config = config
         self.state = State()
-
-        #self.ui.set_translation_domain(config.PKG_NAME)
-        self.widget.set_application(application=app)
-        self.widget.connect("destroy-event", self.on_destroy)
-        self.widget.connect("delete-event", self.on_destroy)
-
         self.model = Model()
+
         for i in (Model.COLUMN_CMD, Model.COLUMN_TITLE, Model.COLUMN_TAGS):
             col = Gtk.TreeViewColumn()
             cell = Gtk.CellRendererText()
@@ -103,19 +106,15 @@ class AppWindow(helpers.BuildableWidgetDecorator):
 
         self._search_timeout = 0
 
-        self.edit_dialog = EditDialog()
-        self.edit_dialog.set_transient_for(self.widget)
-        self.strfmt_dialog = StringFormatterDialog()
-        self.strfmt_dialog.set_transient_for(self.widget)
-
-        self.connect_signals()
+        self.edit_dialog = EditDialog(transient_for=self.window)
+        self.strfmt_dialog = StringFormatterDialog(transient_for=self.window)
 
     def run(self):
         """
         Main application entry point
         """
         self.state.reset()
-        self.widget.show_all()
+        self.window.show_all()
         self.load_snippets()
 
     def destroy(self):
@@ -123,8 +122,11 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         Main application exit point
         """
         self.db.close()
-        self.widget.destroy()
+        self.window.destroy()
         self.emit('close')
+
+    def present(self):
+        self.window.present()
 
     def set_cwd(self, cwd):
         """
@@ -143,17 +145,11 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         if db_file != ':memory:':
             self._config.database_path = db_file
             self._config.save()
-        self.pager = Pager(self.ui, self.db, page_size=self._config.pager_page_size)
+        self.pager = Pager(self._gtk_builder, self.db, page_size=self._config.pager_page_size)
         self.pager.set_sort_columns([
             (self._config.pager_sort_column, 'DESC'),
             ('id', 'ASC', True)
         ])
-
-    def emit(self, *args):
-        """
-        Ensures signals are emitted in the main thread
-        """
-        GLib.idle_add(GObject.GObject.emit, self, *args)
 
     def load_snippets(self):
         """
@@ -227,7 +223,7 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         try:
             response = self.strfmt_dialog.run(row['title'], row['cmd'], row['doc'])
         except Exception as err:
-            ErrorDialog().run(err)
+            self._error(err)
         else:
             if response == Gtk.ResponseType.ACCEPT:
                 output = self.strfmt_dialog.get_output()
@@ -274,24 +270,37 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         item.connect('activate', cb)
         menu.append(item)
 
+    def _error(self, err):
+        ErrorDialog(transient_for=self.window).run(err)
+
     ###########################################################################
     # ------------------------------ SIGNALS
     ###########################################################################
 
+    def emit(self, *args):
+        """
+        Ensures signals are emitted in the main thread
+        """
+        GLib.idle_add(GObject.GObject.emit, self, *args)
+
     # ===== Pager navigation
 
+    @Buildable.Callback()
     def on_pager_first_btn_clicked(self, btn):
         rows = self.pager.first()
         self._load_rows(rows)
 
+    @Buildable.Callback()
     def on_pager_prev_btn_clicked(self, btn):
         rows = self.pager.previous()
         self._load_rows(rows)
 
+    @Buildable.Callback()
     def on_pager_next_btn_clicked(self, btn):
         rows = self.pager.next()
         self._load_rows(rows)
 
+    @Buildable.Callback()
     def on_pager_last_btn_clicked(self, btn):
         rows = self.pager.last()
         self._load_rows(rows)
@@ -301,6 +310,7 @@ class AppWindow(helpers.BuildableWidgetDecorator):
     def on_destroy(self, dialog, event, data=None):
         self.destroy()
 
+    @Buildable.Callback()
     def on_snip_list_button_release_event(self, treeview, event):
         """
         Handler for self.snip_list 'button-release-event' signal.
@@ -313,6 +323,7 @@ class AppWindow(helpers.BuildableWidgetDecorator):
                 return
             self.show_row_context_menu()
 
+    @Buildable.Callback()
     def on_snip_list_row_activated(self, treeview, path, col):
         """
         Handler for self.snip_list 'row-activated' signal.
@@ -326,11 +337,13 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         row = self.db.get(rowid)
         self.insert_snippet(row)
 
+    @Buildable.Callback()
     def on_show_btn_clicked(self, widget, data=None):
         self.edit_dialog.set_editable(False)
         self.on_edit_btn_clicked(widget, data)
         self.edit_dialog.set_editable(True)
 
+    @Buildable.Callback()
     def on_apply_btn_clicked(self, widget, data=None):
         """
         Handler for self.apply_btn 'clicked' and
@@ -343,8 +356,9 @@ class AppWindow(helpers.BuildableWidgetDecorator):
             if row:
                 self.insert_snippet(row)
         except Exception as error:
-            ErrorDialog().run(error)
+            self._error(error)
 
+    @Buildable.Callback()
     def on_cancel_btn_clicked(self, widget, data=None):
         """
         Handler for self.cancel_btn 'clicked' signal.
@@ -353,6 +367,7 @@ class AppWindow(helpers.BuildableWidgetDecorator):
         """
         self.destroy()
 
+    @Buildable.Callback()
     def on_add_btn_clicked(self, widget, data=None):
         """
         Handler for self.add_btn 'clicked' signal.
@@ -366,8 +381,9 @@ class AppWindow(helpers.BuildableWidgetDecorator):
                 data = self.edit_dialog.get_data()
                 self.insert_row(data)
         except Exception as error:
-            ErrorDialog().run(error)
+            self._error(error)
 
+    @Buildable.Callback()
     def on_edit_btn_clicked(self, widget, data=None):
         """
         Handler for self.edit_btn 'clicked' and
@@ -385,8 +401,9 @@ class AppWindow(helpers.BuildableWidgetDecorator):
                 data = self.edit_dialog.get_data()
                 self.update_row(it, data)
         except Exception as error:
-            ErrorDialog().run(error)
+            self._error(error)
 
+    @Buildable.Callback()
     def on_delete_btn_clicked(self, widget, data=None):
         """
         Handler for self.delete_btn 'clicked' and
@@ -398,31 +415,14 @@ class AppWindow(helpers.BuildableWidgetDecorator):
             model, it = self.get_selection()
             self.remove_row(it)
         except Exception as error:
-            ErrorDialog().run(error)
+            self._error(error)
 
     # ===== Handle Search
 
-    def on_search_entry_icon_press(self, widget, icon_pos, event):
+    @Buildable.Callback()
+    def on_search_changed(self, widget):
         """
-        Handler for self.search_entry 'icon-press' signal.
-
-        Resets the search entry.
-        """
-        widget.set_text('')
-
-    def on_search_entry_changed(self, widget):
-        """
-        Handler for self.search_entry 'changed' signal.
-
-        Queues a request for a search operation.
-        """
-        if self._search_timeout:
-            GLib.source_remove(self._search_timeout)
-        self._search_timeout = GLib.timeout_add(self.SEARCH_TIMEOUT, self._on_search_timeout)
-
-    def _on_search_timeout(self):
-        """
-        The actual search method.
+        Handler for self.search_entry 'search-changed' signal.
         """
         if State.LOADING in self.state:
             # Defer filtering if we are loading rows
@@ -446,7 +446,7 @@ class AppWindow(helpers.BuildableWidgetDecorator):
 
     # ===== File Menu
 
-    def on_open_menuitem_activate(self, menuitem):
+    def on_open_action_activate(self, action, param):
         filename = OpenDialog().run()
         if not filename:
             return
@@ -454,9 +454,9 @@ class AppWindow(helpers.BuildableWidgetDecorator):
             self.set_database(filename)
             self.load_snippets()
         except Exception as err:
-            ErrorDialog().run(err)
+            self._error(err)
 
-    def on_create_menuitem_activate(self, menuitem):
+    def on_new_action_activate(self, action, param):
         filename = CreateDialog().run()
         if not filename:
             return
@@ -464,21 +464,21 @@ class AppWindow(helpers.BuildableWidgetDecorator):
             self.set_database(filename)
             self.load_snippets()
         except Exception as err:
-            ErrorDialog().run(err)
+            self._error(err)
 
-    def on_import_menuitem_activate(self, menuitem):
+    def on_import_action_activate(self, action, param):
         try:
             ImportDialog().run(self.db)
         except Exception as err:
-            ErrorDialog().run(err)
+            self._error(err)
         else:
             self.load_snippets()
 
-    def on_export_menuitem_activate(self, menuitem):
+    def on_export_action_activate(self, action, param):
         try:
             ExportDialog().run(self.db)
         except Exception as err:
-            ErrorDialog().run(err)
+            self._error(err)
 
     # ===== Display Menu
 

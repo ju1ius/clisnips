@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <menu id="app-menu">
+    <section>
+      <!--<attribute name="display-hint">horizontal-buttons</attribute>-->
+      <item>
+        <attribute name="label">_New</attribute>
+        <attribute name="action">app.new</attribute>
+        <attribute name="verb-icon">document-new-symbolic</attribute>
+      </item>
+      <item>
+        <attribute name="label">_Open</attribute>
+        <attribute name="action">app.open</attribute>
+        <attribute name="verb-icon">document-open-symbolic</attribute>
+      </item>
+    </section>
+    <section>
+      <!--<attribute name="display-hint">horizontal-buttons</attribute>-->
+      <item>
+        <attribute name="label">_Import</attribute>
+        <attribute name="action">app.import</attribute>
+        <attribute name="verb-icon">document-new-symbolic</attribute>
+      </item>
+      <item>
+        <attribute name="label">_Export</attribute>
+        <attribute name="action">app.export</attribute>
+        <attribute name="verb-icon">document-open-symbolic</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label">_About</attribute>
+        <attribute name="action">app.about</attribute>
+        <attribute name="verb-icon">application-exit-symbolic</attribute>
+      </item>
+      <item>
+        <attribute name="label">_Help</attribute>
+        <attribute name="action">app.help</attribute>
+        <attribute name="verb-icon">application-exit-symbolic</attribute>
+      </item>
+    </section>
+    <section>
+      <item>
+        <attribute name="label">_Quit</attribute>
+        <attribute name="action">app.quit</attribute>
+        <attribute name="verb-icon">application-exit-symbolic</attribute>
+      </item>
+    </section>
+  </menu>
+</interface>

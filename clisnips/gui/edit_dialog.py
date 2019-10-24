@@ -2,8 +2,10 @@ from pathlib import Path
 
 from gi.repository import Gtk
 
+from .buildable import Buildable
 from .error_dialog import ErrorDialog
-from .helpers import BuildableWidgetDecorator, SimpleTextView, replace_widget
+from .helpers import replace_widget
+from .text_view import SimpleTextView
 # validation
 from ..exceptions import ParsingError
 from ..strfmt import doc_parser, fmt_parser
@@ -18,35 +20,43 @@ except ImportError:
 __DIR__ = Path(__file__).parent.absolute()
 
 
-class EditDialog(BuildableWidgetDecorator):
+@Buildable.from_file(__DIR__ / 'resources' / 'glade' / 'edit_dialog.glade')
+class EditDialog:
 
-    UI_FILE = __DIR__ / 'resources' / 'glade' / 'edit_dialog.glade'
-    MAIN_WIDGET = 'edit_dialog'
-    WIDGET_IDS = ('desc_entry', 'cmd_textview', 'doc_textview', 'tags_entry')
+    _dialog: Gtk.Dialog = Buildable.Child('edit_dialog')
+    desc_entry: Gtk.Entry = Buildable.Child()
+    cmd_textview: Gtk.TextView = Buildable.Child()
+    doc_textview: Gtk.TextView = Buildable.Child()
+    tags_entry: Gtk.Entry = Buildable.Child()
 
-    def __init__(self):
+    def __init__(self, transient_for=None):
         super().__init__()
         #self.ui.set_translation_domain(config.PKG_NAME)
-
-        self._setup_textviews()
-        self.connect_signals()
-
+        self._dialog.set_transient_for(transient_for)
         self._editable = True
         self._item_id = None
+        # must be called before assigning self._fields since we replace textview widgets
+        self._setup_textviews()
+        self._fields = (
+            self.desc_entry,
+            self.cmd_textview,
+            self.doc_textview,
+            self.tags_entry,
+        )
 
     def run(self, data=None):
         self.reset_fields()
         if data:
             self.populate_fields(data)
-        response = self.widget.run()
+        response = self._dialog.run()
         if not self._editable:
             return Gtk.ResponseType.REJECT
         return response
 
     def set_editable(self, editable):
         self._editable = editable
-        for field in self.WIDGET_IDS:
-            getattr(self, field).set_editable(editable)
+        for field in self._fields:
+            field.set_editable(editable)
 
     def populate_fields(self, data):
         self._item_id = data['id']
@@ -57,12 +67,12 @@ class EditDialog(BuildableWidgetDecorator):
 
     def reset_fields(self):
         if self._editable:
-            self.widget.set_title('Edit snippet')
+            self._dialog.set_title('Edit snippet')
         else:
-            self.widget.set_title('Snippet properties')
+            self._dialog.set_title('Snippet properties')
         self._item_id = None
-        for field in self.WIDGET_IDS:
-            getattr(self, field).set_text('')
+        for field in self._fields:
+            field.set_text('')
 
     def get_data(self):
         return {
@@ -120,20 +130,21 @@ class EditDialog(BuildableWidgetDecorator):
     # ------------------------------ SIGNALS
     ###########################################################################
 
+    @Buildable.Callback()
     def on_edit_dialog_response(self, widget, response_id):
         if not self._editable:
-            self.widget.hide()
+            self._dialog.hide()
             return False
         if response_id == Gtk.ResponseType.ACCEPT:
             if not self._validate():
-                self.widget.stop_emission('response')
+                self._dialog.stop_emission('response')
                 return False
-            self.widget.hide()
+            self._dialog.hide()
         elif response_id == Gtk.ResponseType.REJECT:
             self.reset_fields()
-            self.widget.hide()
+            self._dialog.hide()
         elif response_id == Gtk.ResponseType.DELETE_EVENT:
             self.reset_fields()
-            self.widget.hide()
+            self._dialog.hide()
             return True
         return False
