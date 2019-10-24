@@ -16,7 +16,7 @@ value_range:    T_DIGIT T_COLON digit (T_COLON digit)? (T_STAR digit)?
 value:          T_STAR? (T_STRING | digit)
 digit:          T_INTEGER | T_FLOAT
 """
-
+from ..exceptions import ParsingError
 from .doc_lexer import Lexer
 from .doc_nodes import *
 from .doc_tokens import *
@@ -84,9 +84,7 @@ class LLkParser(object):
 
     def _unexpected_token(self, token, *expected):
         expected = ', '.join(token_name(t) for t in expected)
-        raise ParsingError(
-            'Unexpected token: {} (expected {})'.format(token, expected)
-        )
+        raise ParsingError(f'Unexpected token: {token} (expected {expected})')
 
 
 class Parser(LLkParser):
@@ -185,9 +183,7 @@ class Parser(LLkParser):
         # no identifier, try automatic numbering
         if self._lookahead_type() == T_RBRACE:
             if self._has_numeric_field:
-                raise ParsingError(
-                    'cannot switch from manual to automatic field numbering'
-                )
+                raise ParsingError('Cannot switch from manual to automatic field numbering')
             self._auto_field_count += 1
             return Parameter(self._auto_field_count)
         token = self._match(T_IDENTIFIER, T_INTEGER, T_FLAG)
@@ -199,9 +195,7 @@ class Parser(LLkParser):
         # it's an integer, check that numbering is correct
         if token.type == T_INTEGER:
             if self._auto_field_count > -1:
-                raise ParsingError(
-                    'cannot switch from automatic to manual field numbering'
-                )
+                raise ParsingError('Cannot switch from automatic to manual field numbering')
             self._has_numeric_field = True
         return Parameter(token.value)
 

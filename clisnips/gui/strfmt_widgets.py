@@ -308,7 +308,7 @@ class PathCompletion(Gtk.EntryCompletion):
         path = model.get_value(tree_iter, self.COLUMN_PATH)
         entry: Gtk.Entry = self.get_entry()
         entry.set_text(path)
-        entry.set_position(len(path))
+        entry.set_position(entry.get_text_length())
 
         return True
 
