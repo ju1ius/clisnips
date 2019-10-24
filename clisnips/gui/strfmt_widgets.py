@@ -5,7 +5,7 @@ from pathlib import Path
 from gi.repository import GLib, GObject, Gio, Gtk
 
 from ..strfmt.doc_nodes import ValueList, ValueRange
-from ..utils import get_num_decimals
+from ..utils.number import get_num_decimals
 
 
 def _entry_from_doc(field: str, doc):

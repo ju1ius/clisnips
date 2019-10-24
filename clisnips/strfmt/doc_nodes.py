@@ -1,5 +1,5 @@
 
-from ..utils import get_num_decimals
+from ..utils.number import get_num_decimals
 
 
 class Documentation(object):

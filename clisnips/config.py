@@ -3,7 +3,7 @@ import os
 import os.path
 from pathlib import Path
 
-from .utils import (get_contrast_fgcolor, interpolate_colors, parse_color)
+from .utils.color import get_contrast_fgcolor, interpolate_colors, parse_color
 
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']

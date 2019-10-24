@@ -1,21 +1,8 @@
-
-from decimal import Decimal
 from typing import Union
 
-from gi.repository import Gdk, Pango
-
-
-def get_num_decimals(n) -> int:
-    if isinstance(n, float):
-        decimal_part = str(float(Decimal(n) % 1))
-        return len(decimal_part.split('.')[1])
-    return 0
-
-
-# ========== Fonts & Colors helpers
+from gi.repository import Gdk
 
 ColorSpec = Union[Gdk.RGBA, Gdk.Color, str]
-FontSpec = Union[Pango.FontDescription, str]
 
 
 def parse_color(spec: ColorSpec) -> Gdk.RGBA:
@@ -27,12 +14,6 @@ def parse_color(spec: ColorSpec) -> Gdk.RGBA:
     if not color.parse(spec):
         raise RuntimeError(f'Could not parse color: {spec!r}')
     return color
-
-
-def parse_font(spec: FontSpec) -> Pango.FontDescription:
-    if isinstance(spec, Pango.FontDescription):
-        return spec
-    return Pango.FontDescription(spec)
 
 
 # 65535. Set this to 255 to work with 8bit integers.

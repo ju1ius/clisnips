@@ -6,7 +6,7 @@ http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plu
 import re
 import time
 
-from .utils import pad_list
+from ..utils.list import pad_list
 
 
 ARGS_RE = re.compile(r'(?<!\\)((?:\\\\)*\?)')
