@@ -44,7 +44,6 @@ class OffsetPager:
         self._executed = False
         self._query = query
         self._query_params = params
-        return self
 
     def get_query(self):
         return self._query
@@ -53,7 +52,6 @@ class OffsetPager:
         self._executed = False
         self._count_query = f'SELECT COUNT(*) FROM ({query})'
         self._count_query_params = params
-        return self
 
     def set_page_size(self, size):
         self._executed = False

@@ -5,12 +5,12 @@
     <section>
       <!--<attribute name="display-hint">horizontal-buttons</attribute>-->
       <item>
-        <attribute name="label">_New</attribute>
+        <attribute name="label" translatable="yes">_New</attribute>
         <attribute name="action">app.new</attribute>
         <attribute name="verb-icon">document-new-symbolic</attribute>
       </item>
       <item>
-        <attribute name="label">_Open</attribute>
+        <attribute name="label" translatable="yes">_Open</attribute>
         <attribute name="action">app.open</attribute>
         <attribute name="verb-icon">document-open-symbolic</attribute>
       </item>
@@ -18,33 +18,21 @@
     <section>
       <!--<attribute name="display-hint">horizontal-buttons</attribute>-->
       <item>
-        <attribute name="label">_Import</attribute>
+        <attribute name="label" translatable="yes">_Import</attribute>
         <attribute name="action">app.import</attribute>
         <attribute name="verb-icon">document-new-symbolic</attribute>
       </item>
       <item>
-        <attribute name="label">_Export</attribute>
+        <attribute name="label" translatable="yes">_Export</attribute>
         <attribute name="action">app.export</attribute>
         <attribute name="verb-icon">document-open-symbolic</attribute>
       </item>
     </section>
     <section>
       <item>
-        <attribute name="label">_About</attribute>
+        <attribute name="label" translatable="yes">_About</attribute>
         <attribute name="action">app.about</attribute>
-        <attribute name="verb-icon">application-exit-symbolic</attribute>
-      </item>
-      <item>
-        <attribute name="label">_Help</attribute>
-        <attribute name="action">app.help</attribute>
-        <attribute name="verb-icon">application-exit-symbolic</attribute>
-      </item>
-    </section>
-    <section>
-      <item>
-        <attribute name="label">_Quit</attribute>
-        <attribute name="action">app.quit</attribute>
-        <attribute name="verb-icon">application-exit-symbolic</attribute>
+        <attribute name="verb-icon">application-about-symbolic</attribute>
       </item>
     </section>
   </menu>

@@ -87,7 +87,6 @@ Author: Jules Bernable
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="popover">sort_options_menu</property>
                 <child>
                   <object class="GtkGrid">
                     <property name="visible">True</property>
@@ -180,7 +179,9 @@ Author: Jules Bernable
                     <signal name="button-release-event" handler="on_snip_list_button_release_event" swapped="no"/>
                     <signal name="row-activated" handler="on_snip_list_row_activated" swapped="no"/>
                     <child internal-child="selection">
-                      <object class="GtkTreeSelection"/>
+                      <object class="GtkTreeSelection">
+                        <signal name="changed" handler="on_snip_list_selection_changed" swapped="no"/>
+                      </object>
                     </child>
                   </object>
                 </child>
@@ -222,6 +223,7 @@ Author: Jules Bernable
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="action_name">win.pager-first</property>
                         <property name="image">img_goto_first</property>
                         <property name="relief">none</property>
                         <property name="always_show_image">True</property>
@@ -238,6 +240,7 @@ Author: Jules Bernable
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="action_name">win.pager-previous</property>
                         <property name="image">img_goto_prev</property>
                         <property name="relief">none</property>
                         <property name="always_show_image">True</property>
@@ -271,6 +274,7 @@ Author: Jules Bernable
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="action_name">win.pager-next</property>
                         <property name="image">img_goto_next</property>
                         <property name="relief">none</property>
                         <signal name="clicked" handler="on_pager_next_btn_clicked" swapped="no"/>
@@ -286,6 +290,7 @@ Author: Jules Bernable
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="action_name">win.pager-last</property>
                         <property name="image">img_goto_last</property>
                         <property name="relief">none</property>
                         <property name="always_show_image">True</property>
@@ -332,6 +337,7 @@ Author: Jules Bernable
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="action_name">win.snippet-delete</property>
                     <property name="image">img_delete</property>
                     <property name="relief">half</property>
                     <property name="always_show_image">True</property>
@@ -348,6 +354,7 @@ Author: Jules Bernable
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="action_name">win.snippet-edit</property>
                     <property name="image">img_edit</property>
                     <property name="relief">half</property>
                     <property name="always_show_image">True</property>
@@ -364,6 +371,7 @@ Author: Jules Bernable
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="action_name">win.snippet-add</property>
                     <property name="image">img_add</property>
                     <property name="relief">half</property>
                     <property name="always_show_image">True</property>
@@ -394,6 +402,7 @@ Author: Jules Bernable
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <property name="action_name">win.snippet-apply</property>
                     <property name="use_underline">True</property>
                     <signal name="clicked" handler="on_apply_btn_clicked" swapped="no"/>
                     <child>
@@ -440,83 +449,6 @@ Author: Jules Bernable
           </packing>
         </child>
       </object>
-    </child>
-  </object>
-  <object class="GtkPopoverMenu" id="sort_options_menu">
-    <property name="can_focus">False</property>
-    <property name="relative_to">sort_options_menu_btn</property>
-    <property name="position">bottom</property>
-    <property name="constrain_to">none</property>
-    <child>
-      <object class="GtkBox">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <child>
-          <object class="GtkRadioButton" id="sort_ranking_menuitem">
-            <property name="label" translatable="yes">By popularity</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="active">True</property>
-            <property name="draw_indicator">True</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkRadioButton" id="sort_created_menuitem">
-            <property name="label" translatable="yes">By creation date</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="draw_indicator">True</property>
-            <property name="group">sort_ranking_menuitem</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkRadioButton" id="sort_last_used_menuitem">
-            <property name="label" translatable="yes">By last usage date</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="draw_indicator">True</property>
-            <property name="group">sort_ranking_menuitem</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkRadioButton" id="sort_usage_count_menuitem">
-            <property name="label" translatable="yes">By usage count</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="draw_indicator">True</property>
-            <property name="group">sort_ranking_menuitem</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
-          </packing>
-        </child>
-      </object>
-      <packing>
-        <property name="submenu">submenu0</property>
-        <property name="position">1</property>
-      </packing>
     </child>
   </object>
 </interface>

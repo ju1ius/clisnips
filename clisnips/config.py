@@ -1,14 +1,9 @@
+import configparser
 import os
 import os.path
-import configparser
 from pathlib import Path
 
-from .utils import (
-    parse_font,
-    parse_color,
-    get_contrast_fgcolor,
-    interpolate_colors
-)
+from .utils import (get_contrast_fgcolor, interpolate_colors, parse_color)
 
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']

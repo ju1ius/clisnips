@@ -12,6 +12,7 @@ gi.require_versions({
 from gi.repository import Gtk, Gio, Gdk, GLib
 
 from .app_window import AppWindow
+from .action import add_action
 from ..config import Config
 from .about_dialog import AboutDialog
 
@@ -48,13 +49,13 @@ class Application(Gtk.Application):
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
-        self._add_action('quit', self.on_quit)
-        self._add_action('open', self.on_import)
-        self._add_action('new', self.on_import)
-        self._add_action('import', self.on_import)
-        self._add_action('export', self.on_export)
-        self._add_action('about', self.on_about)
-        self._add_action('set-cwd', self.on_set_cwd, GLib.VariantType('s'))
+        add_action(self, 'quit', self.on_quit_action)
+        add_action(self, 'open', self.on_import)
+        add_action(self, 'new', self.on_import)
+        add_action(self, 'import', self.on_import)
+        add_action(self, 'export', self.on_export)
+        add_action(self, 'about', self.on_about_action)
+        add_action(self, 'set-cwd', self.on_set_cwd, GLib.VariantType('s'))
         self._load_menus()
         self._load_stylesheets()
 
@@ -73,7 +74,7 @@ class Application(Gtk.Application):
             self.window.run()
         self.window.present()
 
-    def on_quit(self, action, param):
+    def on_quit_action(self, action, param):
         self.window.destroy()
         self.quit()
 
@@ -83,7 +84,7 @@ class Application(Gtk.Application):
     def on_export(self, action, param):
         pass
 
-    def on_about(self, actio, param):
+    def on_about_action(self, action, param):
         dlg = AboutDialog()
         dlg.run()
         dlg.destroy()
@@ -112,10 +113,5 @@ class Application(Gtk.Application):
 
     def _load_menus(self):
         ui = Gtk.Builder()
-        ui.add_from_file(str(self._resource_path / 'glade' / 'menus.glade'))
+        ui.add_from_file(str(self._resource_path / 'glade' / 'app-menu.glade'))
         self.set_app_menu(ui.get_object('app-menu'))
-
-    def _add_action(self, name, callback, parameter_type=None):
-        action = Gio.SimpleAction.new(name, parameter_type)
-        action.connect('activate', callback)
-        self.add_action(action)

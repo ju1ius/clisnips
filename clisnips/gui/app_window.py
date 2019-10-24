@@ -1,17 +1,17 @@
 from pathlib import Path
 
-from gi.repository import GLib, GObject, Gdk, Gtk, Pango
+from gi.repository import GLib, GObject, Gdk, Gio, Gtk, Pango
 
-from .about_dialog import AboutDialog
+from .action import add_action, add_stateful_action
 from .buildable import Buildable
 from .edit_dialog import EditDialog
 from .error_dialog import ErrorDialog
 from .import_export import ExportDialog, ImportDialog
 from .open_dialog import CreateDialog, OpenDialog
-from .pager import Pager
 from .state import State as BaseState
 from .strfmt_dialog import StringFormatterDialog
 from ..config import HELP_URI
+from ..database.search_pager import SearchPager
 from ..database.snippets_db import SnippetsDatabase
 
 __DIR__ = Path(__file__).parent.absolute()
@@ -41,21 +41,17 @@ class Model(Gtk.ListStore):
         super().__init__(*self.COLUMNS)
 
 
-@Buildable.from_file(__DIR__ / 'resources' / 'glade' / 'test.glade')
+@Buildable.from_file(__DIR__ / 'resources' / 'glade' / 'app-window.glade')
 class AppWindow(GObject.GObject):
 
     window: Gtk.ApplicationWindow = Buildable.Child('app_window')
+
     search_entry: Gtk.SearchEntry = Buildable.Child()
+    sort_options_menu_btn: Gtk.MenuButton = Buildable.Child()
     snip_list: Gtk.TreeView = Buildable.Child()
-    pager_first_btn: Gtk.Button = Buildable.Child()
-    pager_prev_btn: Gtk.Button = Buildable.Child()
-    pager_next_btn: Gtk.Button = Buildable.Child()
-    pager_last_btn: Gtk.Button = Buildable.Child()
+
     pager_curpage_lbl: Gtk.Label = Buildable.Child()
-    add_btn: Gtk.Button = Buildable.Child()
-    edit_btn: Gtk.Button = Buildable.Child()
-    delete_btn: Gtk.Button = Buildable.Child()
-    apply_btn: Gtk.Button = Buildable.Child()
+    pager_info_lbl: Gtk.Label = Buildable.Child()
 
     # Signals emited by this dialog
     __gsignals__ = {
@@ -80,10 +76,28 @@ class AppWindow(GObject.GObject):
         GObject.GObject.__init__(self)
         self.window.set_application(application=app)
 
-        app.lookup_action('open').connect('activate', self.on_open_action_activate)
-        app.lookup_action('new').connect('activate', self.on_new_action_activate)
-        app.lookup_action('import').connect('activate', self.on_import_action_activate)
-        app.lookup_action('export').connect('activate', self.on_export_action_activate)
+        # app actions
+        app.lookup_action('open').connect('activate', self.on_open_action)
+        app.lookup_action('new').connect('activate', self.on_app_new_action)
+        app.lookup_action('import').connect('activate', self.on_import_action)
+        app.lookup_action('export').connect('activate', self.on_export_action)
+        # window actions
+        add_action(self.window, 'snippet-apply', self.on_snippet_apply_action)
+        add_action(self.window, 'snippet-add', self.on_snippet_add_action)
+        add_action(self.window, 'snippet-edit', self.on_snippet_edit_action)
+        add_action(self.window, 'snippet-delete', self.on_snippet_delete_action)
+        add_stateful_action(self.window, 'order-by', self.on_order_by_action,
+                            GLib.VariantType('s'), GLib.Variant('s', 'popularity'))
+        for page in ('first', 'previous', 'next', 'last'):
+            add_action(self.window, f'pager-{page}', self.on_pager_action)
+        # Menus
+        builder = Gtk.Builder()
+        builder.add_from_file(str(__DIR__ / 'resources' / 'glade' / 'win-menu.glade'))
+        menu = builder.get_object('sort-menu')
+        self.sort_options_menu_btn.set_menu_model(menu)
+        menu = builder.get_object('snippet-list-context-menu')
+        self._context_menu: Gtk.Menu = Gtk.Menu.new_from_model(menu)
+        self._context_menu.attach_to_widget(self.window)
 
         self._config = config
         self.state = State()
@@ -103,8 +117,6 @@ class AppWindow(GObject.GObject):
         self.db = None
         self.pager = None
         self.set_database(self._config.database_path)
-
-        self._search_timeout = 0
 
         self.edit_dialog = EditDialog(transient_for=self.window)
         self.strfmt_dialog = StringFormatterDialog(transient_for=self.window)
@@ -145,11 +157,8 @@ class AppWindow(GObject.GObject):
         if db_file != ':memory:':
             self._config.database_path = db_file
             self._config.save()
-        self.pager = Pager(self._gtk_builder, self.db, page_size=self._config.pager_page_size)
-        self.pager.set_sort_columns([
-            (self._config.pager_sort_column, 'DESC'),
-            ('id', 'ASC', True)
-        ])
+        self.pager = SearchPager(self.db, page_size=self._config.pager_page_size)
+        self.pager.set_sort_column(self._config.pager_sort_column)
 
     def load_snippets(self):
         """
@@ -159,10 +168,201 @@ class AppWindow(GObject.GObject):
         operating on the model while state is in State.LOADING.
         """
         self.state += State.LOADING
-        self.pager.mode = Pager.MODE_LIST
-        rows = self.pager.execute().first()
+        rows = self.pager.list()
+        self._update_pager_view()
         self._load_rows(rows)
         self.state -= State.LOADING
+
+    ###########################################################################
+    # ------------------------------ ACTIONS
+    ###########################################################################
+
+    # ===== File Menu
+
+    def on_open_action(self, action, param):
+        filename = OpenDialog().run()
+        if not filename:
+            return
+        try:
+            self.set_database(filename)
+            self.load_snippets()
+        except Exception as err:
+            self._error(err)
+
+    def on_app_new_action(self, action, param):
+        filename = CreateDialog().run()
+        if not filename:
+            return
+        try:
+            self.set_database(filename)
+            self.load_snippets()
+        except Exception as err:
+            self._error(err)
+
+    def on_import_action(self, action, param):
+        try:
+            ImportDialog().run(self.db)
+        except Exception as err:
+            self._error(err)
+        else:
+            self.load_snippets()
+
+    def on_export_action(self, action, param):
+        try:
+            ExportDialog().run(self.db)
+        except Exception as err:
+            self._error(err)
+
+    def on_helplink_menuitem_activate(self, menuitem):
+        Gtk.show_uri(Gdk.Screen.get_default(), HELP_URI, int(GLib.get_current_time()))
+
+    # ===== Display Menu
+
+    def on_order_by_action(self, action, param: GLib.Variant):
+        action.set_state(param)
+        value = param.unpack()
+        column = {
+            'popularity': 'ranking',
+            'creation-date': 'created_at',
+            'usage-count': 'usage_count',
+            'last-usage-date': 'last_used_at',
+        }.get(value, 'ranking')
+        self._change_sort_columns(column)
+
+    def _change_sort_column(self, column):
+        self._config.pager_sort_column = column
+        self._config.save()
+        self.pager.set_sort_column(column)
+        if self.pager.is_searching:
+            rows = self.pager.search(self.get_search_text())
+        else:
+            rows = self.pager.list()
+        self._load_rows(rows)
+
+    # ===== SearchPager navigation
+
+    def on_pager_action(self, action: Gio.SimpleAction, param=None):
+        method = action.get_name().split('-')[-1]
+        rows = getattr(self.pager, method)()
+        self._update_pager_view()
+        self._load_rows(rows)
+
+    def _update_pager_view(self):
+        page = self.pager.current_page
+        self.pager_curpage_lbl.set_text(str(page))
+        info = f'page {page} of {len(self.pager)} ({self.pager.total_rows} snippets)'
+        self.pager_info_lbl.set_text(info)
+        # Action states
+        is_first, is_last = self.pager.is_first_page, self.pager.is_last_page
+        self.window.lookup_action('pager-first').set_enabled(not is_first)
+        self.window.lookup_action('pager-previous').set_enabled(not is_first)
+        self.window.lookup_action('pager-next').set_enabled(not is_last)
+        self.window.lookup_action('pager-last').set_enabled(not is_last)
+
+    # ===== Snippets list actions
+
+    def on_snippet_apply_action(self, action, param=None):
+        try:
+            row = self.get_selected_row()
+            if row:
+                self.insert_snippet(row)
+        except Exception as error:
+            self._error(error)
+
+    def on_snippet_add_action(self, action, param=None):
+        try:
+            response = self.edit_dialog.run()
+            if response == Gtk.ResponseType.ACCEPT:
+                data = self.edit_dialog.get_data()
+                self.insert_row(data)
+        except Exception as error:
+            self._error(error)
+
+    def on_snippet_edit_action(self, action, param=None):
+        model, it = self.get_selection()
+        if not model or not it:
+            return
+        try:
+            row = self.db.get(model.get_value(it, Model.COLUMN_ID))
+            response = self.edit_dialog.run(row)
+            if response == Gtk.ResponseType.ACCEPT:
+                data = self.edit_dialog.get_data()
+                self.update_row(it, data)
+        except Exception as error:
+            self._error(error)
+
+    def on_snippet_delete_action(self, action, param=None):
+        try:
+            model, it = self.get_selection()
+            self.remove_row(it)
+        except Exception as error:
+            self._error(error)
+
+    ###########################################################################
+    # ------------------------------ SIGNALS
+    ###########################################################################
+
+    def emit(self, *args):
+        """
+        Ensures signals are emitted in the main thread
+        """
+        GLib.idle_add(GObject.GObject.emit, self, *args)
+
+    @Buildable.Callback()
+    def on_snip_list_button_release_event(self, treeview, event):
+        """
+        Handler for self.snip_list 'button-release-event' signal.
+
+        Shows a row's contextmenu on right-click.
+        """
+        if event.button == 3:  # right click
+            model, it = self.get_selection()
+            if not model or not it:
+                return
+            self._context_menu.popup_at_pointer(event)
+
+    @Buildable.Callback()
+    def on_snip_list_row_activated(self, treeview, path, col):
+        self.window.activate_action('snippet-apply')
+
+    @Buildable.Callback()
+    def on_snip_list_selection_changed(self, selection: Gtk.TreeSelection):
+        model, it = selection.get_selected()
+        for name in ('apply', 'edit', 'delete'):
+            self.window.lookup_action(f'snippet-{name}').set_enabled(bool(it))
+
+    # ===== Handle Search
+
+    @Buildable.Callback()
+    def on_search_changed(self, widget):
+        """
+        Handler for self.search_entry 'search-changed' signal.
+        """
+        if State.LOADING in self.state:
+            # Defer filtering if we are loading rows
+            return True
+        self.state += State.SEARCHING
+        query = self.get_search_text()
+        if not query:
+            self.load_snippets()
+            return False
+        rows = self.pager.search(query)
+        self._update_pager_view()
+        self._load_rows(rows)
+        self.state -= State.SEARCHING
+        return False
+
+    ###########################################################################
+    # ------------------------------ SUPPORT
+    ###########################################################################
+
+    def get_search_text(self):
+        return self.search_entry.get_text().strip()
+
+    def _error(self, err):
+        ErrorDialog(transient_for=self.window).run(err)
+
+    # ========== Methods for acting on data rows ========== #
 
     def _load_rows(self, rows):
         self.state += State.LOADING
@@ -181,8 +381,6 @@ class AppWindow(GObject.GObject):
             ))
         self.snip_list.set_model(self.model)
         self.state -= State.LOADING
-
-    # ========== Methods for acting on data rows ========== #
 
     def insert_row(self, data):
         rowid = self.db.insert(data)
@@ -230,15 +428,7 @@ class AppWindow(GObject.GObject):
                 self.db.use_snippet(row['id'])
                 self.emit('insert-snippet', output)
 
-    def get_search_text(self):
-        return self.search_entry.get_text().strip()
-
     # ========== Methods for working with the treeview ========== #
-
-    def _search_callback(self, model, it, data=None):
-        rowid = model.get_value(it, Model.COLUMN_ID)
-        if rowid is not None:
-            return rowid in self._search_results
 
     def get_selection(self):
         selection = self.snip_list.get_selection()
@@ -252,278 +442,3 @@ class AppWindow(GObject.GObject):
         rowid = model.get_value(it, Model.COLUMN_ID)
         row = self.db.get(rowid)
         return row
-
-    def show_row_context_menu(self):
-        menu = Gtk.Menu()
-        for sid, cb in (('_Apply', self.on_apply_btn_clicked),
-                        ('_Properties', self.on_show_btn_clicked)):
-            self._add_context_menu_item(menu, sid, cb)
-        menu.append(Gtk.SeparatorMenuItem())
-        for sid, cb in ((Gtk.STOCK_EDIT, self.on_edit_btn_clicked),
-                        ('_Delete', self.on_delete_btn_clicked)):
-            self._add_context_menu_item(menu, sid, cb)
-        menu.show_all()
-        menu.popup(None, None, None, None, 3, 0)
-
-    def _add_context_menu_item(self, menu, stock_id, cb):
-        item = Gtk.MenuItem.new_with_mnemonic(stock_id)
-        item.connect('activate', cb)
-        menu.append(item)
-
-    def _error(self, err):
-        ErrorDialog(transient_for=self.window).run(err)
-
-    ###########################################################################
-    # ------------------------------ SIGNALS
-    ###########################################################################
-
-    def emit(self, *args):
-        """
-        Ensures signals are emitted in the main thread
-        """
-        GLib.idle_add(GObject.GObject.emit, self, *args)
-
-    # ===== Pager navigation
-
-    @Buildable.Callback()
-    def on_pager_first_btn_clicked(self, btn):
-        rows = self.pager.first()
-        self._load_rows(rows)
-
-    @Buildable.Callback()
-    def on_pager_prev_btn_clicked(self, btn):
-        rows = self.pager.previous()
-        self._load_rows(rows)
-
-    @Buildable.Callback()
-    def on_pager_next_btn_clicked(self, btn):
-        rows = self.pager.next()
-        self._load_rows(rows)
-
-    @Buildable.Callback()
-    def on_pager_last_btn_clicked(self, btn):
-        rows = self.pager.last()
-        self._load_rows(rows)
-
-    # ===== Snippets list actions
-
-    def on_destroy(self, dialog, event, data=None):
-        self.destroy()
-
-    @Buildable.Callback()
-    def on_snip_list_button_release_event(self, treeview, event):
-        """
-        Handler for self.snip_list 'button-release-event' signal.
-
-        Shows a row's contextmenu on right-click.
-        """
-        if event.button == 3:  # right click
-            model, it = self.get_selection()
-            if not model or not it:
-                return
-            self.show_row_context_menu()
-
-    @Buildable.Callback()
-    def on_snip_list_row_activated(self, treeview, path, col):
-        """
-        Handler for self.snip_list 'row-activated' signal.
-
-        Inserts a command on row double-click.
-        Opens the command dialog if needed.
-        """
-        model = treeview.get_model()
-        it = model.get_iter(path)
-        rowid = model.get_value(it, Model.COLUMN_ID)
-        row = self.db.get(rowid)
-        self.insert_snippet(row)
-
-    @Buildable.Callback()
-    def on_show_btn_clicked(self, widget, data=None):
-        self.edit_dialog.set_editable(False)
-        self.on_edit_btn_clicked(widget, data)
-        self.edit_dialog.set_editable(True)
-
-    @Buildable.Callback()
-    def on_apply_btn_clicked(self, widget, data=None):
-        """
-        Handler for self.apply_btn 'clicked' and
-        row context menu apply item 'activate' signals.
-
-        See `self.on_snip_list_row_activated`.
-        """
-        try:
-            row = self.get_selected_row()
-            if row:
-                self.insert_snippet(row)
-        except Exception as error:
-            self._error(error)
-
-    @Buildable.Callback()
-    def on_cancel_btn_clicked(self, widget, data=None):
-        """
-        Handler for self.cancel_btn 'clicked' signal.
-
-        Closes this dialog without doing nothing.
-        """
-        self.destroy()
-
-    @Buildable.Callback()
-    def on_add_btn_clicked(self, widget, data=None):
-        """
-        Handler for self.add_btn 'clicked' signal.
-
-        Opens an empty command editing dialog
-        and inserts the new row into the treeview.
-        """
-        try:
-            response = self.edit_dialog.run()
-            if response == Gtk.ResponseType.ACCEPT:
-                data = self.edit_dialog.get_data()
-                self.insert_row(data)
-        except Exception as error:
-            self._error(error)
-
-    @Buildable.Callback()
-    def on_edit_btn_clicked(self, widget, data=None):
-        """
-        Handler for self.edit_btn 'clicked' and
-        row context menu edit item 'activate' signals.
-
-        Opens the edit dialog with the selected command.
-        """
-        model, it = self.get_selection()
-        if not model or not it:
-            return
-        try:
-            row = self.db.get(model.get_value(it, Model.COLUMN_ID))
-            response = self.edit_dialog.run(row)
-            if response == Gtk.ResponseType.ACCEPT:
-                data = self.edit_dialog.get_data()
-                self.update_row(it, data)
-        except Exception as error:
-            self._error(error)
-
-    @Buildable.Callback()
-    def on_delete_btn_clicked(self, widget, data=None):
-        """
-        Handler for self.delete_btn 'clicked' and
-        row context menu delete item 'activate' signals.
-
-        Deletes the selected row.
-        """
-        try:
-            model, it = self.get_selection()
-            self.remove_row(it)
-        except Exception as error:
-            self._error(error)
-
-    # ===== Handle Search
-
-    @Buildable.Callback()
-    def on_search_changed(self, widget):
-        """
-        Handler for self.search_entry 'search-changed' signal.
-        """
-        if State.LOADING in self.state:
-            # Defer filtering if we are loading rows
-            return True
-        self.state += State.SEARCHING
-        self._search_timeout = 0
-        query = self.get_search_text()
-        if not query:
-            self.load_snippets()
-            return False
-        params = {'term': query}
-        self.pager.mode = Pager.MODE_SEARCH
-        rows = self.pager.execute(params, params).first()
-        if not rows:
-            return False
-        self._load_rows(rows)
-        self.state -= State.SEARCHING
-        return False
-
-    # ========== MenuBar items event handlers ========== #
-
-    # ===== File Menu
-
-    def on_open_action_activate(self, action, param):
-        filename = OpenDialog().run()
-        if not filename:
-            return
-        try:
-            self.set_database(filename)
-            self.load_snippets()
-        except Exception as err:
-            self._error(err)
-
-    def on_new_action_activate(self, action, param):
-        filename = CreateDialog().run()
-        if not filename:
-            return
-        try:
-            self.set_database(filename)
-            self.load_snippets()
-        except Exception as err:
-            self._error(err)
-
-    def on_import_action_activate(self, action, param):
-        try:
-            ImportDialog().run(self.db)
-        except Exception as err:
-            self._error(err)
-        else:
-            self.load_snippets()
-
-    def on_export_action_activate(self, action, param):
-        try:
-            ExportDialog().run(self.db)
-        except Exception as err:
-            self._error(err)
-
-    # ===== Display Menu
-
-    def on_sort_ranking_menuitem_activate(self, menuitem):
-        self._change_sort_columns([
-            ('ranking', 'DESC'),
-            ('id', 'ASC', True)
-        ])
-
-    def on_sort_created_menuitem_activate(self, menuitem):
-        self._change_sort_columns([
-            ('created_at', 'DESC'),
-            ('id', 'ASC', True)
-        ])
-
-    def on_sort_last_used_menuitem_activate(self, menuitem):
-        self._change_sort_columns([
-            ('last_used_at', 'DESC'),
-            ('id', 'ASC', True)
-        ])
-
-    def on_sort_usage_count_menuitem_activate(self, menuitem):
-        self._change_sort_columns([
-            ('usage_count', 'DESC'),
-            ('id', 'ASC', True)
-        ])
-
-    def _change_sort_columns(self, columns):
-        self._config.pager_sort_column = columns[0][0]
-        self._config.save()
-        self.pager.set_sort_columns(columns)
-        if self.pager.mode == Pager.MODE_SEARCH:
-            search = self.get_search_text()
-            params = {'term': search} if search else ()
-        else:
-            params = ()
-        rows = self.pager.execute(params, params).first()
-        self._load_rows(rows)
-
-    # ===== Help Menu
-
-    def on_helplink_menuitem_activate(self, menuitem):
-        Gtk.show_uri(Gdk.Screen.get_default(), HELP_URI, int(GLib.get_current_time()))
-
-    def on_about_menuitem_activate(self, menuitem):
-        dlg = AboutDialog()
-        dlg.run()
-        dlg.destroy()

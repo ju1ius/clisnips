@@ -1,4 +1,6 @@
 - [ ] Documentation !!!
+- [ ] Fix CSS !
+- [ ] validate config
 - [x] Allow communication with terminal via dbus.
 -  Parser
     - [x] Handle command-line flags (-h, -R, -i, etc...)
@@ -13,6 +15,7 @@
     - [x] sort columns
     - [x] page size
     - [x] db file path
+    - [ ] use GSettings
 - Provide a default xml file to import on install, with a useful set of snippets.
     - [x] tar
     - [ ] git
@@ -21,5 +24,11 @@
 - [ ] Replace FileChooserButton by Button + FileChooserDialog
 - [ ] Gtk3 port
     - [x] Use CSS / StyleContext API
-    - [ ] Migrate to Gio.Action API
+    - [-] Migrate to Gio.Action API
+    - [ ] fix path completion entry
     - [ ] load user CSS from XDG_CONFIG_HOME
+- [ ] Curses GUI
+    - [ ] Find a framework:
+        * [Urwid](https://github.com/urwid/urwid/wiki/Application-list)
+        * [Panwid data-table](https://github.com/tonycpsu/panwid)
+        * [Console Applications with Urwid](https://www.youtube.com/watch?v=4UwhXC1OP2A)
