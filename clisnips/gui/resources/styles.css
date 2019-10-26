@@ -34,18 +34,8 @@
 @define-color background-color-warning @theme-yellow-muted;
 @define-color background-color-error   @theme-red-muted;
 
-/**
- * Snippets list
- */
-#app_window .snip_list {
-  background-color: @theme-background-color;
-  color: @theme-foreground-color;
-  font-family: monospace;
-  border: 1px solid #2e3138;
-}
-#app_window .snip_list :selected {
-  outline: none;
-  border: 1px solid @theme-grey-muted;
+.suggested-action {
+  padding: 0 24px;
 }
 
 /**
