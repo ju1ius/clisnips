@@ -227,7 +227,7 @@ class AppWindow(GObject.GObject):
             'usage-count': 'usage_count',
             'last-usage-date': 'last_used_at',
         }.get(value, 'ranking')
-        self._change_sort_columns(column)
+        self._change_sort_column(column)
 
     def _change_sort_column(self, column):
         self._config.pager_sort_column = column
