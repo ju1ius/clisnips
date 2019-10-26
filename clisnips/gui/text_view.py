@@ -18,10 +18,11 @@ class SimpleTextView(WidgetDecorator):
         'changed': (GObject.SignalFlags.RUN_LAST, None, ())
     }
 
-    def __init__(self, widget):
+    def __init__(self, widget: Gtk.TextView):
         super().__init__(widget)
         self._tab_width = 4
         self.set_tab_width(self._tab_width, force=True)
+        self.widget.get_style_context().add_class('simple-textview')
         self.buffer.connect('changed', self._on_buffer_changed)
 
     @property

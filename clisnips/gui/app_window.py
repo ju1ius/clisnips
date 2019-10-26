@@ -50,8 +50,7 @@ class AppWindow(GObject.GObject):
     sort_options_menu_btn: Gtk.MenuButton = Buildable.Child()
     snip_list: Gtk.TreeView = Buildable.Child()
 
-    pager_curpage_lbl: Gtk.Label = Buildable.Child()
-    pager_info_lbl: Gtk.Label = Buildable.Child()
+    pager_infos_lbl: Gtk.Label = Buildable.Child()
 
     # Signals emited by this dialog
     __gsignals__ = {
@@ -114,8 +113,8 @@ class AppWindow(GObject.GObject):
             col.add_attribute(cell, 'text', i)
             self.snip_list.append_column(col)
 
-        self.db = None
-        self.pager = None
+        self.db: SnippetsDatabase = None
+        self.pager: SearchPager = None
         self.set_database(self._config.database_path)
 
         self.edit_dialog = EditDialog(transient_for=self.window)
@@ -249,9 +248,7 @@ class AppWindow(GObject.GObject):
 
     def _update_pager_view(self):
         page = self.pager.current_page
-        self.pager_curpage_lbl.set_text(str(page))
-        info = f'page {page} of {len(self.pager)} ({self.pager.total_rows} snippets)'
-        self.pager_info_lbl.set_text(info)
+        self.pager_infos_lbl.set_text(f'Page {page} of {len(self.pager)} ({self.pager.total_rows} snippets)')
         # Action states
         is_first, is_last = self.pager.is_first_page, self.pager.is_last_page
         self.window.lookup_action('pager-first').set_enabled(not is_first)

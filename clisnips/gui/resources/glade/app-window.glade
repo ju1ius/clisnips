@@ -198,18 +198,63 @@ Author: Jules Bernable
                 <property name="can_focus">False</property>
                 <property name="spacing">6</property>
                 <child>
-                  <object class="GtkLabel" id="pager_info_lbl">
+                  <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="halign">start</property>
-                    <property name="valign">center</property>
-                    <property name="label" translatable="yes">Pager Infos</property>
-                    <attributes>
-                      <attribute name="style" value="italic"/>
-                    </attributes>
+                    <child>
+                      <object class="GtkButton" id="delete_btn">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="action_name">win.snippet-delete</property>
+                        <property name="image">img_delete</property>
+                        <property name="always_show_image">True</property>
+                        <signal name="clicked" handler="on_delete_btn_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="edit_btn">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="action_name">win.snippet-edit</property>
+                        <property name="image">img_edit</property>
+                        <property name="always_show_image">True</property>
+                        <signal name="clicked" handler="on_edit_btn_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="add_btn">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="action_name">win.snippet-add</property>
+                        <property name="image">img_add</property>
+                        <property name="always_show_image">True</property>
+                        <signal name="clicked" handler="on_add_btn_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <style>
+                      <class name="linked"/>
+                    </style>
                   </object>
                   <packing>
-                    <property name="expand">True</property>
+                    <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
@@ -225,7 +270,6 @@ Author: Jules Bernable
                         <property name="receives_default">True</property>
                         <property name="action_name">win.pager-first</property>
                         <property name="image">img_goto_first</property>
-                        <property name="relief">none</property>
                         <property name="always_show_image">True</property>
                         <signal name="clicked" handler="on_pager_first_btn_clicked" swapped="no"/>
                       </object>
@@ -242,7 +286,6 @@ Author: Jules Bernable
                         <property name="receives_default">True</property>
                         <property name="action_name">win.pager-previous</property>
                         <property name="image">img_goto_prev</property>
-                        <property name="relief">none</property>
                         <property name="always_show_image">True</property>
                         <signal name="clicked" handler="on_pager_prev_btn_clicked" swapped="no"/>
                       </object>
@@ -253,30 +296,12 @@ Author: Jules Bernable
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel" id="pager_curpage_lbl">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">1</property>
-                        <property name="justify">center</property>
-                        <attributes>
-                          <attribute name="weight" value="bold"/>
-                        </attributes>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="fill">True</property>
-                        <property name="padding">6</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                    <child>
                       <object class="GtkButton" id="pager_next_btn">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
                         <property name="action_name">win.pager-next</property>
                         <property name="image">img_goto_next</property>
-                        <property name="relief">none</property>
                         <signal name="clicked" handler="on_pager_next_btn_clicked" swapped="no"/>
                       </object>
                       <packing>
@@ -292,7 +317,6 @@ Author: Jules Bernable
                         <property name="receives_default">True</property>
                         <property name="action_name">win.pager-last</property>
                         <property name="image">img_goto_last</property>
-                        <property name="relief">none</property>
                         <property name="always_show_image">True</property>
                         <signal name="clicked" handler="on_pager_last_btn_clicked" swapped="no"/>
                       </object>
@@ -302,11 +326,29 @@ Author: Jules Bernable
                         <property name="position">4</property>
                       </packing>
                     </child>
+                    <style>
+                      <class name="linked"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
+                    <property name="pack_type">end</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkLabel" id="pager_infos_lbl">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="label" translatable="yes">Page 1 of 25 (255 snippets)</property>
+                    <property name="justify">center</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="padding">6</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -329,69 +371,7 @@ Author: Jules Bernable
             <property name="can_focus">False</property>
             <property name="spacing">6</property>
             <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <child>
-                  <object class="GtkButton" id="delete_btn">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="action_name">win.snippet-delete</property>
-                    <property name="image">img_delete</property>
-                    <property name="relief">half</property>
-                    <property name="always_show_image">True</property>
-                    <signal name="clicked" handler="on_delete_btn_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="edit_btn">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="action_name">win.snippet-edit</property>
-                    <property name="image">img_edit</property>
-                    <property name="relief">half</property>
-                    <property name="always_show_image">True</property>
-                    <signal name="clicked" handler="on_edit_btn_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="add_btn">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="action_name">win.snippet-add</property>
-                    <property name="image">img_add</property>
-                    <property name="relief">half</property>
-                    <property name="always_show_image">True</property>
-                    <signal name="clicked" handler="on_add_btn_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
-                <style>
-                  <class name="linked"/>
-                </style>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
+              <placeholder/>
             </child>
             <child>
               <object class="GtkBox">

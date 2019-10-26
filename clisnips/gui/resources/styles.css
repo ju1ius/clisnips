@@ -46,29 +46,29 @@ textview {
   font-family: monospace;
 }
 
-textview:not(.sourceview) {
+.simple-textview {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
   caret-color: @text-caret-color;
 }
 
-textview:not(.sourceview) text {
+.simple-textview text {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
 }
 
-textview:not(.sourceview) text selection {
+.simple-textview text selection {
   background-color: @theme-foreground-color;
   color: @theme-background-color;
 }
 
-textview:not(.sourceview).inverted, textview:not(.sourceview).inverted text {
+.simple-textview.inverted, .simple-textview.inverted text {
   background-color: @theme-foreground-color;
   color: @theme-background-color;
   caret-color: @theme-caret-color-inverted;
 }
 
-textview:not(.sourceview).inverted text selection {
+.simple-textview.inverted text selection {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
 }
