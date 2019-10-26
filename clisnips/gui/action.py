@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import Callable, Optional
 
-from gi.repository import Gio, GLib
+from gi.repository import GLib, Gio
 
 
 def add_action(
     obj: Gio.ActionMap,
     name: str,
-    callback: callable,
+    callback: Callable,
     param_type: Optional[GLib.VariantType] = None
 ) -> Gio.SimpleAction:
     action = Gio.SimpleAction.new(name, param_type)
@@ -18,7 +18,7 @@ def add_action(
 def add_stateful_action(
     obj: Gio.ActionMap,
     name: str,
-    callback: callable,
+    callback: Callable,
     param_type: Optional[GLib.VariantType] = None,
     state: Optional[GLib.Variant] = None
 ) -> Gio.SimpleAction:

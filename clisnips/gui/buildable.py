@@ -1,22 +1,15 @@
-from os import PathLike
-from typing import Optional, Type, TypeVar
+from typing import Callable, Dict, Optional, Type, TypeVar, Any
 
 from gi.repository import GObject, Gtk
-from typing_extensions import Protocol
+
+from .._types import AnyPath
 
 __all__ = ['Buildable']
 
 
-class _Decoratee(Protocol):
-    __dict__: dict = ...
-    __init__: callable = ...
-    __gtk_callbacks__: dict = ...
-    __gtk_widgets__: dict = ...
-
-
-def _register(cls: _Decoratee, builder: Gtk.Builder, strict_callbacks: bool = False):
-    bound_widgets = {}
-    bound_methods = {}
+def _register(cls, builder: Optional[Gtk.Builder], strict_callbacks: bool = False):
+    bound_widgets: Dict[str, str] = {}
+    bound_methods: Dict[str, str] = {}
 
     for attr, obj in list(cls.__dict__.items()):
         if isinstance(obj, _Child):
@@ -48,7 +41,7 @@ def _register(cls: _Decoratee, builder: Gtk.Builder, strict_callbacks: bool = Fa
     cls.__init__ = instance_init
 
 
-def _init_buildable(self, cls, builder: Gtk.Builder, strict_callbacks: bool, args: tuple, kwargs: dict):
+def _init_buildable(self, cls, builder: Optional[Gtk.Builder], strict_callbacks: bool, args: tuple, kwargs: dict):
     if builder:
         # builder was passed via decorator, store it on the instance
         self._gtk_builder = builder
@@ -109,7 +102,7 @@ class _Child:
 
 class _Callback:
 
-    def __init__(self, callback: callable, name: Optional[str]):
+    def __init__(self, callback: Callable, name: Optional[str]):
         self.callback = callback
         self.name = name
 
@@ -119,7 +112,7 @@ class _CallbackDecorator:
     def __init__(self, name: str = None):
         self.name: Optional[str] = name
 
-    def __call__(self, callback: callable) -> _Callback:
+    def __call__(self, callback: Callable) -> _Callback:
         return _Callback(callback, self.name)
 
 
@@ -129,20 +122,20 @@ _T = TypeVar('_T')
 
 class Buildable(object):
 
-    Child = _Child
+    Child: Any = _Child
     Callback = _CallbackDecorator
 
     @classmethod
-    def from_file(cls: Type[_TBuildable], file_name: PathLike) -> _TBuildable:
+    def from_file(cls: Type[_TBuildable], file_name: AnyPath) -> _TBuildable:
         return cls(file_name=file_name)
 
     @classmethod
     def from_string(cls: Type[_TBuildable], string: str) -> _TBuildable:
         return cls(xml=string)
 
-    def __init__(self, xml: Optional[str] = None, file_name: Optional[PathLike] = None, strict_callbacks: bool = False):
+    def __init__(self, xml: Optional[str] = None, file_name: Optional[AnyPath] = None, strict_callbacks: bool = False):
         self._xml: Optional[str] = xml
-        self._file_name: Optional[PathLike] = file_name
+        self._file_name: Optional[AnyPath] = file_name
         self._strict_callbacks = strict_callbacks
 
     def __call__(self, cls: _T) -> _T:

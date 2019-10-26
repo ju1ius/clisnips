@@ -5,12 +5,12 @@ https://github.com/xfce-mirror/thunar/blob/master/thunar/thunar-path-entry.c
 
 import locale
 import os
-from os import PathLike
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
 from gi.repository import GLib, Gdk, Gio, Gtk
 
+from .._types import AnyPath
 from ..utils.common_prefix import common_prefix
 
 
@@ -32,7 +32,7 @@ def _was_control_pressed(event_state: Optional[Gdk.ModifierType] = None) -> bool
 
 class _File:
 
-    def __init__(self, file: Union[PathLike, Gio.File]):
+    def __init__(self, file: Union[AnyPath, Gio.File]):
         if isinstance(file, Gio.File):
             self._file = file
         else:
@@ -89,7 +89,7 @@ class _EntryCompletion(Gtk.EntryCompletion):
 
 class PathEntry(Gtk.Entry):
 
-    def __init__(self, working_directory: Optional[PathLike] = None):
+    def __init__(self, working_directory: Optional[AnyPath] = None):
         super().__init__()
         self._cwd: Path = Path.cwd()
         if working_directory:
@@ -122,7 +122,7 @@ class PathEntry(Gtk.Entry):
     def get_working_directory(self) -> Path:
         return self._cwd
 
-    def set_working_directory(self, directory: PathLike):
+    def set_working_directory(self, directory: AnyPath):
         self._cwd = Path(directory).expanduser().resolve(True)
 
     # thunar_path_entry_focus

@@ -1,10 +1,10 @@
 import re
 from collections import deque
+from typing import Match, Optional, Pattern, Tuple
 
 from .doc_tokens import *
 
-_PATTERN_TYPE = type(re.compile("", 0))
-_RE_CACHE = {}
+_RE_CACHE: Dict[Tuple[str, bool], Pattern[str]] = {}
 
 WSP_CHARS = '\t\f\x20'
 WSP_RX = re.compile(r'[\t\f ]*')
@@ -30,14 +30,13 @@ PARAM_RX = re.compile(r'(\d+)|({ident})'.format(ident=IDENT_RX.pattern))
 INTEGER_RX = re.compile(r'\d+')
 FLOAT_RX = re.compile(r'\d*\.\d+')
 TYPEHINT_RX = re.compile(r'\(\s*({ident})\s*\)'.format(ident=IDENT_RX.pattern))
-DIGIT_RX = re.compile(
-    r'-?(?:({float})|({int}))'.format(float=FLOAT_RX.pattern,
-                                      int=INTEGER_RX.pattern)
-)
+DIGIT_RX = re.compile(r'-?(?:({float})|({int}))'.format(float=FLOAT_RX.pattern, int=INTEGER_RX.pattern))
 STRING_RX = re.compile(r'"((?:\\"|[^"])*)"')
 DSTR_RX = re.compile(r'"(?:\\.|[^"])*"')
 SSTR_RX = re.compile(r"'(?:\\.|[^'])*'")
 TSTR_RX = re.compile(r'(\'\'\'|""")(?:\\.|[^\\])*\1')
+
+EMPTY = ''
 
 
 class StringLexer(object):
@@ -45,36 +44,40 @@ class StringLexer(object):
     A simple String lexer
     """
 
-    def __init__(self, text=None):
-        if text is not None:
+    def __init__(self, text: str = ''):
+        self.text = text
+        self.length: int = 0
+        self.pos: int = -1
+        self.col: int = -1
+        self.line: int = -1
+        self.char: str = EMPTY
+        self.newline_pending: bool = False
+        if text:
             self.set_text(text)
 
-    def set_text(self, text):
-
+    def set_text(self, text: str):
         self.text = text
         self.length = len(self.text)
         self.reset()
 
     def reset(self):
-
         self.pos = -1
         self.col = -1
         self.line = 0
-        self.char = None
+        self.char = EMPTY
         self.newline_pending = False
 
-    def lookahead(self, n=1, accumulate=False):
-
+    def lookahead(self, n: int = 1, accumulate: bool = False) -> str:
         pos = self.pos + n
         if pos < self.length:
             if accumulate:
-                return self.text[self.pos+1:pos+1]
+                return self.text[self.pos + 1:pos + 1]
             return self.text[pos]
         if accumulate:
-            return self.text[self.pos+1:]
+            return self.text[self.pos + 1:]
+        return EMPTY
 
-    def lookbehind(self, n=1, accumulate=False):
-
+    def lookbehind(self, n: int = 1, accumulate: bool = False) -> str:
         pos = self.pos - n
         if pos >= 0:
             if accumulate:
@@ -82,21 +85,21 @@ class StringLexer(object):
             return self.text[pos]
         if accumulate:
             return self.text[:self.pos]
+        return EMPTY
 
-    def advance(self, n=1):
-
+    def advance(self, n: int = 1) -> str:
         if self.newline_pending:
             self.line += 1
             self.col = -1
         if self.pos + n >= self.length:
-            self.char = None
+            self.char = EMPTY
             self.pos = self.length
             return self.char
         if n == 1:
             self.pos += 1
             self.col += 1
             self.char = self.text[self.pos]
-            #self.newline_pending = "\n" == self.char
+            # self.newline_pending = "\n" == self.char
             return self.char
         text = self.text
         old_pos = self.pos
@@ -105,23 +108,22 @@ class StringLexer(object):
         # oldpos (+1 since it should have been handled by self.newline_pending)
         # and newpos (not -1 since we will set the last to be pending)
         line_count = text.count("\n", old_pos, new_pos + 1)
-        #print text[old_pos:new_pos+1], line_count
+        # print text[old_pos:new_pos+1], line_count
         if line_count > 0:
             last_line_pos = text.rfind("\n", old_pos, new_pos + 1)
-            #print last_line_pos
+            # print last_line_pos
             self.line += line_count
             self.col = new_pos - last_line_pos
         else:
             self.col += n
         self.pos = new_pos
         self.char = text[new_pos]
-        #self.newline_pending = "\n" == self.char
+        # self.newline_pending = "\n" == self.char
         return self.char
 
-    def recede(self, n=1):
-
+    def recede(self, n: int = 1) -> str:
         if self.pos - n < 0:
-            self.char = None
+            self.char = EMPTY
             return self.char
         old_pos = self.pos
         text = self.text
@@ -130,7 +132,7 @@ class StringLexer(object):
         # new_pos and old_pos (not+1 since it has been handled by advance
         # already)
         line_count = text.count("\n", new_pos, old_pos)
-        #print old_pos, new_pos, line_count, text[new_pos:old_pos+1]
+        # print old_pos, new_pos, line_count, text[new_pos:old_pos+1]
         if line_count > 0:
             self.line -= line_count
             first_line_pos = text.find("\n", new_pos, old_pos)
@@ -143,35 +145,32 @@ class StringLexer(object):
         self.char = text[new_pos]
         return self.char
 
-    def read(self, n=1):
-
+    def read(self, n: int = 1) -> str:
         startpos = self.pos
         la = self.advance(n)
-        if la is None:
-            return None
+        if la is EMPTY:
+            return EMPTY
         return self.text[startpos:self.pos + 1]
 
-    def unread(self, n=1):
-
+    def unread(self, n: int = 1) -> str:
         endpos = self.pos
         la = self.recede(n)
-        if la is None:
-            return None
+        if la is EMPTY:
+            return EMPTY
         return self.text[self.pos:endpos + 1]
 
-    def consume(self, string):
+    def consume(self, string: str):
         self.advance(len(string))
 
-    def unconsume(self, string):
+    def unconsume(self, string: str):
         self.recede(len(string))
 
-    def read_until(self, pattern, negate=True, accumulate=True):
+    def read_until(self, pattern: Union[str, Pattern], negate: bool = True, accumulate: bool = True) -> str:
         """
         Consumes the input string until we find a match for pattern
         """
-
-        if not isinstance(pattern, _PATTERN_TYPE):
-            cache_key = (pattern, negate)
+        if not isinstance(pattern, Pattern):
+            cache_key: Tuple[str, bool] = (pattern, negate)
             if cache_key not in _RE_CACHE:
                 neg = '^' if negate else ''
                 _RE_CACHE[cache_key] = re.compile(fr'[{neg}{pattern}]+')
@@ -180,17 +179,20 @@ class StringLexer(object):
         if m:
             self.advance(m.end() - 1 - m.start())
             return m.group(0)
-        return ''
+        return EMPTY
 
 
 class Lexer(StringLexer):
+    """
+    A stateful lexer
+    """
 
     def __init__(self, text):
         super().__init__(text)
         self.state = self.freetext_state
+        self.token_queue = deque()
 
     def __iter__(self):
-
         self.token_queue = deque()
         while True:
             if not self.state():
@@ -200,20 +202,13 @@ class Lexer(StringLexer):
                 token = self.token_queue.popleft()
                 yield token
 
-    def init_token(self, type, value=None):
-
+    def init_token(self, type: int, value: str = EMPTY) -> Token:
         token = Token(type, self.line, self.col, value)
         token.startpos = self.pos
         return token
 
-    def finalize_token(self, token, line=None, col=None, pos=None, value=None):
-
-        #caller = inspect.stack()[1][2:4]
-        #if caller[1] in ('flush_attr_stack', 'emit_tokens'):
-            #caller = inspect.stack()[2][2:4]
-        #print "Finalize(from %s:%s)-> %s (char: %s, line: %s, col: %s)" % (
-            #caller[1],caller[0],token,self.char,self.line,self.col
-        #)
+    def finalize_token(self, token: Token, line: Optional[int] = None, col: Optional[int] = None,
+                       pos: Optional[int] = None, value: Optional[str] = None):
         if value is not None:
             token.value = value
         token.endpos = pos if pos is not None else self.pos
@@ -221,11 +216,9 @@ class Lexer(StringLexer):
         token.endcol = col if col is not None else self.col
         return token
 
-    def freetext_state(self):
-
-        #print "ENTER freetext_state"
+    def freetext_state(self) -> bool:
         char = self.advance()
-        if char is None:
+        if char is EMPTY:
             return False
         if char == '{':
             token = self.init_token(T_LBRACE, '{')
@@ -249,10 +242,9 @@ class Lexer(StringLexer):
         self.token_queue.append(token)
         return True
 
-    def param_state(self):
-
-        #print "ENTER param_state"
+    def param_state(self) -> bool:
         while True:
+            token = None
             char = self._skip_whitespace()
             if char == '}':
                 token = self.init_token(T_RBRACE, '}')
@@ -277,11 +269,9 @@ class Lexer(StringLexer):
                 break
         return True
 
-    def after_param_state(self):
-
-        #print "ENTER after_param_state"
+    def after_param_state(self) -> bool:
         char = self._skip_whitespace()
-        if char is None:
+        if char is EMPTY:
             return False
         if char == '(':
             token = self.init_token(T_LPAREN, '(')
@@ -297,11 +287,10 @@ class Lexer(StringLexer):
         self.state = self.freetext_state
         return True
 
-    def typehint_state(self):
-
+    def typehint_state(self) -> bool:
         while True:
             char = self._skip_whitespace()
-            if char is None:
+            if char is EMPTY:
                 return False
             if char == ')':
                 token = self.init_token(T_RPAREN, ')')
@@ -319,12 +308,11 @@ class Lexer(StringLexer):
             self.token_queue.append(token)
         return True
 
-    def valuehint_state(self):
-
-        #print "ENTER valuehint_state"
+    def valuehint_state(self) -> bool:
         while True:
+            token = None
             char = self._skip_whitespace()
-            if char is None:
+            if char is EMPTY:
                 return False
             if char == ']':
                 token = self.init_token(T_RBRACK, ']')
@@ -357,8 +345,7 @@ class Lexer(StringLexer):
                 self.token_queue.append(token)
         return True
 
-    def codeblock_state(self):
-
+    def codeblock_state(self) -> bool:
         code = self.init_token(T_TEXT, '')
         while True:
             code.value += self.read_until(r'"\'`')
@@ -410,11 +397,10 @@ class Lexer(StringLexer):
                 code.value += char
         return True
 
-    def _handle_param_identifier(self):
-
+    def _handle_param_identifier(self) -> Optional[Token]:
         m = PARAM_RX.match(self.text, self.pos)
         if not m:
-            return
+            return None
         if m.group(1):
             _type = T_INTEGER
         elif m.group(2):
@@ -423,29 +409,26 @@ class Lexer(StringLexer):
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _handle_flag(self):
-
+    def _handle_flag(self) -> Optional[Token]:
         m = FLAG_RX.match(self.text, self.pos)
         if not m:
-            return
+            return None
         token = self.init_token(T_FLAG, m.group(0))
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _handle_quoted_string(self):
-
+    def _handle_quoted_string(self) -> Optional[Token]:
         m = STRING_RX.match(self.text, self.pos)
         if not m:
-            return
+            return None
         token = self.init_token(T_STRING, m.group(1))
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _handle_digit(self):
-
+    def _handle_digit(self) -> Optional[Token]:
         m = DIGIT_RX.match(self.text, self.pos)
         if not m:
-            return
+            return None
         if m.group(1):
             _type = T_FLOAT
         elif m.group(2):
@@ -454,30 +437,24 @@ class Lexer(StringLexer):
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _consume_freetext(self):
-
+    def _consume_freetext(self) -> str:
         m = FREETEXT_BOUNDS_RX.search(self.text, self.pos)
         if not m:
-            return ''
+            return EMPTY
         end = m.end()
         text = self.text[self.pos:end]
         self.advance(end - self.pos - 1)
         return text
 
-    def _skip_whitespace(self):
-
+    def _skip_whitespace(self) -> str:
         char = self.advance()
-        if char is None:
-            return None
         if char in WSP_CHARS:
             self.read_until(WSP_RX)
             char = self.advance()
         return char
 
-    def _consume_match(self, match, group=0):
-
+    def _consume_match(self, match: Match, group: Union[int, str] = 0) -> str:
         if not match:
-            return
+            return EMPTY
         self.advance(match.end(group) - 1 - match.start(group))
         return match.group(group)
-

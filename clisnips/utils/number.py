@@ -20,6 +20,7 @@ def get_num_decimals(n: Any) -> int:
         return 0
     d = 0
     match = FLOAT_RE.match(str(n))
+    assert match
     if match['decimals']:
         d += len(match['decimals'])
     if match['exponent']:

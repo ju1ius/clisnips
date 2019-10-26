@@ -16,10 +16,10 @@ value_range:    T_DIGIT T_COLON digit (T_COLON digit)? (T_STAR digit)?
 value:          T_STAR? (T_STRING | digit)
 digit:          T_INTEGER | T_FLOAT
 """
-from ..exceptions import ParsingError
 from .doc_lexer import Lexer
 from .doc_nodes import *
 from .doc_tokens import *
+from ..exceptions import ParsingError
 
 
 def _to_number(string):

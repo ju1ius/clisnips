@@ -1,5 +1,6 @@
-from textwrap import dedent
 import time
+from textwrap import dedent
+
 try:
     from xml.etree import cElementTree as etree
 except ImportError:

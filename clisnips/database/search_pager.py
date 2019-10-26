@@ -1,8 +1,9 @@
+from .pager import Pager
+from .scrolling_pager import ScrollingPager
 from .snippets_db import SnippetsDatabase
-from ..database.scrolling_pager import ScrollingPager
 
 
-class SearchPager:
+class SearchPager(Pager):
 
     def __init__(self, db: SnippetsDatabase, page_size: int):
         self._page_size = page_size
