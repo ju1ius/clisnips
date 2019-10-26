@@ -1,5 +1,5 @@
 - [ ] Documentation !!!
-- [ ] Fix CSS !
+- [ ] Implement soft delete / trashcan
 - [ ] validate config
 - [x] Allow communication with terminal via dbus.
 -  Parser
@@ -24,7 +24,7 @@
 - [ ] Replace FileChooserButton by Button + FileChooserDialog
 - [ ] Gtk3 port
     - [x] Use CSS / StyleContext API
-    - [-] Migrate to Gio.Action API
+    - [x] Migrate to Gio.Action API
     - [ ] fix path completion entry
     - [ ] load user CSS from XDG_CONFIG_HOME
 - [ ] Curses GUI
