@@ -11,7 +11,7 @@ from .open_dialog import CreateDialog, OpenDialog
 from .state import State as BaseState
 from .strfmt_dialog import StringFormatterDialog
 from ..config import HELP_URI
-from ..database.search_pager import SearchPager
+from ..database.search_pager import SearchPager, SearchPagerType
 from ..database.snippets_db import SnippetsDatabase
 
 __DIR__ = Path(__file__).parent.absolute()
@@ -114,7 +114,7 @@ class AppWindow(GObject.GObject):
             self.snip_list.append_column(col)
 
         self.db: SnippetsDatabase = None
-        self.pager: SearchPager = None
+        self.pager: SearchPagerType = None
         self.set_database(self._config.database_path)
 
         self.edit_dialog = EditDialog(transient_for=self.window)

@@ -1,9 +1,14 @@
+from typing import Union
+
 from .pager import Pager
 from .scrolling_pager import ScrollingPager
 from .snippets_db import SnippetsDatabase
 
 
-class SearchPager(Pager):
+SearchPagerType = Union[Pager, 'SearchPager']
+
+
+class SearchPager:
 
     def __init__(self, db: SnippetsDatabase, page_size: int):
         self._page_size = page_size
