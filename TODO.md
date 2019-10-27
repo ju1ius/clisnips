@@ -15,7 +15,6 @@
     - [x] sort columns
     - [x] page size
     - [x] db file path
-    - [ ] use GSettings
 - Provide a default xml file to import on install, with a useful set of snippets.
     - [x] tar
     - [ ] git

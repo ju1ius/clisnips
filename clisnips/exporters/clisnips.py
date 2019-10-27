@@ -30,11 +30,14 @@ class Exporter(object):
         self.add_field(doc, snip, 'title', row['title'])
         self.add_field(doc, snip, 'command', row['cmd'])
         self.add_field(doc, snip, 'tag', row['tag'])
-        self.add_field(doc, snip, 'doc', row['doc'])
+        self.add_field(doc, snip, 'doc', row['doc'], cdata=True)
         return snip
 
-    def add_field(self, doc, parent, name, text):
+    def add_field(self, doc, parent, name, text, cdata=False):
         el = doc.createElement(name)
-        txt = doc.createTextNode(text)
+        if cdata:
+            txt = doc.createCDATASection(text)
+        else:
+            txt = doc.createTextNode(text)
         el.appendChild(txt)
         parent.appendChild(el)
