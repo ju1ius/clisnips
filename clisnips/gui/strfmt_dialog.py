@@ -8,7 +8,7 @@ from . import msg_dialogs
 from .buildable import Buildable
 from .error_dialog import ErrorDialog
 from .state import State
-from .strfmt_widgets import Field
+from .strfmt import field_from_documentation
 from .text_view import SimpleTextView
 from ..config import styles
 from ..diff import InlineMyersSequenceMatcher
@@ -27,7 +27,7 @@ class StrfmtDialogState(State):
 @Buildable.from_file(__DIR__ / 'resources' / 'glade' / 'strfmt_dialog.glade')
 class StringFormatterDialog:
 
-    UPDATE_TIMEOUT = 200
+    UPDATE_TIMEOUT = 150
 
     _dialog: Gtk.Dialog = Buildable.Child('strfmt_dialog')
     title_lbl: Gtk.Label = Buildable.Child()
@@ -144,8 +144,8 @@ class StringFormatterDialog:
     def set_fields(self, field_names):
         parameters = self._doc_tree.parameters
         for name in field_names:
-            param_doc = parameters.get(name)
-            self.add_field(name, param_doc)
+            field = field_from_documentation(name, self._doc_tree)
+            self.add_field(name, field)
         self.fields_vbox.show_all()
         self.update_preview()
 
@@ -156,8 +156,7 @@ class StringFormatterDialog:
         for child in self.fields_vbox.get_children():
             self.fields_vbox.remove(child)
 
-    def add_field(self, name, doc):
-        field = Field.from_documentation(name, doc)
+    def add_field(self, name, field):
         field.connect('changed', self.on_field_change)
         self.fields_vbox.pack_start(field, expand=True, fill=True, padding=0)
         self.fields[name] = field
