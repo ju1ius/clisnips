@@ -96,7 +96,7 @@ class PathEntry(Gtk.Entry):
             self.set_working_directory(working_directory)
         #
         self._current_folder = None
-        self._has_completion = False
+        self._has_inline_completion = False
         self._in_change = False
         self._check_completion_idle_id = 0
         #
@@ -116,8 +116,8 @@ class PathEntry(Gtk.Entry):
         self.connect('insert-text', self._do_insert_text)
         self.connect('changed', self._do_changed)
         # clear the auto completion whenever the cursor is moved manually or the selection is changed manually
-        self.connect('notify::cursor-position', self._on_clear_completion)
-        self.connect('notify::selection-bound', self._on_clear_completion)
+        self.connect('notify::cursor-position', self._on_properties_changed)
+        self.connect('notify::selection-bound', self._on_properties_changed)
 
     def get_working_directory(self) -> Path:
         return self._cwd
@@ -128,35 +128,35 @@ class PathEntry(Gtk.Entry):
     # thunar_path_entry_focus
     def _do_focus(self, entry, direction: Gtk.DirectionType):
         if direction == Gtk.DirectionType.TAB_FORWARD and self.has_focus() and not _was_control_pressed():
-            if not self._has_completion and self._is_cursor_at_end():
+            if not self._has_inline_completion and self._is_cursor_at_end():
                 self._append_common_prefix(highlight=False)
             self._move_cursor_at_end()
             return True
-        return super().do_focus(direction)
+        return False
 
     # thunar_path_entry_key_press_event
     def _on_key_press(self, entry: Gtk.Entry, event: Gdk.EventKey):
         if event.keyval == Gdk.KEY_Tab and not _was_control_pressed(event.state):
-            if not self._has_completion and self._is_cursor_at_end():
+            if not self._has_inline_completion and self._is_cursor_at_end():
                 self._append_common_prefix(highlight=False)
             self._move_cursor_at_end()
             # emit "changed", so the completion window is popped up
             self.emit('changed')
             # we handled the event
             return True
+        if event.keyval in (Gdk.KEY_Down, Gdk.KEY_Up):
+            self._handle_key_up_down(up=event.keyval == Gdk.KEY_Up)
         return False
 
     # thunar_path_entry_activate
     def _do_activate(self, *args, **kwargs):
-        if self._has_completion:
+        if self._has_inline_completion:
             self._move_cursor_at_end()
 
     # thunar_path_entry_do_insert_text
     def _do_insert_text(self, entry, text, length, position):
-        # self.get_buffer().insert_text(position, text, length)
         if not self._in_change:
             self._queue_check_completion()
-        # return length + position
 
     # thunar_path_entry_changed
     def _do_changed(self, entry):
@@ -177,11 +177,11 @@ class PathEntry(Gtk.Entry):
             self._populate_model(current_folder)
 
     # thunar_path_entry_clear_completion
-    def _on_clear_completion(self, entry, bound):
+    def _on_properties_changed(self, entry, prop):
         # reset the completion and apply the new text
-        if self._has_completion:
-            self._has_completion = False
-            self._do_changed()
+        if self._has_inline_completion:
+            self._has_inline_completion = False
+            self._do_changed(entry)
 
     # thunar_path_entry_match_func
     def _completion_match_callback(self, completion: _EntryCompletion, key: str, it: Gtk.TreeIter, user_data=None):
@@ -233,7 +233,7 @@ class PathEntry(Gtk.Entry):
             # highlight the prefix if requested
             if highlight:
                 self.select_region(last_slash_offset + text_length, last_slash_offset + prefix_length)
-                self._has_completion = True
+                self._has_inline_completion = True
 
     # thunar_path_entry_common_prefix_lookup
     def _find_common_prefix(self) -> Union[Tuple[str, bool], Tuple[None, None]]:
@@ -267,25 +267,13 @@ class PathEntry(Gtk.Entry):
         self._check_completion_idle_id = 0
         return False
 
-    def _populate_model(self, directory: _Folder):
-        completion = self.get_completion()
-        attrs = ','.join((
-            Gio.FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
-            Gio.FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE,
-            Gio.FILE_ATTRIBUTE_STANDARD_ICON,
-        ))
-        result = []
-        for finfo in directory.enumerate_children(attrs, Gio.FileQueryInfoFlags.NONE):
-            mime_type = finfo.get_attribute_as_string(Gio.FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE)
-            result.append((
-                finfo.get_icon(),
-                finfo.get_display_name(),
-                os.path.join(directory.get_path(), finfo.get_display_name()),
-                mime_type == 'inode/directory',
-            ))
-        result.sort(key=lambda x: locale.strxfrm(x[1]))
+    def _populate_model(self, folder: _Folder):
+        # sort by filename
+        result = sorted(self._scan_folder(folder), key=lambda x: locale.strxfrm(x[1]))
+        # and put directories first
         result.sort(key=lambda x: x[3], reverse=True)
 
+        completion = self.get_completion()
         model = completion.get_model()
         completion.set_model(None)
         model.clear()
@@ -310,3 +298,24 @@ class PathEntry(Gtk.Entry):
 
     def _move_cursor_at_end(self):
         self.set_position(self.get_text_length())
+
+    @staticmethod
+    def _scan_folder(folder: _Folder):
+        attrs = ','.join((
+            Gio.FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME,
+            Gio.FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE,
+            Gio.FILE_ATTRIBUTE_STANDARD_ICON,
+        ))
+        for finfo in folder.enumerate_children(attrs, Gio.FileQueryInfoFlags.NONE):
+            mime_type = finfo.get_attribute_as_string(Gio.FILE_ATTRIBUTE_STANDARD_FAST_CONTENT_TYPE)
+            yield (
+                finfo.get_icon(),
+                finfo.get_display_name(),
+                os.path.join(folder.get_path(), finfo.get_display_name()),
+                mime_type == 'inode/directory',
+            )
+
+    def _handle_key_up_down(self, up):
+        if not self._has_inline_completion:
+            return
+        # TODO: there's currently no way to know the selected row of a Gtk.EntryCompletion...
