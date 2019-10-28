@@ -44,7 +44,6 @@ class ScrollingPager(OffsetPager):
             self._sort_columns.append((name, order))
         if not self._id_column:
             raise RuntimeError('You must add an unique sort column. Consider adding ("rowid", "ASC", True)')
-        return self
 
     def execute(self, params=(), count_params=()):
         if not self._id_column:

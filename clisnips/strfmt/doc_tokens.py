@@ -1,3 +1,5 @@
+from typing import Dict, Union
+
 (
     T_EOF,
     T_TEXT,
@@ -16,7 +18,7 @@
     T_STAR
 ) = range(19)
 
-__TOKEN_NAMES = {}
+__TOKEN_NAMES: Dict[int, str] = {}
 
 for k, v in dict(vars()).items():
     if k.startswith('T_'):
@@ -24,37 +26,40 @@ for k, v in dict(vars()).items():
 del k, v
 
 
-def token_name(token_type):
+def token_name(token_type: Union[int, 'Token']):
     """Returns the token name given its type"""
     if isinstance(token_type, Token):
         token_type = token_type.type
     return __TOKEN_NAMES[token_type]
 
 
-class Token(object):
+class Token:
 
     __slots__ = (
-        'type', 'name', 'value',
+        'type', 'value',
         'startline', 'startcol', 'endline', 'endcol',
         'startpos', 'endpos'
     )
 
-    def __init__(self, type, startline, startcol, value=''):
+    @property
+    def name(self) -> str:
+        return token_name(self.type)
+
+    def __init__(self, type: int, startline: int, startcol: int, value: str = ''):
         self.type = type
-        self.name = token_name(type)
         self.startline = startline
         self.startcol = startcol
         self.value = value
         self.endline = startline
         self.endcol = startcol
-        self.startpos = self.endpos = None
+        self.startpos = self.endpos = -1
 
     def __str__(self):
         return f'{self.name} {self.value!r} on line {self.startline}, column {self.startcol}'
 
     def __repr__(self):
         pos = ''
-        if self.startpos is not None:
-            pos = f'{self.startpos}->{self.endpos}'
-        return (f'<Token {self.name} @ {pos} '
+        if self.startpos >= 0:
+            pos = f' {self.startpos}->{self.endpos}'
+        return (f'<Token {self.name} @{pos} '
                 f'({self.startline},{self.startcol})->({self.endline},{self.endcol}) : {self.value!r}>')

@@ -1,13 +1,14 @@
+from typing import Dict, List
 
-from ..utils import get_num_decimals
+from ..utils.number import get_num_decimals
 
 
 class Documentation(object):
 
     def __init__(self):
-        self.header = ''
-        self.parameters = dict()
-        self.code_blocks = []
+        self.header: str = ''
+        self.parameters: Dict[str, Parameter] = dict()
+        self.code_blocks: List[CodeBlock] = []
 
     def __str__(self):
         code = '\n'.join(str(c) for c in self.code_blocks)
@@ -20,7 +21,7 @@ class Documentation(object):
 
 class Parameter(object):
 
-    def __init__(self, name, typehint=None, valuehint=None, text=None):
+    def __init__(self, name: str, typehint=None, valuehint=None, text: str = ''):
         self.name = name
         self.typehint = typehint
         self.valuehint = valuehint

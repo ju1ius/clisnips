@@ -2,8 +2,10 @@ import os
 import sqlite3
 import stat
 import time
-from os import PathLike
 from pathlib import Path
+from typing import Iterable, Optional, Union
+
+from .._types import AnyPath
 
 __DIR__ = Path(__file__).absolute().parent
 
@@ -17,11 +19,15 @@ with open(__DIR__ / 'schema.sql', 'r') as fp:
     SCHEMA_QUERY = fp.read()
 
 
+ResultSet = Iterable[sqlite3.Row]
+QueryParameters = Union[tuple, dict]
+
+
 def ranking_function(created: int, last_used: int, num_used: int) -> float:
     now = time.time()
     age = (now - created) / SECONDS_TO_DAYS
-    last_used = (now - last_used) / SECONDS_TO_DAYS
-    return num_used / pow(last_used / age, GRAVITY)
+    last_used_days = (now - last_used) / SECONDS_TO_DAYS
+    return num_used / pow(last_used_days / age, GRAVITY)
 
 
 class SnippetsDatabase:
@@ -40,7 +46,7 @@ class SnippetsDatabase:
         self._num_rows = 0
 
     @classmethod
-    def open(cls, db_file: PathLike = ':memory:'):
+    def open(cls, db_file: AnyPath = ':memory:'):
         db_file = Path(db_file)
         if db_file.name != ':memory:' and not db_file.is_file():
             db_file.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
@@ -61,7 +67,6 @@ class SnippetsDatabase:
     def save(self):
         if self.connection.total_changes > 0:
             self.connection.commit()
-        return self
 
     def close(self):
         if not self.closed:
@@ -89,7 +94,7 @@ class SnippetsDatabase:
         with to:
             self.connection.backup(to, pages=1, progress=progress)
 
-    def dump(self, to: PathLike):
+    def dump(self, to: AnyPath):
         with open(to, 'w') as fp:
             for line in self.connection.iterdump():
                 fp.write(f'{line}\n')
@@ -108,20 +113,20 @@ class SnippetsDatabase:
                 for row in rows:
                     yield row
 
-    def get(self, rowid):
+    def get(self, rowid) -> Optional[sqlite3.Row]:
         query = 'SELECT rowid AS id, * FROM snippets WHERE rowid = :id'
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
     @staticmethod
-    def get_listing_query():
+    def get_listing_query() -> str:
         return 'SELECT rowid AS id, title, cmd, tag, created_at, last_used_at, usage_count, ranking FROM snippets'
 
     @staticmethod
-    def get_listing_count_query():
+    def get_listing_count_query() -> str:
         return 'SELECT rowid FROM snippets'
 
     @staticmethod
-    def get_search_query():
+    def get_search_query() -> str:
         return f'''
             SELECT i.rowid as docid, s.rowid AS id,
             s.title, s.cmd, s.tag,
@@ -131,10 +136,10 @@ class SnippetsDatabase:
         '''
 
     @staticmethod
-    def get_search_count_query():
+    def get_search_count_query() -> str:
         return f'SELECT rowid FROM snippets_index WHERE snippets_index MATCH :term'
 
-    def search(self, term):
+    def search(self, term: str) -> ResultSet:
         query = f'SELECT rowid AS id FROM snippets_index WHERE snippets_index MATCH :term'
         try:
             rows = self.cursor.execute(query, {'term': term}).fetchall()
@@ -142,7 +147,7 @@ class SnippetsDatabase:
             return []
         return rows
 
-    def insert(self, data):
+    def insert(self, data) -> int:
         query = 'INSERT INTO snippets(title, cmd, doc, tag) VALUES(:title, :cmd, :doc, :tag)'
         with self.connection:
             self.cursor.execute(query, data)
@@ -150,7 +155,7 @@ class SnippetsDatabase:
                 self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid
 
-    def insertmany(self, data):
+    def insertmany(self, data) -> int:
         query = '''
             INSERT INTO snippets(
                 title, cmd, doc, tag,
@@ -167,7 +172,7 @@ class SnippetsDatabase:
                 self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid
 
-    def update(self, data):
+    def update(self, data) -> int:
         query = 'UPDATE snippets SET title = :title, cmd = :cmd, doc = :doc, tag = :tag WHERE rowid = :id'
         with self.connection:
             self.cursor.execute(query, data)

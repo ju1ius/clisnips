@@ -11,10 +11,14 @@ gi.require_versions({
 })
 from gi.repository import Gtk, Gio, Gdk, GLib
 
-from .app_window import MainDialog
+from .app_window import AppWindow
+from .action import add_action
 from ..config import Config
+from .about_dialog import AboutDialog
 
 __DIR__ = Path(__file__).absolute().parent
+
+APP_FLAGS = Gio.ApplicationFlags.HANDLES_COMMAND_LINE
 
 
 class Application(Gtk.Application):
@@ -22,31 +26,68 @@ class Application(Gtk.Application):
     def __init__(self):
         super().__init__(
             application_id='me.ju1ius.clisnips',
-            flags=Gio.ApplicationFlags.FLAGS_NONE
+            flags=APP_FLAGS
         )
         self.window = None
         self._resource_path = __DIR__ / 'resources'
         self._css_provider = Gtk.CssProvider()
         self._config = Config()
 
+        self.add_main_option(
+            'database', 0,
+            GLib.OptionFlags.NONE, GLib.OptionArg.STRING,
+            'Path to a snippet database, or ":memory:" to use an in-memory database.', 'PATH'
+        )
+
+    def do_dbus_register(self, bus: Gio.DBusConnection, object_path: str):
+        definition = self._resource_path / 'me.ju1ius.clisnips.xml'
+        with open(definition, 'r') as fp:
+            info: Gio.DBusNodeInfo = Gio.DBusNodeInfo.new_for_xml(fp.read())
+            interface = info.lookup_interface('me.ju1ius.clisnips')
+            bus.register_object(object_path, interface, None, None, None)
+        return True
+
     def do_startup(self):
         Gtk.Application.do_startup(self)
-        self._add_action('quit', self.on_quit)
-        self._add_action('set-cwd', self.on_set_cwd, GLib.VariantType('s'))
-        self._register_dbus_interface()
+        add_action(self, 'quit', self.on_quit_action)
+        add_action(self, 'open', self.on_import)
+        add_action(self, 'new', self.on_import)
+        add_action(self, 'import', self.on_import)
+        add_action(self, 'export', self.on_export)
+        add_action(self, 'about', self.on_about_action)
+        add_action(self, 'set-cwd', self.on_set_cwd, GLib.VariantType('s'))
+        self._load_menus()
         self._load_stylesheets()
 
+    def do_command_line(self, cli: Gio.ApplicationCommandLine):
+        options = cli.get_options_dict().end().unpack()
+        if 'database' in options:
+            # TODO: set database
+            pass
+        self.activate()
+        return 0
+
     def do_activate(self):
-        Gtk.Application.do_activate(self)
         if not self.window:
-            self.window = MainDialog(self, self._config)
+            self.window = AppWindow(self, self._config)
             self.window.connect('insert-snippet', self.on_insert_snippet)
             self.window.run()
         self.window.present()
 
-    def on_quit(self, action, param):
+    def on_quit_action(self, action, param):
         self.window.destroy()
         self.quit()
+
+    def on_import(self, action, param):
+        pass
+
+    def on_export(self, action, param):
+        pass
+
+    def on_about_action(self, action, param):
+        dlg = AboutDialog()
+        dlg.run()
+        dlg.destroy()
 
     def on_set_cwd(self, action, cwd: GLib.Variant):
         print(f'set-cwd: {cwd}')
@@ -65,25 +106,12 @@ class Application(Gtk.Application):
             GLib.Variant('(s)', (snippet,))
         )
 
-    def _register_dbus_interface(self):
-        bus: Gio.DBusConnection = self.get_dbus_connection()
-        definition = self._resource_path / 'me.ju1ius.clisnips.xml'
-        with open(definition, 'r') as fp:
-            info: Gio.DBusNodeInfo = Gio.DBusNodeInfo.new_for_xml(fp.read())
-            bus.register_object(
-                self.get_dbus_object_path(),
-                info.lookup_interface('me.ju1ius.clisnips'),
-                None,
-                None,
-                None
-            )
-
     def _load_stylesheets(self):
         screen = Gdk.Screen.get_default()
         self._css_provider.load_from_path(str(self._resource_path / 'styles.css'))
         Gtk.StyleContext.add_provider_for_screen(screen, self._css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
-    def _add_action(self, name, callback, parameter_type=None):
-        action = Gio.SimpleAction.new(name, parameter_type)
-        action.connect('activate', callback)
-        self.add_action(action)
+    def _load_menus(self):
+        ui = Gtk.Builder()
+        ui.add_from_file(str(self._resource_path / 'glade' / 'app-menu.glade'))
+        self.set_app_menu(ui.get_object('app-menu'))

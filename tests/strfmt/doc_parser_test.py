@@ -1,9 +1,8 @@
 import unittest
 
 from clisnips.exceptions import ParsingError
+from clisnips.strfmt.doc_nodes import (CodeBlock, Parameter, ValueList, ValueRange)
 from clisnips.strfmt.doc_parser import parse
-from clisnips.strfmt.doc_nodes import (Parameter, ValueList, ValueRange,
-                                       CodeBlock)
 
 
 class DocParserTest(unittest.TestCase):
@@ -56,11 +55,11 @@ class DocParserTest(unittest.TestCase):
         self.assertIn(1, doc.parameters)
         #
         text = '{} foo\n{1} bar'
-        with self.assertRaisesRegexp(ParsingError, 'field numbering'):
+        with self.assertRaisesRegex(ParsingError, 'field numbering'):
             doc = parse(text)
         #
         text = '{1} foo\n{} bar'
-        with self.assertRaisesRegexp(ParsingError, 'field numbering'):
+        with self.assertRaisesRegex(ParsingError, 'field numbering'):
             doc = parse(text)
 
     def testParseValueList(self):

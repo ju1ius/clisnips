@@ -34,18 +34,8 @@
 @define-color background-color-warning @theme-yellow-muted;
 @define-color background-color-error   @theme-red-muted;
 
-/**
- * Snippets list
- */
-#app_window .snip_list {
-  background-color: @theme-background-color;
-  color: @theme-foreground-color;
-  font-family: monospace;
-  border: 1px solid #2e3138;
-}
-#app_window .snip_list :selected {
-  outline: none;
-  border: 1px solid @theme-grey-muted;
+.suggested-action {
+  padding: 0 24px;
 }
 
 /**
@@ -56,29 +46,29 @@ textview {
   font-family: monospace;
 }
 
-textview:not(.sourceview) {
+.simple-textview {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
   caret-color: @text-caret-color;
 }
 
-textview:not(.sourceview) text {
+.simple-textview text {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
 }
 
-textview:not(.sourceview) text selection {
+.simple-textview text selection {
   background-color: @theme-foreground-color;
   color: @theme-background-color;
 }
 
-textview:not(.sourceview).inverted, textview:not(.sourceview).inverted text {
+.simple-textview.inverted, .simple-textview.inverted text {
   background-color: @theme-foreground-color;
   color: @theme-background-color;
   caret-color: @theme-caret-color-inverted;
 }
 
-textview:not(.sourceview).inverted text selection {
+.simple-textview.inverted text selection {
   background-color: @theme-background-color;
   color: @theme-foreground-color;
 }

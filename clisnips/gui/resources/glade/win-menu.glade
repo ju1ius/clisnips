@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="3.20"/>
+  <menu id="sort-menu">
+    <section>
+      <item>
+        <attribute name="label">Sort by popularity</attribute>
+        <attribute name="action">win.order-by</attribute>
+        <attribute name="target">popularity</attribute>
+      </item>
+      <item>
+        <attribute name="label">Sort by usage count</attribute>
+        <attribute name="action">win.order-by</attribute>
+        <attribute name="target">usage-count</attribute>
+      </item>
+      <item>
+        <attribute name="label">Sort by last usage date</attribute>
+        <attribute name="action">win.order-by</attribute>
+        <attribute name="target">last-usage-date</attribute>
+      </item>
+      <item>
+        <attribute name="label">Sort by creation date</attribute>
+        <attribute name="action">win.order-by</attribute>
+        <attribute name="target">creation-date</attribute>
+      </item>
+    </section>
+  </menu>
+  <menu id="snippet-list-context-menu">
+    <item>
+      <attribute name="label" translatable="yes">_Apply</attribute>
+      <attribute name="action">win.snippet-apply</attribute>
+    </item>
+    <item>
+      <attribute name="label" translatable="yes">_Edit</attribute>
+      <attribute name="action">win.snippet-edit</attribute>
+    </item>
+    <item>
+      <attribute name="label" translatable="yes">_Delete</attribute>
+      <attribute name="action">win.snippet-delete</attribute>
+    </item>
+  </menu>
+</interface>
