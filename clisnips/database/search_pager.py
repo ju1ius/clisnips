@@ -1,3 +1,4 @@
+import sqlite3
 from typing import Union
 
 from .pager import Pager
@@ -6,6 +7,10 @@ from .snippets_db import SnippetsDatabase
 
 
 SearchPagerType = Union[Pager, 'SearchPager']
+
+
+class SearchSyntaxError(RuntimeError):
+    pass
 
 
 class SearchPager:
@@ -39,7 +44,16 @@ class SearchPager:
         self._is_searching = True
         self._current_pager = self._search_pager
         params = {'term': term}
-        return self.execute(params, params).first()
+        try:
+            self.execute(params, params)
+        except sqlite3.OperationalError as err:
+            # HACK: If only there was a better way ...
+            if err.args and str(err.args[0]).startswith('fts5: syntax error'):
+                raise SearchSyntaxError(term)
+            else:
+                raise err
+        else:
+            return self.first()
 
     def list(self):
         self._is_searching = False

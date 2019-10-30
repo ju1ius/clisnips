@@ -6,6 +6,8 @@ verify_ssl = true
 [packages]
 pycairo = "*"
 pygobject = "*"
+urwid = "*"
+typing-extensions = "*"
 
 [dev-packages]
 mypy = "*"

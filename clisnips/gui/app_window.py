@@ -11,7 +11,7 @@ from .open_dialog import CreateDialog, OpenDialog
 from .state import State as BaseState
 from .strfmt_dialog import StringFormatterDialog
 from ..config import HELP_URI
-from ..database.search_pager import SearchPager, SearchPagerType
+from ..database.search_pager import SearchPager, SearchPagerType, SearchSyntaxError
 from ..database.snippets_db import SnippetsDatabase
 
 __DIR__ = Path(__file__).parent.absolute()
@@ -343,11 +343,16 @@ class AppWindow(GObject.GObject):
         if not query:
             self.load_snippets()
             return False
-        rows = self.pager.search(query)
-        self._update_pager_view()
-        self._load_rows(rows)
-        self.state -= State.SEARCHING
-        return False
+        try:
+            rows = self.pager.search(query)
+        except SearchSyntaxError:
+            pass
+        else:
+            self._update_pager_view()
+            self._load_rows(rows)
+        finally:
+            self.state -= State.SEARCHING
+            return False
 
     ###########################################################################
     # ------------------------------ SUPPORT
