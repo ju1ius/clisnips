@@ -1,11 +1,11 @@
 import logging
-import os
 from pathlib import Path
 
+from .logging import logger
+from .models.snippets import SnippetsModel
 from .screens.snippets_list import SnippetsListScreen
 from .tui import TUI
 from ..database.snippets_db import SnippetsDatabase
-from .logging import logger
 
 
 class Application:
@@ -24,7 +24,8 @@ class Application:
         # TODO: cleanup database connection, etc...
 
     def _build_snippets_list(self, *args, **kwargs):
-        screen = SnippetsListScreen(self._db)
+        model = SnippetsModel(self._db)
+        screen = SnippetsListScreen(model)
         self.ui.connect(screen, 'snippet-applied', self._on_snippet_applied)
         return screen
 

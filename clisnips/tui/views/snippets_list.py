@@ -1,42 +1,78 @@
 import urwid
 
-from ..logging import logger
+from ..models.snippets import SnippetsModel
+from ..view import View
 from ..widgets.search_entry import SearchEntry
+from ..widgets.snippets_list_footer import SnippetListFooter
+from ..widgets.sort_dialog import SortDialog
 from ..widgets.table.column import Column
 from ..widgets.table.store import Store as ListStore
 from ..widgets.table.table import Table
 
 
-class SnippetListView(urwid.Frame):
+class SnippetListView(View):
 
-    signals = ['search-changed', 'snippet-selected']
+    signals = [
+        'search-changed',
+        'snippet-selected',
+        'sort-column-selected',
+        'sort-order-selected',
+    ]
 
-    def __init__(self, store: ListStore):
+    def __init__(self, model: SnippetsModel):
+
+        self._model = model
+        self._model.connect(model.Signals.ROWS_LOADED, self._on_model_rows_loaded)
+
         self.search_entry = SearchEntry()
-        self.snippet_list = Table(store)
+        urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
+
+        self._list_store = ListStore()
+        self.snippet_list = Table(self._list_store)
         self.snippet_list.append_column(Column('cmd'))
         self.snippet_list.append_column(Column('title'))
         self.snippet_list.append_column(Column('tag'))
-
-        urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
         urwid.connect_signal(self.snippet_list, 'row-selected', self._on_snippet_list_row_selected)
 
-        super().__init__(self.snippet_list, header=self.search_entry, focus_part='header')
+        self._footer = SnippetListFooter()
+
+        frame = urwid.Frame(self.snippet_list, header=self.search_entry, footer=self._footer, focus_part='header')
+        super().__init__(frame)
+
+    def get_search_text(self):
+        return self.search_entry.get_search_text()
+
+    def _open_sort_dialog(self):
+        dialog = SortDialog(self, self._model)
+        urwid.connect_signal(dialog, 'sort-changed', self._on_sort_column_selected)
+        self.open_dialog(dialog, title='Sort Options', width=35, height=12)
+
+    def _on_model_rows_loaded(self, model: SnippetsModel, rows):
+        self._list_store.load(rows)
+        self._footer.set_pager_infos(model.current_page, model.page_count, model.row_count)
 
     def keypress(self, size, key):
+        if key == '?':
+            return
+        if key == 'f2':
+            self._open_sort_dialog()
+            return
         key = super().keypress(size, key)
         if key in ('tab', 'shift tab'):
-            if self.focus_position == 'header':
-                self.focus_position = 'body'
+            if self.view.focus_position == 'header':
+                self.view.focus_position = 'body'
             else:
-                self.focus_position = 'header'
-        if key == 'down' and self.focus_position == 'header':
-            self.focus_position = 'body'
-        if key == 'up' and self.focus_position == 'body':
-            self.focus_position = 'header'
+                self.view.focus_position = 'header'
+        if key == 'down' and self.view.focus_position == 'header':
+            self.view.focus_position = 'body'
+        if key == 'up' and self.view.focus_position == 'body':
+            self.view.focus_position = 'header'
 
     def _on_search_term_changed(self, entry, text):
         self._emit('search-changed', text)
 
     def _on_snippet_list_row_selected(self, table, row):
         self._emit('snippet-selected', row)
+
+    def _on_sort_column_selected(self, dialog, column, order):
+        self._emit('sort-column-selected', column, order)

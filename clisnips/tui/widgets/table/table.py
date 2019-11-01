@@ -32,7 +32,7 @@ class Table(urwid.Frame):
         for row in self._model:
             self._body.add_row(row)
 
-        urwid.connect_signal(model, model.SIGNAL_LOAD, self.refresh)
+        urwid.connect_signal(model, model.Signals.ROWS_LOADED, self.refresh)
 
         super().__init__(
             self._body,
@@ -43,7 +43,7 @@ class Table(urwid.Frame):
         # self._update_footer()
 
     def __del__(self):
-        urwid.disconnect_signal(self._model, self._model.SIGNAL_LOAD, self.refresh)
+        urwid.disconnect_signal(self._model, self._model.Signals.ROWS_LOADED, self.refresh)
         urwid.disconnect_signal(self._body, self._body.KEYPRESS, self._on_body_keypress)
         self._body.clear()
 
@@ -101,8 +101,8 @@ class Table(urwid.Frame):
         elif new_index < self._visible_columns - 1:
             new_index = self._visible_columns - 1
 
-        if new_index > (len(self._model.columns) - 1):
-            new_index = len(self._model.columns) - 1
+        if new_index > (len(self._columns) - 1):
+            new_index = len(self._columns) - 1
 
         self._focused_col_index = new_index
 
@@ -152,7 +152,7 @@ class Table(urwid.Frame):
 
     def _update_footer(self):
         rowcount = self._rowcount
-        cols_count = len(self._model.columns)
+        cols_count = len(self._columns)
 
         row_index = self._focused_row_index
 

@@ -11,6 +11,9 @@ class Padding:
 
 
 class Column:
+    """
+    Represents a table column
+    """
 
     def __init__(self, index: Union[str, int],
                  width: Optional[int] = None, min_width: int = 0, max_width: Union[int, float] = math.inf,
@@ -28,11 +31,11 @@ class Column:
         self.computed_width = 0
 
     @property
-    def is_resizable(self):
+    def is_resizable(self) -> bool:
         return not self.is_fixed
 
     @property
-    def is_fixed(self):
+    def is_fixed(self) -> bool:
         return self.width or not self.word_wrap or not self.wrappable
 
     def compute_width(self):

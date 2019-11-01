@@ -1,12 +1,14 @@
 from math import ceil
 
+from .pager import Pager
 
-class OffsetPager:
+
+class OffsetPager(Pager):
 
     def __init__(self, connection, page_size=100):
         self._con = connection
         self._current_page = 1
-        self._num_pages = 1
+        self._page_count = 1
         self._page_size = page_size
         self._total_size = 0
         self._query = None
@@ -15,6 +17,14 @@ class OffsetPager:
         self._count_query_params = None
 
         self._executed = False
+
+    @property
+    def page_size(self):
+        return self._page_size
+
+    @property
+    def page_count(self) -> int:
+        return self._page_count
 
     @property
     def current_page(self):
@@ -29,12 +39,12 @@ class OffsetPager:
     @property
     def is_last_page(self):
         self._check_executed()
-        return self._current_page == self._num_pages
+        return self._current_page == self._page_count
 
     @property
     def must_paginate(self):
         self._check_executed()
-        return self._num_pages > 1
+        return self._page_count > 1
 
     @property
     def total_rows(self):
@@ -72,8 +82,8 @@ class OffsetPager:
         self._check_executed()
         if page <= 1:
             page = 1
-        elif page >= self._num_pages:
-            page = self._num_pages
+        elif page >= self._page_count:
+            page = self._page_count
         self._current_page = page
         offset = (page - 1) * self._page_size
         query = 'SELECT * FROM ({query}) LIMIT {page_size} {offset}'.format(
@@ -88,16 +98,13 @@ class OffsetPager:
         return self.get_page(1)
 
     def last(self):
-        return self.get_page(self._num_pages)
+        return self.get_page(self._page_count)
 
     def next(self):
         return self.get_page(self._current_page + 1)
 
     def previous(self):
         return self.get_page(self._current_page - 1)
-
-    def __len__(self):
-        return self._num_pages
 
     def _count(self):
         if not self._count_query:
@@ -108,7 +115,7 @@ class OffsetPager:
             params = self._count_query_params
         count = self._con.execute(query, params).fetchone()[0]
         self._total_size = count
-        self._num_pages = int(ceil(count / self._page_size))
+        self._page_count = int(ceil(count / self._page_size))
 
     def _check_executed(self):
         if not self._executed:

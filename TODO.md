@@ -31,7 +31,7 @@
     - [ ] List View
         - [x] list & search results
         - [ ] pagination
-        - [ ] sorting
+        - [x] sorting
         - [ ] table layout
         - [ ] scrollbar
     - [ ] Show view

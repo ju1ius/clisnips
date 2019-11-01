@@ -15,7 +15,17 @@ class TUI:
     def __init__(self):
         self.root_widget = urwid.WidgetPlaceholder(urwid.SolidFill(''))
         self.builder: Builder = Builder(self.root_widget)
-        self.main_loop: Optional[urwid.MainLoop] = None
+        # Since our main purpose is to insert stuff in the tty command line, we send the screen to STDERR
+        # so we can capture stdout easily without swapping file descriptors
+        screen = urwid.raw_display.Screen(output=sys.stderr)
+        self.main_loop = urwid.MainLoop(
+            self.root_widget,
+            handle_mouse=False,
+            pop_ups=True,
+            palette=theme.palette,
+            screen=screen
+        )
+        self.main_loop.screen.set_terminal_properties(colors=256)
 
     def register_screen(self, name: str, build_callback: Callable):
         self.builder.register_screen(name, build_callback)
@@ -33,18 +43,6 @@ class TUI:
         urwid.connect_signal(obj, name, callback, weak_args=weak_args, user_args=user_args)
 
     def main(self):
-        # Since our main purpose is to insert stuff in the tty command line, we send the screen to STDERR
-        # so we can capture stdout easily without swapping file descriptors
-        screen = urwid.raw_display.Screen(output=sys.stderr)
-        self.main_loop = urwid.MainLoop(
-            self.root_widget,
-            handle_mouse=False,
-            pop_ups=True,
-            palette=theme.palette,
-            screen=screen
-        )
-        self.main_loop.screen.set_terminal_properties(colors=256)
-
         # signal.signal(signal.SIGTSTP, self._on_suspend_signal)
 
         signal.signal(signal.SIGINT, self._on_terminate_signal)

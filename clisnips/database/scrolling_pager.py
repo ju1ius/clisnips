@@ -7,14 +7,11 @@ class ScrollingPager(OffsetPager):
     FORWARD = 1
     BACKWARD = 2
 
-    SORT_ASC = True
-    SORT_DESC = False
-
     def __init__(self, connection, page_size=100, sort_columns=None):
         super().__init__(connection, page_size)
 
         self._sort_columns = []
-        self._id_column = ()
+        self._id_column = ('rowid', 'ASC')
         if sort_columns:
             self.set_sort_columns(sort_columns)
         # Keeps track of the resultset bounds after each query
@@ -22,6 +19,9 @@ class ScrollingPager(OffsetPager):
             'first': {},
             'last': {}
         }
+
+    def get_sort_columns(self):
+        return self._sort_columns[:]
 
     def set_sort_columns(self, columns):
         """
@@ -56,8 +56,8 @@ class ScrollingPager(OffsetPager):
         if page <= 1:
             self._current_page = 1
             return self.first()
-        elif page >= self._num_pages:
-            self._current_page = self._num_pages
+        elif page >= self._page_count:
+            self._current_page = self._page_count
             return self.last()
         self._current_page = page
         offset = (page - 1) * self._page_size
@@ -76,7 +76,7 @@ class ScrollingPager(OffsetPager):
 
     def last(self):
         self._check_executed()
-        self._current_page = self._num_pages
+        self._current_page = self._page_count
         query, params = self._last_query, self._query_params
         rs = self._con.execute(query, params).fetchall()
         # reverse result set
@@ -86,7 +86,7 @@ class ScrollingPager(OffsetPager):
 
     def next(self):
         self._check_executed()
-        if self._current_page >= self._num_pages:
+        if self._current_page >= self._page_count:
             return self.last()
         self._current_page += 1
         query = self._next_fmt.format(cursor=self._cursor)

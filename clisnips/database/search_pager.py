@@ -60,9 +60,9 @@ class SearchPager:
         self._current_pager = self._list_pager
         return self.execute().first()
 
-    def set_sort_column(self, column: str):
+    def set_sort_column(self, column: str, order: str = 'DESC'):
         self.set_sort_columns([
-            (column, 'DESC'),
+            (column, order),
             ('id', 'ASC', True)
         ])
 
