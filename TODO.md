@@ -26,8 +26,16 @@
     - [x] Migrate to Gio.Action API
     - [ ] fix path completion entry
     - [ ] load user CSS from XDG_CONFIG_HOME
-- [ ] Curses GUI
-    - [ ] Find a framework:
-        * [Urwid](https://github.com/urwid/urwid/wiki/Application-list)
-        * [Panwid data-table](https://github.com/tonycpsu/panwid)
-        * [Console Applications with Urwid](https://www.youtube.com/watch?v=4UwhXC1OP2A)
+- [ ] Terminal UI
+    - [x] Insert text in command line
+    - [ ] List View
+        - [x] list & search results
+        - [ ] pagination
+        - [ ] sorting
+        - [ ] table layout
+        - [ ] scrollbar
+    - [ ] Show view
+    - [ ] Edit view
+    - [ ] Insert snippet dialog
+    - [ ] Color palette
+    - [ ] Syntax highlighting
