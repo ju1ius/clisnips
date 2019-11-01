@@ -30,7 +30,7 @@
     - [x] Insert text in command line
     - [ ] List View
         - [x] list & search results
-        - [ ] pagination
+        - [x] pagination
         - [x] sorting
         - [ ] table layout
         - [ ] scrollbar

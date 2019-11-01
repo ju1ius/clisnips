@@ -23,12 +23,24 @@ class SnippetsModel:
         urwid.connect_signal(self, signal, callback, weak_args=weak_args, user_args=user_args)
 
     @property
+    def must_paginate(self):
+        return self._pager.must_paginate
+
+    @property
     def page_count(self):
         return self._pager.page_count
 
     @property
     def current_page(self):
         return self._pager.current_page
+
+    @property
+    def is_first_page(self):
+        return self._pager.is_first_page
+
+    @property
+    def is_last_page(self):
+        return self._pager.is_last_page
 
     @property
     def row_count(self):

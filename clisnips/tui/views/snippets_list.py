@@ -17,6 +17,7 @@ class SnippetListView(View):
         'snippet-selected',
         'sort-column-selected',
         'sort-order-selected',
+        'page-requested',
     ]
 
     def __init__(self, model: SnippetsModel):
@@ -63,10 +64,25 @@ class SnippetListView(View):
                 self.view.focus_position = 'body'
             else:
                 self.view.focus_position = 'header'
+            return
         if key == 'down' and self.view.focus_position == 'header':
             self.view.focus_position = 'body'
+            return
         if key == 'up' and self.view.focus_position == 'body':
             self.view.focus_position = 'header'
+            return
+        if key == 'n':
+            self._emit('page-requested', 'next')
+            return
+        if key == 'p':
+            self._emit('page-requested', 'previous')
+            return
+        if key == 'f':
+            self._emit('page-requested', 'first')
+            return
+        if key == 'l':
+            self._emit('page-requested', 'last')
+            return
 
     def _on_search_term_changed(self, entry, text):
         self._emit('search-changed', text)

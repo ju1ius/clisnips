@@ -16,6 +16,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'search-changed', self. _on_search_term_changed)
         urwid.connect_signal(self.view, 'snippet-selected', self._on_snippet_selected)
         urwid.connect_signal(self.view, 'sort-column-selected', self._on_sort_column_selected)
+        urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
 
         self._model.list()
 
@@ -37,3 +38,15 @@ class SnippetsListScreen(Screen):
             self._model.search(self.view.get_search_text())
         else:
             self._model.list()
+
+    def _on_page_requested(self, view, page):
+        if not self._model.must_paginate:
+            return
+        if page == 'first' and not self._model.is_first_page:
+            self._model.first_page()
+        elif page == 'last' and not self._model.is_last_page:
+            self._model.last_page()
+        elif page == 'next' and not self._model.is_last_page:
+            self._model.next_page()
+        elif page == 'previous' and not self._model.is_first_page:
+            self._model.previous_page()
