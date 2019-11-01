@@ -8,7 +8,7 @@ class Store:
 
     class Signals(enum.Enum):
         ROWS_LOADED = 'rows-loaded'
-        ROW_CHANGED = 'row-changed'
+        ROW_UPDATED = 'row-updated'
         ROW_INSERTED = 'row-inserted'
         ROW_DELETED = 'row-deleted'
 
@@ -22,7 +22,7 @@ class Store:
 
     def update(self, index, row):
         self._rows[index] = row
-        self.emit(self.Signals.ROW_CHANGED, index, row)
+        self.emit(self.Signals.ROW_UPDATED, index, row)
 
     def insert(self, index, row):
         self._rows.insert(index, row)

@@ -12,6 +12,7 @@ class SnippetsModel:
     class Signals(enum.Enum):
         ROWS_LOADED = 'rows-loaded'
         ROW_DELETED = 'row-deleted'
+        ROW_UPDATED = 'row-updated'
 
     def __init__(self, db: SnippetsDatabase):
         self._db = db
@@ -61,6 +62,10 @@ class SnippetsModel:
 
     def get(self, snippet_id):
         return self._db.get(snippet_id)
+
+    def update(self, snippet):
+        self._db.update(snippet)
+        self._emit(self.Signals.ROW_UPDATED, snippet['id'], snippet)
 
     def delete(self, rowid):
         self._db.delete(rowid)

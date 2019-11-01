@@ -37,8 +37,13 @@
         - [ ] scrollbar
     - [x] Show view
     - [ ] Edit / Create view
-        - [ ] edit in TUI
+        - [x] edit in TUI
+        - [ ] validate documentation / command syntax
         - [ ] edit in $EDITOR, à la git commit
     - [ ] Insert snippet dialog
+        - [ ] edit in TUI
+        - [ ] validate documentation / command syntax
+        - [ ] edit in $EDITOR, à la git commit
     - [ ] Color palette
     - [ ] Syntax highlighting
+    - [ ] Help / About dialog

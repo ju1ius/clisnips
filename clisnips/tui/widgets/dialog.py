@@ -25,8 +25,9 @@ class DialogOverlay(urwid.Overlay):
         super().__init__(*args, **kwargs)
 
     def keypress(self, size, key):
-        if key in ('esc', 'q'):
+        if key == 'esc':
             self.parent.close_dialog()
+            return
         else:
             return super().keypress(size, key)
 
@@ -41,7 +42,9 @@ class Dialog(urwid.WidgetWrap):
     def __init__(self, parent, body):
         self._parent = parent
         self._body = body
-        self._frame = urwid.Frame(self._body, focus_part='body')
+        # self._frame = urwid.Frame(self._body, focus_part='body')
+        self._action_area = None
+        self._frame = urwid.Pile([self._body])
         w = self._frame
         # pad area around listbox
         w = urwid.Padding(w, ('fixed left', 2), ('fixed right', 2))
@@ -69,8 +72,12 @@ class Dialog(urwid.WidgetWrap):
             button = urwid.AttrWrap(button, 'selectable', 'focus')
             buttons.append(button)
         cell_width += 4  # account for urwid internal button decorations
-        action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align='center')
-        self._frame.footer = urwid.Pile([urwid.Divider(), action_area], focus_item=1)
+        self._action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align='center')
+        footer = urwid.Pile([urwid.Divider(), self._action_area], focus_item=1)
+        self._frame.contents = [
+            (self._body, ('weight', 1)),
+            (footer, ('pack', None)),
+        ]
 
     def _on_button_clicked(self, response_type, button):
         self._emit(self.Signals.RESPONSE, response_type)

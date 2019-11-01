@@ -18,6 +18,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'sort-column-selected', self._on_sort_column_selected)
         urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
+        urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
 
         self._model.list()
 
@@ -54,3 +55,6 @@ class SnippetsListScreen(Screen):
 
     def _on_delete_snippet_requested(self, view, rowid):
         self._model.delete(rowid)
+
+    def _on_edit_snippet_requested(self, view, snippet):
+        self._model.update(snippet)

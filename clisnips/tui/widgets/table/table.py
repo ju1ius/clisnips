@@ -34,6 +34,7 @@ class Table(urwid.Frame):
 
         urwid.connect_signal(model, model.Signals.ROWS_LOADED, self.refresh)
         urwid.connect_signal(model, model.Signals.ROW_DELETED, self._on_row_deleted)
+        urwid.connect_signal(model, model.Signals.ROW_UPDATED, self._on_row_updated)
 
         super().__init__(
             self._body,
@@ -106,6 +107,11 @@ class Table(urwid.Frame):
             return
         if index >= self._rowcount:
             index = self._rowcount - 1
+        self.focus_row(index)
+
+    def _on_row_updated(self, model, index, row):
+        index = self._focused_row_index
+        self.refresh(model)
         self.focus_row(index)
 
     def _increment_col_index(self, offset, absolute=False):
