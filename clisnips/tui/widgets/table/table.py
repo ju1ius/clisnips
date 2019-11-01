@@ -33,6 +33,7 @@ class Table(urwid.Frame):
             self._body.add_row(row)
 
         urwid.connect_signal(model, model.Signals.ROWS_LOADED, self.refresh)
+        urwid.connect_signal(model, model.Signals.ROW_DELETED, self._on_row_deleted)
 
         super().__init__(
             self._body,
@@ -44,6 +45,7 @@ class Table(urwid.Frame):
 
     def __del__(self):
         urwid.disconnect_signal(self._model, self._model.Signals.ROWS_LOADED, self.refresh)
+        urwid.disconnect_signal(self._model, self._model.Signals.ROW_DELETED, self._on_row_deleted)
         urwid.disconnect_signal(self._body, self._body.KEYPRESS, self._on_body_keypress)
         self._body.clear()
 
@@ -57,13 +59,16 @@ class Table(urwid.Frame):
 
     def get_selected(self):
         index = self._focused_row_index
-        return self._model[index]
+        try:
+            return self._model[index]
+        except IndexError:
+            return None
 
     def render(self, size, focus=False):
         self._widget_size = size
         return super().render(size, focus)
 
-    def refresh(self, model):
+    def refresh(self, model, *args):
         self._visible_columns = 0
         self._focused_row_index = 0
         self._focused_col_index = 0
@@ -93,6 +98,15 @@ class Table(urwid.Frame):
             trow = row.original_widget
             trow.resize(col_index, increment)
         self._emit(self.SIGNAL_COLUMN_RESIZED, col_index, width)
+
+    def _on_row_deleted(self, model, index):
+        index = self._focused_row_index
+        self.refresh(model)
+        if not self._rowcount:
+            return
+        if index >= self._rowcount:
+            index = self._rowcount - 1
+        self.focus_row(index)
 
     def _increment_col_index(self, offset, absolute=False):
         if absolute is False:

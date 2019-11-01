@@ -1,10 +1,10 @@
 import urwid
 
-from ..logging import logger
-from .dialog import Dialog
+from ...logging import logger
+from ..dialog import Dialog
 
 
-class SortDialog(Dialog):
+class SortSnippetsDialog(Dialog):
     signals = ['sort-changed']
 
     column_choices = {

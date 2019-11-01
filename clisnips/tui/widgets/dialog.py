@@ -36,6 +36,8 @@ class Dialog(urwid.WidgetWrap):
     class Signals(enum.Enum):
         RESPONSE = 'response'
 
+    signals = list(Signals)
+
     def __init__(self, parent, body):
         self._parent = parent
         self._body = body
@@ -59,13 +61,16 @@ class Dialog(urwid.WidgetWrap):
 
     def set_buttons(self, settings):
         buttons = []
+        cell_width = 0
         for label, response_type in settings:
+            cell_width = max(cell_width, len(label))
             button = urwid.Button(label)
-            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=response_type)
+            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=[response_type])
             button = urwid.AttrWrap(button, 'selectable', 'focus')
             buttons.append(button)
-        action_area = urwid.GridFlow(buttons, 10, 3, 1, 'center')
+        cell_width += 4  # account for urwid internal button decorations
+        action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align='center')
         self._frame.footer = urwid.Pile([urwid.Divider(), action_area], focus_item=1)
 
-    def _on_button_clicked(self, button, response_type):
+    def _on_button_clicked(self, response_type, button):
         self._emit(self.Signals.RESPONSE, response_type)

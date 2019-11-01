@@ -1,4 +1,5 @@
 import enum
+from typing import Callable, Any, Union, Tuple
 
 import urwid
 
@@ -34,6 +35,12 @@ class Store:
     def delete(self, index):
         self._rows.pop(index)
         self.emit(self.Signals.ROW_DELETED, index)
+
+    def find(self, callback: Callable[[Any], bool]) -> Union[Tuple[int, Any], Tuple[None, None]]:
+        for index, row in enumerate(self._rows):
+            if callback(row):
+                return index, row
+        return None, None
 
     @property
     def rows(self):

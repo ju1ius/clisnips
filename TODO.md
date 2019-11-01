@@ -32,10 +32,13 @@
         - [x] list & search results
         - [x] pagination
         - [x] sorting
+        - [x] Delete snippet action
         - [ ] table layout
         - [ ] scrollbar
     - [x] Show view
-    - [ ] Edit view
+    - [ ] Edit / Create view
+        - [ ] edit in TUI
+        - [ ] edit in $EDITOR, à la git commit
     - [ ] Insert snippet dialog
     - [ ] Color palette
     - [ ] Syntax highlighting

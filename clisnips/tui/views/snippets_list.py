@@ -2,10 +2,12 @@ import urwid
 
 from ..models.snippets import SnippetsModel
 from ..view import View
+from ..widgets.dialog import ResponseType
+from ..widgets.dialogs.confirm import ConfirmDialog
+from ..widgets.dialogs.show_snippet import ShowSnippetDialog
+from ..widgets.dialogs.sort_snippets import SortSnippetsDialog
 from ..widgets.search_entry import SearchEntry
-from ..widgets.show_snippet_dialog import ShowSnippetDialog
 from ..widgets.snippets_list_footer import SnippetListFooter
-from ..widgets.sort_dialog import SortDialog
 from ..widgets.table.column import Column
 from ..widgets.table.store import Store as ListStore
 from ..widgets.table.table import Table
@@ -19,12 +21,14 @@ class SnippetListView(View):
         'sort-column-selected',
         'sort-order-selected',
         'page-requested',
+        'delete-snippet-requested',
     ]
 
     def __init__(self, model: SnippetsModel):
 
         self._model = model
         self._model.connect(model.Signals.ROWS_LOADED, self._on_model_rows_loaded)
+        self._model.connect(model.Signals.ROW_DELETED, self._on_model_row_deleted)
 
         self.search_entry = SearchEntry()
         urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
@@ -45,7 +49,7 @@ class SnippetListView(View):
         return self.search_entry.get_search_text()
 
     def _open_sort_dialog(self):
-        dialog = SortDialog(self, self._model)
+        dialog = SortSnippetsDialog(self, self._model)
         urwid.connect_signal(dialog, 'sort-changed', self._on_sort_column_selected)
         self.open_dialog(dialog, title='Sort Options', width=35, height=12)
 
@@ -60,6 +64,11 @@ class SnippetListView(View):
     def _on_model_rows_loaded(self, model: SnippetsModel, rows):
         self._list_store.load(rows)
         self._footer.set_pager_infos(model.current_page, model.page_count, model.row_count)
+
+    def _on_model_row_deleted(self, model, rowid):
+        index, row = self._list_store.find(lambda r: r['id'] == rowid)
+        if index is not None:
+            self._list_store.delete(index)
 
     def keypress(self, size, key):
         if key == '?':
@@ -95,12 +104,25 @@ class SnippetListView(View):
         if key == 's':
             self._open_show_dialog()
             return
+        if key == 'd':
+            self._on_delete_snippet_requested()
+            return
 
     def _on_search_term_changed(self, entry, text):
         self._emit('search-changed', text)
 
     def _on_snippet_list_row_selected(self, table, row):
-        self._emit('snippet-selected', row)
+        snippet = self._model.get(row['id'])
+        self._emit('snippet-selected', snippet)
 
     def _on_sort_column_selected(self, dialog, column, order):
         self._emit('sort-column-selected', column, order)
+
+    def _on_delete_snippet_requested(self):
+        row = self.snippet_list.get_selected()
+        if not row:
+            return
+        msg = 'Are you shure you want to delete this snippet ?'
+        dialog = ConfirmDialog(self, msg)
+        dialog.on_accept(lambda *x: self._emit('delete-snippet-requested', row['id']))
+        self.open_dialog(dialog, 'Caution !')

@@ -17,6 +17,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'snippet-selected', self._on_snippet_selected)
         urwid.connect_signal(self.view, 'sort-column-selected', self._on_sort_column_selected)
         urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
+        urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
 
         self._model.list()
 
@@ -26,9 +27,9 @@ class SnippetsListScreen(Screen):
             return
         self._model.search(text)
 
-    def _on_snippet_selected(self, view, row):
+    def _on_snippet_selected(self, view, snippet):
         # TODO: show command dialog if needed
-        urwid.emit_signal(self, 'snippet-applied', row['cmd'])
+        urwid.emit_signal(self, 'snippet-applied', snippet['cmd'])
 
     def _on_sort_column_selected(self, view, column, order):
         # self._config.pager_sort_column = column
@@ -50,3 +51,6 @@ class SnippetsListScreen(Screen):
             self._model.next_page()
         elif page == 'previous' and not self._model.is_first_page:
             self._model.previous_page()
+
+    def _on_delete_snippet_requested(self, view, rowid):
+        self._model.delete(rowid)

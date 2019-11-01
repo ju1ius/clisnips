@@ -1,6 +1,6 @@
 import urwid
 
-from .dialog import Dialog
+from ..dialog import Dialog
 
 
 class ShowSnippetDialog(Dialog):
