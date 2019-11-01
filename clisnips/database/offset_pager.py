@@ -74,7 +74,7 @@ class OffsetPager(Pager):
             self._query_params = params
         if count_params:
             self._count_query_params = count_params
-        self._count()
+        self.count()
         self._executed = True
         return self
 
@@ -106,7 +106,7 @@ class OffsetPager(Pager):
     def previous(self):
         return self.get_page(self._current_page - 1)
 
-    def _count(self):
+    def count(self):
         if not self._count_query:
             query = f'SELECT COUNT(*) FROM ({self._query})'
             params = self._query_params

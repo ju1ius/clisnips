@@ -66,6 +66,7 @@ class SnippetsModel:
 
     def create(self, snippet):
         rowid = self._db.insert(snippet)
+        self._pager.count()
         snippet = self._db.get(rowid)
         self._emit(self.Signals.ROW_CREATED, snippet)
 
@@ -75,6 +76,7 @@ class SnippetsModel:
 
     def delete(self, rowid):
         self._db.delete(rowid)
+        self._pager.count()
         self._emit(self.Signals.ROW_DELETED, rowid)
 
     def search(self, term: str):

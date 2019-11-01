@@ -33,8 +33,7 @@ class EditSnippetDialog(Dialog):
         def handler(dialog, response_type):
             if response_type == ResponseType.ACCEPT:
                 snippet = self._collect_values()
-                if callback(snippet, *args):
-                    self._parent.close_dialog()
+                callback(snippet)
         urwid.connect_signal(self, self.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type):

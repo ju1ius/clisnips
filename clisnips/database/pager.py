@@ -71,3 +71,10 @@ class Pager(ABC):
 
     def __len__(self) -> int:
         return self.page_count
+
+    @abstractmethod
+    def count(self):
+        """
+        Updates the pager internal count by re-querying the database.
+        """
+        ...

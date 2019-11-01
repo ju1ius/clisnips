@@ -58,7 +58,9 @@ class SnippetsListScreen(Screen):
         self._model.delete(rowid)
 
     def _on_edit_snippet_requested(self, view, snippet):
+        # TODO: validate and proceed or cancel
         self._model.update(snippet)
 
     def _on_create_snippet_requested(self, view, snippet):
+        # TODO: validate and proceed or cancel
         self._model.create(snippet)

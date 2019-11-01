@@ -45,7 +45,7 @@ class SnippetListView(View):
         self.snippet_list.append_column(Column('tag'))
         urwid.connect_signal(self.snippet_list, 'row-selected', self._on_snippet_list_row_selected)
 
-        self._footer = SnippetListFooter()
+        self._footer = SnippetListFooter(model)
 
         frame = urwid.Frame(self.snippet_list, header=self.search_entry, footer=self._footer, focus_part='header')
         super().__init__(frame)
@@ -83,11 +83,10 @@ class SnippetListView(View):
 
     def _on_model_rows_loaded(self, model: SnippetsModel, rows):
         self._list_store.load(rows)
-        self._footer.set_pager_infos(model.current_page, model.page_count, model.row_count)
 
     def _on_model_row_created(self, model, row):
         self._list_store.insert(0, row)
-        # TODO: synchronize pager state ?
+        self.close_dialog()
 
     def _on_model_row_deleted(self, model, rowid):
         index, row = self._list_store.find(lambda r: r['id'] == rowid)
@@ -98,6 +97,7 @@ class SnippetListView(View):
         index, row = self._list_store.find(lambda r: r['id'] == rowid)
         if index is not None:
             self._list_store.update(index, snippet)
+        self.close_dialog()
 
     def keypress(self, size, key):
         if key == 'f2':
@@ -167,11 +167,7 @@ class SnippetListView(View):
         self.open_dialog(dialog, 'Caution !')
 
     def _on_edit_dialog_accept(self, snippet):
-        # TODO: validate and return True only if valid
         self._emit('edit-snippet-requested', snippet)
-        return True
 
     def _on_create_dialog_accept(self, snippet):
-        # TODO: validate and return True only if valid
         self._emit('create-snippet-requested', snippet)
-        return True

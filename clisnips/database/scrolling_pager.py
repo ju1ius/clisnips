@@ -106,8 +106,8 @@ class ScrollingPager(OffsetPager):
         self._update_cursor(rs)
         return rs
 
-    def _count(self):
-        super()._count()
+    def count(self):
+        super().count()
         self._compile_queries()
 
     def _update_cursor(self, resultset):
