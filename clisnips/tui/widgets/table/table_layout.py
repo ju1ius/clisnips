@@ -74,12 +74,16 @@ class TableLayout:
     @staticmethod
     def _compute_cell_content_width(value) -> int:
         value = str(value)
+        if not value:
+            return 0
         longest_line = max(value.splitlines(), key=len)
         return len(longest_line)
 
     @staticmethod
     def _compute_cell_min_content_width(value) -> int:
         value = str(value)
+        if not value:
+            return 0
         words = _WORD_SPLIT_RX.split(value)
         longest_word = max(words, key=len)
         return len(longest_word)

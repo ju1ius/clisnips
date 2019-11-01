@@ -19,6 +19,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
         urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
+        urwid.connect_signal(self.view, 'create-snippet-requested', self._on_create_snippet_requested)
 
         self._model.list()
 
@@ -58,3 +59,6 @@ class SnippetsListScreen(Screen):
 
     def _on_edit_snippet_requested(self, view, snippet):
         self._model.update(snippet)
+
+    def _on_create_snippet_requested(self, view, snippet):
+        self._model.create(snippet)

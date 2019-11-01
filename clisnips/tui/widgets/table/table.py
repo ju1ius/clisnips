@@ -33,6 +33,7 @@ class Table(urwid.Frame):
             self._body.add_row(row)
 
         urwid.connect_signal(model, model.Signals.ROWS_LOADED, self.refresh)
+        urwid.connect_signal(model, model.Signals.ROW_INSERTED, self._on_row_inserted)
         urwid.connect_signal(model, model.Signals.ROW_DELETED, self._on_row_deleted)
         urwid.connect_signal(model, model.Signals.ROW_UPDATED, self._on_row_updated)
 
@@ -46,6 +47,7 @@ class Table(urwid.Frame):
 
     def __del__(self):
         urwid.disconnect_signal(self._model, self._model.Signals.ROWS_LOADED, self.refresh)
+        urwid.disconnect_signal(self._model, self._model.Signals.ROW_INSERTED, self._on_row_inserted)
         urwid.disconnect_signal(self._model, self._model.Signals.ROW_DELETED, self._on_row_deleted)
         urwid.disconnect_signal(self._body, self._body.KEYPRESS, self._on_body_keypress)
         self._body.clear()
@@ -99,6 +101,10 @@ class Table(urwid.Frame):
             trow = row.original_widget
             trow.resize(col_index, increment)
         self._emit(self.SIGNAL_COLUMN_RESIZED, col_index, width)
+
+    def _on_row_inserted(self, model, index, row):
+        self.refresh(model)
+        self.focus_row(index)
 
     def _on_row_deleted(self, model, index):
         index = self._focused_row_index

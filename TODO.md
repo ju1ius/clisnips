@@ -38,10 +38,12 @@
     - [x] Show view
     - [ ] Edit / Create view
         - [x] edit in TUI
+        - [ ] synchronize pager state
         - [ ] validate documentation / command syntax
         - [ ] edit in $EDITOR, à la git commit
     - [ ] Insert snippet dialog
-        - [ ] edit in TUI
+        - [x] edit in TUI
+        - [ ] synchronize pager state
         - [ ] validate documentation / command syntax
         - [ ] edit in $EDITOR, à la git commit
     - [ ] Color palette

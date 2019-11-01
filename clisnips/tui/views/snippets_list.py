@@ -22,6 +22,7 @@ class SnippetListView(View):
         'sort-column-selected',
         'sort-order-selected',
         'page-requested',
+        'create-snippet-requested',
         'delete-snippet-requested',
         'edit-snippet-requested',
     ]
@@ -30,6 +31,7 @@ class SnippetListView(View):
 
         self._model = model
         self._model.connect(model.Signals.ROWS_LOADED, self._on_model_rows_loaded)
+        self._model.connect(model.Signals.ROW_CREATED, self._on_model_row_created)
         self._model.connect(model.Signals.ROW_DELETED, self._on_model_row_deleted)
         self._model.connect(model.Signals.ROW_UPDATED, self._on_model_row_updated)
 
@@ -73,9 +75,19 @@ class SnippetListView(View):
         dialog.on_accept(self._on_edit_dialog_accept)
         self.open_dialog(dialog, title='Edit snippet')
 
+    def _open_create_dialog(self):
+        snippet = {'title': '', 'tag': '', 'cmd': '', 'doc': ''}
+        dialog = EditSnippetDialog(self, snippet)
+        dialog.on_accept(self._on_create_dialog_accept)
+        self.open_dialog(dialog, title='New snippet')
+
     def _on_model_rows_loaded(self, model: SnippetsModel, rows):
         self._list_store.load(rows)
         self._footer.set_pager_infos(model.current_page, model.page_count, model.row_count)
+
+    def _on_model_row_created(self, model, row):
+        self._list_store.insert(0, row)
+        # TODO: synchronize pager state ?
 
     def _on_model_row_deleted(self, model, rowid):
         index, row = self._list_store.find(lambda r: r['id'] == rowid)
@@ -127,7 +139,7 @@ class SnippetListView(View):
             self._on_delete_snippet_requested()
             return
         if key in ('+', 'i', 'insert'):
-            # TODO: create !
+            self._open_create_dialog()
             return
         if key == 'e':
             self._open_edit_dialog()
@@ -155,6 +167,11 @@ class SnippetListView(View):
         self.open_dialog(dialog, 'Caution !')
 
     def _on_edit_dialog_accept(self, snippet):
-        # TODO: validate and return True if valid
+        # TODO: validate and return True only if valid
         self._emit('edit-snippet-requested', snippet)
+        return True
+
+    def _on_create_dialog_accept(self, snippet):
+        # TODO: validate and return True only if valid
+        self._emit('create-snippet-requested', snippet)
         return True

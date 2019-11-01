@@ -11,6 +11,7 @@ class SnippetsModel:
 
     class Signals(enum.Enum):
         ROWS_LOADED = 'rows-loaded'
+        ROW_CREATED = 'row-created'
         ROW_DELETED = 'row-deleted'
         ROW_UPDATED = 'row-updated'
 
@@ -62,6 +63,11 @@ class SnippetsModel:
 
     def get(self, snippet_id):
         return self._db.get(snippet_id)
+
+    def create(self, snippet):
+        rowid = self._db.insert(snippet)
+        snippet = self._db.get(rowid)
+        self._emit(self.Signals.ROW_CREATED, snippet)
 
     def update(self, snippet):
         self._db.update(snippet)
