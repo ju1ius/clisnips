@@ -3,6 +3,8 @@ import urwid
 from ..models.snippets import SnippetsModel
 from ..screen import Screen
 from ..views.snippets_list import SnippetListView
+from ...exceptions import ParsingError
+from ...strfmt import fmt_parser
 
 
 class SnippetsListScreen(Screen):
@@ -17,6 +19,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'snippet-selected', self._on_snippet_selected)
         urwid.connect_signal(self.view, 'sort-column-selected', self._on_sort_column_selected)
         urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
+        urwid.connect_signal(self.view, 'apply-snippet-requested', self._on_apply_snippet_requested)
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
         urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
         urwid.connect_signal(self.view, 'create-snippet-requested', self._on_create_snippet_requested)
@@ -30,8 +33,15 @@ class SnippetsListScreen(Screen):
         self._model.search(text)
 
     def _on_snippet_selected(self, view, snippet):
-        # TODO: show command dialog if needed
-        urwid.emit_signal(self, 'snippet-applied', snippet['cmd'])
+        try:
+            field_names = [f['name'] for f in fmt_parser.parse(snippet['cmd'])]
+        except ParsingError as err:
+            # TODO: show error
+            return
+        if not field_names:
+            urwid.emit_signal(self, 'snippet-applied', snippet['cmd'])
+            return
+        self.view.open_insert_snippet_dialog(snippet)
 
     def _on_sort_column_selected(self, view, column, order):
         # self._config.pager_sort_column = column
@@ -53,6 +63,9 @@ class SnippetsListScreen(Screen):
             self._model.next_page()
         elif page == 'previous' and not self._model.is_first_page:
             self._model.previous_page()
+
+    def _on_apply_snippet_requested(self, view, command):
+        urwid.emit_signal(self, 'snippet-applied', command)
 
     def _on_delete_snippet_requested(self, view, rowid):
         self._model.delete(rowid)

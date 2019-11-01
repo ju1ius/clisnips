@@ -5,6 +5,7 @@ from ..models.snippets import SnippetsModel
 from ..view import View
 from ..widgets.dialogs.confirm import ConfirmDialog
 from ..widgets.dialogs.edit_snippet import EditSnippetDialog
+from ..widgets.dialogs.insert_snippet import InsertSnippetDialog
 from ..widgets.dialogs.show_snippet import ShowSnippetDialog
 from ..widgets.dialogs.sort_snippets import SortSnippetsDialog
 from ..widgets.search_entry import SearchEntry
@@ -22,6 +23,7 @@ class SnippetListView(View):
         'sort-column-selected',
         'sort-order-selected',
         'page-requested',
+        'apply-snippet-requested',
         'create-snippet-requested',
         'delete-snippet-requested',
         'edit-snippet-requested',
@@ -52,6 +54,11 @@ class SnippetListView(View):
 
     def get_search_text(self):
         return self.search_entry.get_search_text()
+
+    def open_insert_snippet_dialog(self, snippet):
+        dialog = InsertSnippetDialog(self, snippet)
+        dialog.on_accept(lambda v: self._emit('apply-snippet-requested', v))
+        self.open_dialog(dialog, title='Insert snippet')
 
     def _open_sort_dialog(self):
         dialog = SortSnippetsDialog(self, self._model)

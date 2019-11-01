@@ -1,4 +1,5 @@
 import enum
+from contextlib import suppress
 
 import urwid
 
@@ -66,7 +67,8 @@ class SnippetsModel:
 
     def create(self, snippet):
         rowid = self._db.insert(snippet)
-        self._pager.count()
+        with suppress(SearchSyntaxError):
+            self._pager.count()
         snippet = self._db.get(rowid)
         self._emit(self.Signals.ROW_CREATED, snippet)
 
@@ -76,35 +78,38 @@ class SnippetsModel:
 
     def delete(self, rowid):
         self._db.delete(rowid)
-        self._pager.count()
+        with suppress(SearchSyntaxError):
+            self._pager.count()
         self._emit(self.Signals.ROW_DELETED, rowid)
 
     def search(self, term: str):
-        try:
+        with suppress(SearchSyntaxError):
             rows = self._pager.search(term)
-        except SearchSyntaxError:
-            return
-        self._load(rows)
+            self._load(rows)
 
     def list(self):
         rows = self._pager.list()
         self._load(rows)
 
     def first_page(self):
-        rows = self._pager.first()
-        self._load(rows)
+        with suppress(SearchSyntaxError):
+            rows = self._pager.first()
+            self._load(rows)
 
     def next_page(self):
-        rows = self._pager.next()
-        self._load(rows)
+        with suppress(SearchSyntaxError):
+            rows = self._pager.next()
+            self._load(rows)
 
     def previous_page(self):
-        rows = self._pager.previous()
-        self._load(rows)
+        with suppress(SearchSyntaxError):
+            rows = self._pager.previous()
+            self._load(rows)
 
     def last_page(self):
-        rows = self._pager.last()
-        self._load(rows)
+        with suppress(SearchSyntaxError):
+            rows = self._pager.last()
+            self._load(rows)
 
     def _load(self, rows):
         self._emit(self.Signals.ROWS_LOADED, rows)

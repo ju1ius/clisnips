@@ -1,5 +1,5 @@
 import enum
-from typing import Optional
+from typing import Optional, Tuple, Any, Iterable
 
 import urwid
 
@@ -42,8 +42,7 @@ class Dialog(urwid.WidgetWrap):
     def __init__(self, parent, body):
         self._parent = parent
         self._body = body
-        # self._frame = urwid.Frame(self._body, focus_part='body')
-        self._action_area = None
+        self._action_area: Optional[urwid.GridFlow] = None
         self._frame = urwid.Pile([self._body])
         w = self._frame
         # pad area around listbox
@@ -65,10 +64,10 @@ class Dialog(urwid.WidgetWrap):
     def set_buttons(self, settings):
         buttons = []
         cell_width = 0
-        for label, response_type in settings:
+        for label, response_type, *args in settings:
             cell_width = max(cell_width, len(label))
             button = urwid.Button(label)
-            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=[response_type])
+            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=[response_type, *args])
             button = urwid.AttrWrap(button, 'selectable', 'focus')
             buttons.append(button)
         cell_width += 4  # account for urwid internal button decorations
@@ -79,5 +78,5 @@ class Dialog(urwid.WidgetWrap):
             (footer, ('pack', None)),
         ]
 
-    def _on_button_clicked(self, response_type, button):
-        self._emit(self.Signals.RESPONSE, response_type)
+    def _on_button_clicked(self, response_type, button, *args):
+        self._emit(self.Signals.RESPONSE, response_type, *args)

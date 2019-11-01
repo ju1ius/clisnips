@@ -1,3 +1,4 @@
+from contextlib import suppress
 from pathlib import Path
 
 from gi.repository import GLib, GObject, Gdk, Gio, Gtk, Pango
@@ -343,16 +344,12 @@ class AppWindow(GObject.GObject):
         if not query:
             self.load_snippets()
             return False
-        try:
+        with suppress(SearchSyntaxError):
             rows = self.pager.search(query)
-        except SearchSyntaxError:
-            pass
-        else:
             self._update_pager_view()
             self._load_rows(rows)
-        finally:
-            self.state -= State.SEARCHING
-            return False
+        self.state -= State.SEARCHING
+        return False
 
     ###########################################################################
     # ------------------------------ SUPPORT

@@ -20,21 +20,22 @@
     - [ ] git
     - [ ] find
     - [ ] apt
-- [ ] Replace FileChooserButton by Button + FileChooserDialog
-- [ ] Gtk3 port
+- [ ] Gtk UI
     - [x] Use CSS / StyleContext API
     - [x] Migrate to Gio.Action API
     - [ ] fix path completion entry
     - [ ] load user CSS from XDG_CONFIG_HOME
+    - [ ] Replace FileChooserButton by Button + FileChooserDialog
 - [ ] Terminal UI
+    - [ ] Config / preferences
     - [x] Insert text in command line
     - [ ] List View
         - [x] list & search results
         - [x] pagination
         - [x] sorting
         - [x] Delete snippet action
-        - [ ] table layout
         - [ ] scrollbar
+        - [ ] table layout
     - [x] Show view
     - [ ] Edit / Create view
         - [x] edit in TUI
@@ -42,6 +43,15 @@
         - [ ] validate documentation / command syntax
         - [ ] edit in $EDITOR, à la git commit
     - [ ] Insert snippet dialog
+        - [ ] field types
+            - [x] text
+            - [x] flag
+            - [x] choice
+            - [ ] range
+            - [ ] path
+        - [ ] error messages
     - [ ] Color palette
     - [ ] Syntax highlighting
+    - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup
     - [ ] Help / About dialog
+    - [ ] job control: handle SIGTSTP / SIGCONT

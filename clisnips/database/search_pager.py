@@ -1,10 +1,10 @@
 import sqlite3
+from contextlib import contextmanager
 from typing import Union
 
 from .pager import Pager
 from .scrolling_pager import ScrollingPager
 from .snippets_db import SnippetsDatabase
-
 
 SearchPagerType = Union[Pager, 'SearchPager']
 
@@ -44,16 +44,8 @@ class SearchPager:
         self._is_searching = True
         self._current_pager = self._search_pager
         params = {'term': term}
-        try:
-            self.execute(params, params)
-        except sqlite3.OperationalError as err:
-            # HACK: If only there was a better way ...
-            if err.args and str(err.args[0]).startswith('fts5: syntax error'):
-                raise SearchSyntaxError(term)
-            else:
-                raise err
-        else:
-            return self.first()
+        self.execute(params, params)
+        return self.first()
 
     def list(self):
         self._is_searching = False
@@ -76,11 +68,27 @@ class SearchPager:
         self._search_pager.set_page_size(size)
 
     def execute(self, params=(), count_params=()):
-        self._current_pager.execute(params, count_params)
+        with self._convert_exceptions():
+            self._current_pager.execute(params, count_params)
         return self
+
+    def count(self):
+        with self._convert_exceptions():
+            self._current_pager.count()
 
     def __getattr__(self, attr):
         return getattr(self._current_pager, attr)
 
     def __len__(self):
         return len(self._current_pager)
+
+    @contextmanager
+    def _convert_exceptions(self):
+        try:
+            yield
+        except sqlite3.OperationalError as err:
+            if self._is_searching and len(err.args):
+                msg = str(err.args[0])
+                if msg.startswith('fts5: syntax error') or msg.startswith('no such column'):
+                    raise SearchSyntaxError(msg)
+            raise err

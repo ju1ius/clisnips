@@ -1,6 +1,10 @@
 
 
 palette = [
+    # (name, foreground, background, mono=None, foreground_high=None, background_high=None)
+    ('diff:ins', 'black,bold', 'dark green', 'standout'),
+    ('diff:del', 'white,bold', 'dark red'),
+
     ('error_message', 'white', 'dark red'),
     ('warning_message', 'black', 'brown'),
     ('info_message', 'white', 'dark blue', '', 'h186', 'g20'),
@@ -29,9 +33,6 @@ palette = [
     ('trow_focused', 'black', 'light gray'),
     ('tcell_more', 'light red', ''),
 
-    ('tcell_null_unfocused', 'dark red', ''),
-    ('tcell_null_focused', 'dark red', 'light gray'),
-
     ('tfooter', 'light red', '', '', 'h186', 'g10'),
 
     # sql syntax highlighting
@@ -44,6 +45,5 @@ palette = [
     ('sql:operator', '', ''),
     ('sql:string', 'light cyan', '', '', 'h202', ''),
     ('sql:keyword.type', 'dark cyan', '', '', 'h210', ''),
-    ('sql:builtin', 'dark cyan', '', '', 'h186', '')
-
+    ('sql:builtin', 'dark cyan', '', '', 'h186', ''),
 ]
