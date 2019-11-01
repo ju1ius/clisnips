@@ -58,6 +58,9 @@ class SnippetsModel:
     def set_sort_column(self, column, order='DESC'):
         self._pager.set_sort_column(column, order)
 
+    def get(self, snippet_id):
+        return self._db.get(snippet_id)
+
     def search(self, term: str):
         try:
             rows = self._pager.search(term)

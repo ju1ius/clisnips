@@ -55,6 +55,10 @@ class Table(urwid.Frame):
         self._columns.append(column)
         self._layout.append_column(column)
 
+    def get_selected(self):
+        index = self._focused_row_index
+        return self._model[index]
+
     def render(self, size, focus=False):
         self._widget_size = size
         return super().render(size, focus)

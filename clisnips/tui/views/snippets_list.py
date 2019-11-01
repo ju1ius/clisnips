@@ -3,6 +3,7 @@ import urwid
 from ..models.snippets import SnippetsModel
 from ..view import View
 from ..widgets.search_entry import SearchEntry
+from ..widgets.show_snippet_dialog import ShowSnippetDialog
 from ..widgets.snippets_list_footer import SnippetListFooter
 from ..widgets.sort_dialog import SortDialog
 from ..widgets.table.column import Column
@@ -48,6 +49,14 @@ class SnippetListView(View):
         urwid.connect_signal(dialog, 'sort-changed', self._on_sort_column_selected)
         self.open_dialog(dialog, title='Sort Options', width=35, height=12)
 
+    def _open_show_dialog(self):
+        row = self.snippet_list.get_selected()
+        if not row:
+            return
+        snippet = self._model.get(row['id'])
+        dialog = ShowSnippetDialog(self, snippet)
+        self.open_dialog(dialog, title='Show snippet')
+
     def _on_model_rows_loaded(self, model: SnippetsModel, rows):
         self._list_store.load(rows)
         self._footer.set_pager_infos(model.current_page, model.page_count, model.row_count)
@@ -82,6 +91,9 @@ class SnippetListView(View):
             return
         if key == 'l':
             self._emit('page-requested', 'last')
+            return
+        if key == 's':
+            self._open_show_dialog()
             return
 
     def _on_search_term_changed(self, entry, text):

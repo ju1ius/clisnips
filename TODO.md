@@ -34,7 +34,7 @@
         - [x] sorting
         - [ ] table layout
         - [ ] scrollbar
-    - [ ] Show view
+    - [x] Show view
     - [ ] Edit view
     - [ ] Insert snippet dialog
     - [ ] Color palette
