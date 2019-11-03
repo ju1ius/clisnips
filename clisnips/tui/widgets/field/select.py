@@ -17,7 +17,7 @@ class SelectField(SimpleField):
 class SelectEntry(Entry, ComboBox):
 
     def __init__(self, choices: Optional[Iterable[str]] = None, default: int = 0):
-        ComboBox.__init__(self)
+        super().__init__()
         if choices:
             for i, choice in enumerate(choices):
                 self.append(choice, choice, i == default)

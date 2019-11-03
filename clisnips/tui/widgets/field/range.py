@@ -1,6 +1,7 @@
 import urwid
 
-from .field import SimpleField, Entry
+from .field import Entry, SimpleField
+from ..edit import EmacsEdit
 from ...urwid_types import TextMarkup
 
 
@@ -11,11 +12,11 @@ class RangeField(SimpleField):
         super().__init__(label, entry)
 
 
-class RangeEntry(Entry, urwid.Edit):
+class RangeEntry(Entry, EmacsEdit):
     """TODO: implement real range widget !"""
 
     def __init__(self, start, end, step, default=None):
-        urwid.Edit.__init__(self, '', default or '')
+        super().__init__('', default or '')
         urwid.connect_signal(self, 'postchange', lambda *x: self._emit('changed'))
 
     def get_value(self):

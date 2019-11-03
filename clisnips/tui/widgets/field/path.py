@@ -3,6 +3,7 @@ from typing import Optional
 import urwid
 
 from .field import Entry, SimpleField
+from ..edit import EmacsEdit
 from ...urwid_types import TextMarkup
 from ...._types import AnyPath
 
@@ -14,11 +15,11 @@ class PathField(SimpleField):
         super().__init__(label, entry)
 
 
-class PathEntry(Entry, urwid.Edit):
+class PathEntry(Entry, EmacsEdit):
     """TODO: implement fs path completion !"""
 
     def __init__(self, cwd: Optional[AnyPath] = None, mode: str = '', default: str = ''):
-        urwid.Edit.__init__(self, '', default)
+        super().__init__('', default)
         urwid.connect_signal(self, 'postchange', lambda *x: self._emit('changed'))
 
     def get_value(self):

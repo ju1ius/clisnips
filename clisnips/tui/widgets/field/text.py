@@ -1,6 +1,7 @@
 import urwid
 
 from .field import Entry, SimpleField
+from ..edit import EmacsEdit
 from ...urwid_types import TextMarkup
 
 
@@ -11,10 +12,10 @@ class TextField(SimpleField):
         super().__init__(label, entry)
 
 
-class TextEntry(Entry, urwid.Edit):
+class TextEntry(Entry, EmacsEdit):
 
     def __init__(self, default: str = ''):
-        urwid.Edit.__init__(self, '', default)
+        super().__init__('', default)
         urwid.connect_signal(self, 'postchange', lambda *x: self._emit('changed'))
 
     def get_value(self):

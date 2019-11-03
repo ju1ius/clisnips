@@ -34,7 +34,6 @@
         - [x] pagination
         - [x] sorting
         - [x] Delete snippet action
-        - [ ] scrollbar
         - [ ] table layout
     - [x] Show view
     - [ ] Edit / Create view
@@ -50,8 +49,10 @@
             - [ ] range
             - [ ] path
         - [ ] error messages
+    - [ ] Import / Export
     - [ ] Color palette
     - [ ] Syntax highlighting
     - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup
     - [ ] Help / About dialog
+    - [ ] scrollbars? nontrivial...
     - [ ] job control: handle SIGTSTP / SIGCONT

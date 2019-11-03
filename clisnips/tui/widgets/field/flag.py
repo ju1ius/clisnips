@@ -15,7 +15,7 @@ class FlagEntry(Entry, urwid.CheckBox):
 
     def __init__(self, flag: str):
         self._flag = flag
-        urwid.CheckBox.__init__(self, flag)
+        super().__init__(flag)
         urwid.connect_signal(self, 'postchange', lambda *x: self._emit('changed'))
 
     def get_value(self):

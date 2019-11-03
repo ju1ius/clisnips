@@ -3,6 +3,7 @@ from typing import Callable
 import urwid
 
 from ..dialog import Dialog, ResponseType
+from ..edit import EmacsEdit
 
 
 class EditSnippetDialog(Dialog):
@@ -48,7 +49,7 @@ class EditSnippetDialog(Dialog):
 
     def _create_field(self, name, label, multiline=False):
         value = self._snippet[name]
-        entry = urwid.Edit(edit_text=value, multiline=multiline)
+        entry = EmacsEdit(edit_text=value, multiline=multiline)
         self._fields[name] = entry
         return urwid.Pile([
             urwid.Text(label),
