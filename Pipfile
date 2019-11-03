@@ -12,6 +12,7 @@ typing-extensions = "*"
 [dev-packages]
 mypy = "*"
 pytest = "*"
+pyfakefs = "*"
 
 [requires]
 python_version = "3.7"
