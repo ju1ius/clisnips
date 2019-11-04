@@ -4,6 +4,8 @@ from typing import Any, Optional
 import urwid
 from urwid.command_map import command_map
 
+from .menu import PopupMenu
+
 __all__ = ['ComboBox']
 
 
@@ -17,43 +19,26 @@ class RadioItem(urwid.RadioButton):
         return self._value
 
 
-class Select(urwid.WidgetWrap):
-    """A menu shown when parent is activated"""
-    signals = ['closed', 'changed']
+class Select(PopupMenu):
+
+    signals = PopupMenu.signals + ['changed']
 
     def __init__(self):
-        """Initialize items list"""
         self._group = []
         self._selected_item = None
-        self._nav_search_key = None
-        self._nav_iter = cycle([])
-        self._list = urwid.Pile([])
-        wrap = urwid.AttrWrap(urwid.Filler(urwid.LineBox(self._list)), 'selectable', 'combobox-bg')
-        super().__init__(wrap)
+        super().__init__()
 
-    def keypress(self, size, key):
-        if key == 'esc':
-            self._emit('closed')
-            return
-        try:
-            nf = next(self._nav_iter)
-        except StopIteration:
-            return super().keypress(size, key)
-        else:
-            self._list.set_focus(self._list.contents[nf][0])
-        return super().keypress(size, key)
+    def set_choices(self, choices):
+        self._walker.clear()
+        for choice in choices:
+            self.append_choice(*choice)
 
-    def set_items(self, items):
-        self._list.contents.clear()
-        for item in items:
-            self.append(*item)
-
-    def append(self, label: str, value, selected: bool = False):
+    def append_choice(self, label: str, value, selected: bool = False):
         item = RadioItem(self._group, label, value, selected)
         urwid.connect_signal(item, 'change', self._on_item_changed)
-        self._list.contents.append((item, ('pack', None)))
         if selected:
             self._selected_item = item
+        super().append(item)
 
     def get_selected(self) -> Optional[RadioItem]:
         return self._selected_item
@@ -61,13 +46,10 @@ class Select(urwid.WidgetWrap):
     def get_default(self) -> Optional[RadioItem]:
         if not len(self):
             return None
-        for item, _ in self._list.contents:
+        for item, _ in self._walker:
             if item.get_state() is True:
                 return item
-        return self._list.contents[0]
-
-    def __len__(self):
-        return len(self._list.contents)
+        return self._walker[0]
 
     def _on_item_changed(self, item, state):
         if state is True:
@@ -95,13 +77,13 @@ class ComboBox(urwid.PopUpLauncher):
         urwid.connect_signal(self.original_widget, 'click', lambda *x: self.open_pop_up())
 
     def set_items(self, items):
-        self._select.set_items(items)
+        self._select.set_choices(items)
         default = self._select.get_default()
         if default:
             self._button.set_label(default.get_label())
 
     def append(self, label, value, selected=False):
-        self._select.append(label, value, selected)
+        self._select.append_choice(label, value, selected)
         if selected:
             self._button.set_label(self._select.get_selected().get_label())
 
