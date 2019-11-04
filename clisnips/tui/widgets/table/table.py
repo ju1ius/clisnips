@@ -2,7 +2,7 @@ import urwid
 
 from .body import Body
 from .column import Column
-from .input_processor import InputProcessor, Direction
+from .input_processor import Direction, InputProcessor
 from .store import Store
 from .table_layout import TableLayout
 

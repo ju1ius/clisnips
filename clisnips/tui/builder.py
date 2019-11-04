@@ -1,9 +1,8 @@
-from typing import Callable, Dict, Any
+from typing import Any, Callable, Dict
 
 import urwid
 
 from .screen import Screen
-
 
 BuildCallback = Callable[[Any], Screen]
 

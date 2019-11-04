@@ -1,7 +1,7 @@
 import urwid
 
-from ...logging import logger
 from ..dialog import Dialog
+from ...logging import logger
 
 
 class SortSnippetsDialog(Dialog):

@@ -1,8 +1,6 @@
-from itertools import cycle
 from typing import Any, Optional
 
 import urwid
-from urwid.command_map import command_map
 
 from .menu import PopupMenu
 

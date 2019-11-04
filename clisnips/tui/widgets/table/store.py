@@ -1,5 +1,5 @@
 import enum
-from typing import Callable, Any, Union, Tuple
+from typing import Any, Callable, Tuple, Union
 
 import urwid
 

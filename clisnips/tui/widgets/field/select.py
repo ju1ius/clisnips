@@ -1,7 +1,5 @@
 from typing import Iterable, Optional
 
-import urwid
-
 from .field import Entry, SimpleField
 from ..combobox import ComboBox
 from ...urwid_types import TextMarkup

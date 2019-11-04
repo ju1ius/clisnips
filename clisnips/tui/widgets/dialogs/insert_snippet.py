@@ -1,5 +1,5 @@
 import string
-from typing import Dict, Callable
+from typing import Callable, Dict
 
 import urwid
 

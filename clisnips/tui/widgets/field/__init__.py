@@ -1,10 +1,10 @@
-from ...urwid_types import TextMarkup
 from .field import Field
 from .flag import FlagField
 from .path import PathField
 from .range import RangeField
 from .select import SelectField
 from .text import TextField
+from ...urwid_types import TextMarkup
 from ....strfmt.doc_nodes import Documentation, Parameter, ValueList, ValueRange
 
 

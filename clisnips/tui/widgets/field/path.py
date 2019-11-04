@@ -1,5 +1,3 @@
-from contextlib import suppress
-
 import urwid
 
 from .field import Entry, SimpleField

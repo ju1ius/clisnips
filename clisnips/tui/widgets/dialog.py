@@ -1,5 +1,5 @@
 import enum
-from typing import Optional, Tuple, Any, Iterable
+from typing import Optional
 
 import urwid
 

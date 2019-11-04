@@ -1,7 +1,7 @@
 import sys
 import time
 from enum import Enum
-from typing import Union, Optional
+from typing import Optional, Union
 
 
 class Direction(Enum):
