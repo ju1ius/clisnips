@@ -20,7 +20,8 @@ class PathEntry(Entry, urwid.PopUpLauncher):
     signals = ['changed']
 
     def __init__(self, cwd: AnyPath = '.', mode: str = '', default: str = ''):
-        self._completion = PathCompletion(FileSystemPathCompletionProvider(cwd))
+        provider = FileSystemPathCompletionProvider(cwd)
+        self._completion = PathCompletion(provider, show_files=mode != 'dir')
 
         self._menu = PathCompletionMenu()
         urwid.connect_signal(self._menu, 'closed', lambda *x: self.close_pop_up())

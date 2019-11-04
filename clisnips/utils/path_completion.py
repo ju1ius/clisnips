@@ -14,15 +14,19 @@ class PathCompletionEntry:
     display_name: str
     path: str
     is_dir: bool
+    is_hidden: bool
 
     def __init__(self, name: str, path: str, is_dir: bool) -> None:
         self.display_name = f'{name}/' if is_dir else name
         self.path = path
         self.is_dir = is_dir
+        self.is_hidden = name.startswith('.')
 
     def __lt__(self, other):
         if self.is_dir == other.is_dir:
-            return strxfrm(self.display_name) < strxfrm(other.display_name)
+            if self.is_hidden == other.is_hidden:
+                return strxfrm(self.display_name) < strxfrm(other.display_name)
+            return other.is_hidden < self.is_hidden
         return other.is_dir < self.is_dir
 
 
@@ -34,9 +38,10 @@ class PathCompletionProvider:
 
 class PathCompletion:
 
-    def __init__(self, provider: PathCompletionProvider, show_files=True):
+    def __init__(self, provider: PathCompletionProvider, show_files=True, show_hidden=True):
         self._provider = provider
         self._show_files = show_files
+        self._show_hidden = show_hidden
 
     def get_completions(self, path):
         results = []
@@ -58,9 +63,11 @@ class PathCompletion:
         return file_part
 
     def _entry_matches(self, entry: PathCompletionEntry, pattern: str) -> bool:
-        if not entry.display_name.startswith(pattern):
-            return False
         if not entry.is_dir and not self._show_files:
+            return False
+        if not self._show_hidden and entry.is_hidden:
+            return False
+        if not entry.display_name.startswith(pattern):
             return False
         return True
 

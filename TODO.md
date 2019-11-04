@@ -47,7 +47,7 @@
             - [x] flag
             - [x] choice
             - [ ] range
-            - [ ] path
+            - [x] path
         - [ ] error messages
     - [ ] Import / Export
     - [ ] Color palette
