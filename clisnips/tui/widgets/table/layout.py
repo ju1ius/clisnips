@@ -21,6 +21,15 @@ class TableLayout:
     def __iter__(self):
         yield from self._rows
 
+    @property
+    def row_focus_attr_map(self):
+        attr_map = {None: 'table-row:focused'}
+        attr_map.update({
+            f'table-column:{col.index}': f'table-column:{col.index}:focused'
+            for col in self._columns
+        })
+        return attr_map
+
     def append_column(self, column: Column):
         self._columns.append(column)
 

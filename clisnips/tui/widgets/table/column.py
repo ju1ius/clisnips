@@ -41,6 +41,16 @@ class Column:
     def is_fixed(self) -> bool:
         return self.width or not self.word_wrap or not self.wrappable
 
+    @property
+    def attr_map(self):
+        return {None: f'table-column:{self.index}'}
+
+    @property
+    def focus_attr_map(self):
+        return {
+            f'table-column:{self.index}': f'table-column:{self.index}:focused',
+        }
+
     def compute_width(self):
         self.computed_width = self.width or (self.content_width + self.padding.length)
 

@@ -6,13 +6,13 @@ palette = [
     ('view:default', 'light gray', 'black'),
     ('search-entry:caption', 'dark cyan', 'black'),
 
-    ('table-row:focused', 'black', 'light gray', 'standout'),
+    ('table-row:focused', 'light gray', 'dark gray', 'standout'),
     ('table-column:cmd', 'light gray', 'black'),
-    ('table-column:cmd:focused', 'black', 'light gray', 'standout'),
+    ('table-column:cmd:focused', 'light gray', 'dark gray', 'standout'),
     ('table-column:title', 'light gray,italics', 'black'),
-    ('table-column:title:focused', 'black,italics', 'light gray', 'standout'),
+    ('table-column:title:focused', 'light gray,italics', 'dark gray', 'standout'),
     ('table-column:tag', 'brown', 'black'),
-    ('table-column:tag:focused', 'black', 'light gray', 'standout'),
+    ('table-column:tag:focused', 'brown', 'dark gray', 'standout'),
 
     # Syntax highlighting
     ('doc:header', 'light gray', 'black'),

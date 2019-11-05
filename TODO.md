@@ -34,20 +34,19 @@
         - [x] pagination
         - [x] sorting
         - [x] Delete snippet action
-        - [ ] table layout
+        - [x] table layout
     - [x] Show view
     - [ ] Edit / Create view
         - [x] edit in TUI
         - [x] synchronize pager state
         - [ ] validate documentation / command syntax
-        - [ ] edit in $EDITOR, à la git commit
     - [ ] Insert snippet dialog
         - [ ] field types
             - [x] text
             - [x] flag
             - [x] choice
-            - [ ] range
             - [x] path
+            - [ ] range
         - [ ] error messages
     - [ ] Import / Export
     - [ ] Color palette

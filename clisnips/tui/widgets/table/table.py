@@ -2,7 +2,7 @@ import urwid
 
 from .body import Body
 from .column import Column
-from .input_processor import Direction, InputProcessor
+from .input_processor import InputProcessor
 from .layout import TableLayout
 from .row import Row
 from .store import TableStore
@@ -69,9 +69,10 @@ class Table(urwid.Frame):
         self._layout.layout(self._model.rows, width)
 
         self._body.clear()
+        col_attr = self._layout.row_focus_attr_map
         for row_index, layout_row in enumerate(self._layout):
-            # row = urwid.AttrMap(Row(layout_row), 'default', focus_map='table-row:focused')
-            self._body.append(Row(layout_row))
+            row = urwid.AttrMap(Row(layout_row), 'table-row', col_attr)
+            self._body.append(row)
 
         self._scroll_rows()
 
@@ -139,18 +140,25 @@ class Table(urwid.Frame):
 
         if key == 'enter':
             self._emit(self.SIGNAL_ROW_SELECTED, self._model[index])
-
-        command = self._input_processor.process_key(key)
-        if not command:
             return
-
-        offset = command.offset
-        if offset == 'page':
-            offset = size[1] - 2
-        if command.direction == Direction.LEFT:
-            self._scroll_left(offset)
-        elif command.direction == Direction.RIGHT:
-            self._scroll_right(offset)
+        # if key == 'left':
+        #     self._scroll_left(1)
+        #     return
+        # if key == 'right':
+        #     self._scroll_right(1)
+        #     return
+        return key
+        # command = self._input_processor.process_key(key)
+        # if not command:
+        #     return
+        #
+        # offset = command.offset
+        # if offset == 'page':
+        #     offset = size[1] - 2
+        # if command.direction == Direction.LEFT:
+        #     self._scroll_left(offset)
+        # elif command.direction == Direction.RIGHT:
+        #     self._scroll_right(offset)
 
     def _detect_visible_columns_count(self):
         focused_row = self._body.focused_row

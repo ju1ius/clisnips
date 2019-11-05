@@ -11,7 +11,7 @@ class Row(urwid.Columns):
         cols = []
         for column, value in layout_row:
             cell = Cell(layout_row, column, value)
-            cell = urwid.AttrMap(cell, f'table-column:{column.index}', f'table-column:{column.index}:focused')
+            cell = urwid.AttrMap(cell, column.attr_map)
             cols.append((column.computed_width, cell))
         super().__init__(cols, dividechars=1)
 

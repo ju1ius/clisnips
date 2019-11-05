@@ -29,6 +29,6 @@ class Body(CyclingFocusListBox):
 
     def keypress(self, size, key):
         self._emit(self.KEYPRESS, size, key)
-        if key in ('up', 'down'):
+        if key in ('up', 'down', 'left', 'right'):
             return super().keypress(size, key)
         return key
