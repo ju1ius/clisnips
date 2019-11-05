@@ -10,9 +10,7 @@ from ..widgets.dialogs.show_snippet import ShowSnippetDialog
 from ..widgets.dialogs.sort_snippets import SortSnippetsDialog
 from ..widgets.search_entry import SearchEntry
 from ..widgets.snippets_list_footer import SnippetListFooter
-from ..widgets.table.column import Column
-from ..widgets.table.store import Store as ListStore
-from ..widgets.table.table import Table
+from ..widgets.table import Column, Table, TableStore
 
 
 class SnippetListView(View):
@@ -37,11 +35,11 @@ class SnippetListView(View):
         self._model.connect(model.Signals.ROW_DELETED, self._on_model_row_deleted)
         self._model.connect(model.Signals.ROW_UPDATED, self._on_model_row_updated)
 
-        self.search_entry = SearchEntry()
+        self.search_entry = SearchEntry('Search term: ')
         urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
 
-        self._list_store = ListStore()
-        self.snippet_list = Table(self._list_store)
+        self._table_store = TableStore()
+        self.snippet_list = Table(self._table_store)
         self.snippet_list.append_column(Column('cmd'))
         self.snippet_list.append_column(Column('title'))
         self.snippet_list.append_column(Column('tag'))
@@ -89,21 +87,21 @@ class SnippetListView(View):
         self.open_dialog(dialog, title='New snippet')
 
     def _on_model_rows_loaded(self, model: SnippetsModel, rows):
-        self._list_store.load(rows)
+        self._table_store.load(rows)
 
     def _on_model_row_created(self, model, row):
-        self._list_store.insert(0, row)
+        self._table_store.insert(0, row)
         self.close_dialog()
 
     def _on_model_row_deleted(self, model, rowid):
-        index, row = self._list_store.find(lambda r: r['id'] == rowid)
+        index, row = self._table_store.find(lambda r: r['id'] == rowid)
         if index is not None:
-            self._list_store.delete(index)
+            self._table_store.delete(index)
 
     def _on_model_row_updated(self, model, rowid, snippet):
-        index, row = self._list_store.find(lambda r: r['id'] == rowid)
+        index, row = self._table_store.find(lambda r: r['id'] == rowid)
         if index is not None:
-            self._list_store.update(index, snippet)
+            self._table_store.update(index, snippet)
         self.close_dialog()
 
     def keypress(self, size, key):

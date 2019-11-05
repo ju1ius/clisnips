@@ -10,7 +10,7 @@ class View(urwid.WidgetWrap):
         self._has_dialog = False
         self.placeholder = urwid.WidgetPlaceholder(urwid.Filler(urwid.Text('')))
         super().__init__(self.placeholder)
-        self.placeholder.original_widget = self.view
+        self.placeholder.original_widget = urwid.AttrMap(self.view, 'view:default')
 
     def open_dialog(self, dialog, title: str = '', width=('relative', 80), height=('relative', 80)):
         frame = DialogFrame(self, dialog, title=title)

@@ -291,5 +291,5 @@ class Parser(LLkParser):
         return self._match(T_INTEGER, T_FLOAT)
 
 
-def parse(docstring):
+def parse(docstring: str) -> Documentation:
     return Parser(Lexer(docstring)).parse()

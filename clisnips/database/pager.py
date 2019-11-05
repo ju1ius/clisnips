@@ -1,7 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Sized
-
-from typing_extensions import Protocol
 
 from .snippets_db import QueryParameters, ResultSet
 

@@ -1,4 +1,4 @@
-from gi.repository import Gtk, GObject
+from gi.repository import GObject, Gtk
 
 from .field import Field
 

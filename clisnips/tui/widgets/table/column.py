@@ -9,6 +9,9 @@ class Padding:
         self.right = right
         self.length = left + right
 
+    def __len__(self):
+        return self.length
+
 
 class Column:
     """
@@ -17,7 +20,7 @@ class Column:
 
     def __init__(self, index: Union[str, int],
                  width: Optional[int] = None, min_width: int = 0, max_width: Union[int, float] = math.inf,
-                 padding: Tuple[int, int] = (1, 1), wrap: bool = False):
+                 padding: Tuple[int, int] = (0, 0), wrap: bool = False):
         self.index = index
         self.width = width
         self.min_width = min_width
@@ -43,3 +46,6 @@ class Column:
 
     def compute_min_width(self):
         self.min_width = self.min_content_width + self.padding.length
+
+    def __repr__(self):
+        return f'<Column[{self.index}] ({self.computed_width})>'

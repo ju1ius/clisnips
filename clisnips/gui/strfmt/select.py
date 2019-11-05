@@ -4,7 +4,6 @@ from gi.repository import Gtk
 
 from .field import SimpleField
 
-
 OptionsType = Iterable[str]
 
 

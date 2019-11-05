@@ -4,7 +4,7 @@ from typing import Any, Callable, Tuple, Union
 import urwid
 
 
-class Store:
+class TableStore:
 
     class Signals(enum.Enum):
         ROWS_LOADED = 'rows-loaded'

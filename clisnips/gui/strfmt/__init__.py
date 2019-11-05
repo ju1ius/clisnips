@@ -1,10 +1,10 @@
 from .field import Field
+from .flag import FlagField
 from .path import PathField
 from .range import RangeField
 from .select import SelectField
-from .flag import FlagField
 from .text import TextField
-from ...strfmt.doc_nodes import Documentation, Parameter, ValueRange, ValueList
+from ...strfmt.doc_nodes import Documentation, Parameter, ValueList, ValueRange
 
 
 def field_from_documentation(field_name: str, doc: Documentation) -> Field:

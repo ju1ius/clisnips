@@ -1,7 +1,7 @@
 from gi.repository import Gtk
 
-from ...utils.number import get_num_decimals
 from .field import SimpleField
+from ...utils.number import get_num_decimals
 
 
 class RangeField(SimpleField):

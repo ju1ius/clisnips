@@ -1,6 +1,7 @@
 import urwid
 
 from ..dialog import Dialog
+from ...highlighter import highlight_command, highlight_documentation
 
 
 class ShowSnippetDialog(Dialog):
@@ -12,9 +13,9 @@ class ShowSnippetDialog(Dialog):
             self._create_divider(),
             self._create_field('Tags', snippet['tag']),
             self._create_divider(),
-            self._create_field('Command', snippet['cmd']),
+            self._create_field('Command', highlight_command(snippet['cmd'])),
             self._create_divider(),
-            self._create_field('Documentation', snippet['doc']),
+            self._create_field('Documentation', highlight_documentation(snippet['doc'])),
             # self._create_divider(),
         ]))
 

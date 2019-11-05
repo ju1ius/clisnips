@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Type, TypeVar, Any
+from typing import Any, Callable, Dict, Optional, Type, TypeVar
 
 from gi.repository import GObject, Gtk
 
