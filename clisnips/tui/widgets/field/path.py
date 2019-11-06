@@ -93,6 +93,8 @@ class PathCompletionMenuItem(urwid.Button):
     button_left = urwid.Text('')
     button_right = urwid.Text('')
 
-    def __init__(self, entry):
-        icon = '📂' if entry.is_dir else '📄'
-        super().__init__(f'{icon} {entry.display_name}')
+    def __init__(self, entry: PathCompletionEntry):
+        prefix = 'symlink-' if entry.is_link else ''
+        file_type = 'directory' if entry.is_dir else 'file'
+        label = (f'path-completion:{prefix}{file_type}', entry.display_name)
+        super().__init__(label)

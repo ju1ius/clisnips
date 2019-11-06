@@ -1,7 +1,7 @@
 from string import Formatter as _CommandParser
 
-from ...exceptions import ParsingError
 from ..urwid_types import TextMarkup
+from ...exceptions import ParsingError
 
 
 def highlight_command(cmd_string) -> TextMarkup:

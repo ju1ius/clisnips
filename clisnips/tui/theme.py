@@ -22,6 +22,11 @@ palette = [
     ('table-column:tag', 'brown', 'black'),
     ('table-column:tag:focused', 'brown', 'dark gray', 'standout'),
 
+    ('path-completion:file', 'light gray', 'default'),
+    ('path-completion:directory', 'dark blue', 'default'),
+    ('path-completion:symlink-directory', 'dark cyan', 'default'),
+    ('path-completion:symlink-file', 'brown', 'default'),
+
     # Syntax highlighting
     ('cmd:default', 'dark green', 'black'),
     ('cmd:param', 'dark magenta', 'black'),

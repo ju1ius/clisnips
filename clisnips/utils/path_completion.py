@@ -1,11 +1,25 @@
+import enum
 import functools
+import os
 import os.path
 from dataclasses import dataclass
 from locale import strxfrm
 from pathlib import Path
 from typing import Iterable
 
-__all__ = ['PathCompletionEntry', 'PathCompletion', 'PathCompletionProvider', 'FileSystemPathCompletionProvider']
+__all__ = [
+    'FileAttributes', 'PathCompletionEntry',
+    'PathCompletion', 'PathCompletionProvider',
+    'FileSystemPathCompletionProvider',
+]
+
+
+class FileAttributes(enum.IntFlag):
+    NONE = 0
+    IS_FILE = 1
+    IS_DIR = 2
+    IS_LINK = 4
+    IS_HIDDEN = 8
 
 
 @functools.total_ordering
@@ -13,14 +27,18 @@ __all__ = ['PathCompletionEntry', 'PathCompletion', 'PathCompletionProvider', 'F
 class PathCompletionEntry:
     display_name: str
     path: str
+    attributes: FileAttributes
     is_dir: bool
+    is_link: bool
     is_hidden: bool
 
-    def __init__(self, name: str, path: str, is_dir: bool) -> None:
-        self.display_name = f'{name}/' if is_dir else name
+    def __init__(self, name: str, path: str, attrs: FileAttributes) -> None:
+        self.attributes = attrs
+        self.is_dir = attrs & FileAttributes.IS_DIR == FileAttributes.IS_DIR
+        self.is_hidden = attrs & FileAttributes.IS_HIDDEN == FileAttributes.IS_HIDDEN
+        self.is_link = attrs & FileAttributes.IS_LINK == FileAttributes.IS_LINK
+        self.display_name = f'{name}{os.sep}' if self.is_dir else name
         self.path = path
-        self.is_dir = is_dir
-        self.is_hidden = name.startswith('.')
 
     def __lt__(self, other):
         if self.is_dir == other.is_dir:
@@ -93,8 +111,22 @@ class FileSystemPathCompletionProvider(PathCompletionProvider):
             dir_part = self._base_dir / dir_part
         return Path(dir_part).expanduser().resolve(strict=True)
 
-    @staticmethod
-    def _scan_directory(path):
+    def _scan_directory(self, path):
         with os.scandir(path) as directory:
+            # type entry os.DirEntry
             for entry in directory:
-                yield PathCompletionEntry(entry.name, entry.path, entry.is_dir())
+                attrs = self._get_entry_attributes(entry)
+                yield PathCompletionEntry(entry.name, entry.path, attrs)
+
+    @staticmethod
+    def _get_entry_attributes(entry: os.DirEntry):
+        attrs = FileAttributes.NONE
+        if entry.is_dir():
+            attrs |= FileAttributes.IS_DIR
+        elif entry.is_file():
+            attrs |= FileAttributes.IS_FILE
+        if entry.is_symlink():
+            attrs |= FileAttributes.IS_LINK
+        if entry.name.startswith('.'):
+            attrs |= FileAttributes.IS_HIDDEN
+        return attrs

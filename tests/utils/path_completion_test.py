@@ -1,6 +1,12 @@
 import pytest
 
-from clisnips.utils.path_completion import *
+from clisnips.utils.path_completion import (
+    PathCompletionEntry,
+    PathCompletion,
+    PathCompletionProvider,
+    FileSystemPathCompletionProvider,
+    FileAttributes as FA,
+)
 
 
 class StubProvider(PathCompletionProvider):
@@ -15,39 +21,39 @@ class StubProvider(PathCompletionProvider):
 class TestCompletionEntry:
 
     def test_dirname_ends_with_slash(self):
-        entry = PathCompletionEntry('foo', '/usr/share/foo', True)
+        entry = PathCompletionEntry('foo', '/usr/share/foo', FA.IS_DIR)
         assert 'foo/' == entry.display_name
 
-        entry = PathCompletionEntry('foo', '/usr/share/foo', False)
+        entry = PathCompletionEntry('foo', '/usr/share/foo', FA.IS_FILE)
         assert 'foo' == entry.display_name
 
     def test_it_sorts_alphabetically(self):
         entries = [
-            PathCompletionEntry('bazar', '/foo/bar/bazar', False),
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('baffle', '/foo/bar/baffle', False),
-            PathCompletionEntry('woot', '/foo/bar/woot', False),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
+            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
         ]
         expected = [
-            PathCompletionEntry('baffle', '/foo/bar/baffle', False),
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('bazar', '/foo/bar/bazar', False),
-            PathCompletionEntry('woot', '/foo/bar/woot', False),
+            PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
+            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
         ]
         assert expected == sorted(entries)
 
     def test_it_sorts_directories_first(self):
         entries = [
-            PathCompletionEntry('bazar', '/foo/bar/bazar', True),
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('waffle', '/foo/bar/waffle', True),
-            PathCompletionEntry('woot', '/foo/bar/woot', False),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_DIR),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('waffle', '/foo/bar/waffle', FA.IS_DIR),
+            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
         ]
         expected = [
-            PathCompletionEntry('bazar', '/foo/bar/bazar', True),
-            PathCompletionEntry('waffle', '/foo/bar/waffle', True),
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('woot', '/foo/bar/woot', False),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_DIR),
+            PathCompletionEntry('waffle', '/foo/bar/waffle', FA.IS_DIR),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
         ]
         assert expected == sorted(entries)
 
@@ -57,16 +63,16 @@ class TestPathCompletion:
     def test_simple_filename_completion(self):
         path = '/foo/bar/ba'
         provider = StubProvider([
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('bazar', '/foo/bar/bazar', False),
-            PathCompletionEntry('baffle', '/foo/bar/baffle', False),
-            PathCompletionEntry('woot', '/foo/bar/woot', False),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
+            PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
+            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
         ])
         completion = PathCompletion(provider)
         expected = [
-            PathCompletionEntry('baffle', '/foo/bar/baffle', False),
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('bazar', '/foo/bar/bazar', False),
+            PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
         ]
         assert expected == completion.get_completions(path)
         assert '/foo/bar/bazar', completion.complete(path == expected[1])
@@ -74,9 +80,9 @@ class TestPathCompletion:
     def test_simple_dirname_completion(self):
         path = '/foo/bar/'
         expected = [
-            PathCompletionEntry('woot', '/foo/bar/woot', True),
-            PathCompletionEntry('baz', '/foo/bar/baz', False),
-            PathCompletionEntry('bazar', '/foo/bar/bazar', False),
+            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_DIR),
+            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
         ]
         provider = StubProvider(expected)
         completion = PathCompletion(provider)
@@ -86,9 +92,9 @@ class TestPathCompletion:
     def test_root_directory_completion(self):
         path = '/'
         expected = [
-            PathCompletionEntry('bin', '/bin', True),
-            PathCompletionEntry('usr', '/usr', True),
-            PathCompletionEntry('vmlinuz', '/vmlinuz', False),
+            PathCompletionEntry('bin', '/bin', FA.IS_DIR),
+            PathCompletionEntry('usr', '/usr', FA.IS_DIR),
+            PathCompletionEntry('vmlinuz', '/vmlinuz', FA.IS_FILE),
         ]
         provider = StubProvider(expected)
         completion = PathCompletion(provider)
@@ -98,8 +104,8 @@ class TestPathCompletion:
     def test_home_directory_completion(self):
         path = '~/'
         expected = [
-            PathCompletionEntry('.config', '/home/user/.config', True),
-            PathCompletionEntry('.bashrc', '/home/user/.bashrc', False),
+            PathCompletionEntry('.config', '/home/user/.config', FA.IS_DIR),
+            PathCompletionEntry('.bashrc', '/home/user/.bashrc', FA.IS_FILE),
         ]
         provider = StubProvider(expected)
         completion = PathCompletion(provider)
@@ -109,14 +115,14 @@ class TestPathCompletion:
     def test_no_directory_completion(self):
         path = 'ba'
         provider = StubProvider([
-            PathCompletionEntry('bar', '/home/user/bar/', True),
-            PathCompletionEntry('baz', '/home/user/baz', False),
-            PathCompletionEntry('qux', '/home/user/qux', False),
+            PathCompletionEntry('bar', '/home/user/bar/', FA.IS_DIR),
+            PathCompletionEntry('baz', '/home/user/baz', FA.IS_FILE),
+            PathCompletionEntry('qux', '/home/user/qux', FA.IS_FILE),
         ])
         completion = PathCompletion(provider)
         expected = [
-            PathCompletionEntry('bar', '/home/user/bar/', True),
-            PathCompletionEntry('baz', '/home/user/baz', False),
+            PathCompletionEntry('bar', '/home/user/bar/', FA.IS_DIR),
+            PathCompletionEntry('baz', '/home/user/baz', FA.IS_FILE),
         ]
         assert expected == completion.get_completions(path)
         assert 'bar/', completion.complete(path == expected[0])
@@ -131,7 +137,7 @@ class TestFileSystemCompletionProvider:
             name = f'{name}.so'
             path = f'/usr/lib/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider()
         completions = list(provider.get_completions('/usr/lib/ba'))
         assert expected == completions
@@ -142,7 +148,7 @@ class TestFileSystemCompletionProvider:
             name = f'{name}.so'
             path = f'/usr/lib/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider('/usr/lib')
         completions = list(provider.get_completions('ba'))
         assert expected == completions
@@ -153,7 +159,7 @@ class TestFileSystemCompletionProvider:
             name = f'{name}.so'
             path = f'/usr/lib/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider('/usr/lib')
         completions = list(provider.get_completions('./ba'))
         assert expected == completions
@@ -161,14 +167,14 @@ class TestFileSystemCompletionProvider:
     def test_dot_dot_relative_paths(self, fs):
         base_dir = '/usr/lib/X11'
         expected = [
-            PathCompletionEntry('X11', base_dir, True)
+            PathCompletionEntry('X11', base_dir, FA.IS_DIR)
         ]
         fs.create_dir(base_dir)
         for name in ('foo', 'bar', 'baz', 'qux'):
             name = f'{name}.so'
             path = f'/usr/lib/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider(base_dir)
         completions = list(provider.get_completions('../ba'))
         assert expected == completions
@@ -180,7 +186,7 @@ class TestFileSystemCompletionProvider:
             name = f'{name}.txt'
             path = f'/home/bigmonkey/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider()
         completions = list(provider.get_completions('~/ba'))
         assert expected == completions
@@ -190,7 +196,7 @@ class TestFileSystemCompletionProvider:
         for name in ('foo', 'bar', 'baz', 'qux'):
             path = f'/bin/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider()
         completions = list(provider.get_completions('/bin/'))
         assert expected == completions
@@ -198,12 +204,12 @@ class TestFileSystemCompletionProvider:
     def test_root_directory_paths(self, fs):
         expected = [
             # added by pyfakefs
-            PathCompletionEntry('tmp', '/tmp', True),
+            PathCompletionEntry('tmp', '/tmp', FA.IS_DIR),
         ]
         for name in ('foo', 'bar', 'baz', 'qux'):
             path = f'/{name}'
             fs.create_file(path)
-            expected.append(PathCompletionEntry(name, path, False))
+            expected.append(PathCompletionEntry(name, path, FA.IS_FILE))
         provider = FileSystemPathCompletionProvider()
         completions = list(provider.get_completions('/'))
         assert expected == completions

@@ -1,10 +1,10 @@
 import re
 
+from pygments import highlight
 from pygments.formatter import Formatter
 from pygments.lexer import RegexLexer, bygroups, using
 from pygments.lexers.python import Python3Lexer
 from pygments.token import *
-from pygments import highlight
 
 __all__ = ['highlight_documentation']
 
