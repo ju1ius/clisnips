@@ -51,7 +51,8 @@ class DocLexer(RegexLexer):
             (r" ' (\\.|[^'])* ' ", String),
             (NUMBER_RX, Number),
             (r'(?-x: +)', Whitespace),
-            (r'[,*:]', Punctuation),
+            (r'[,:]', Punctuation),
+            (r'\*', ValueHint.Default),
         ],
         'code-content': [
             (r'(?m) (?<!^```) ((?:.|\n)+) (^```\n)', bygroups(using(Python3Lexer), Code.End), '#pop'),
@@ -68,6 +69,7 @@ class DocFormatter(Formatter):
         Parameter: 'doc:parameter',
         ValueHint.Start: 'doc:value-hint',
         ValueHint.End: 'doc:value-hint',
+        ValueHint.Default: 'doc:value-hint:default',
         String: 'doc:string',
         Number: 'doc:number',
         TypeHint: 'doc:type-hint',

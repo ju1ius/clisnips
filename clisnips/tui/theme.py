@@ -15,15 +15,15 @@ palette = [
     ('info', 'white', 'dark blue', '', 'h186', 'g20'),
 
     ('table-row:focused', 'light gray', 'dark gray', 'standout'),
-    ('table-column:cmd', 'light gray', 'black'),
-    ('table-column:cmd:focused', 'light gray', 'dark gray', 'standout'),
+    ('table-column:cmd', 'dark green', 'black'),
+    ('table-column:cmd:focused', 'dark green', 'dark gray', 'standout'),
     ('table-column:title', 'light gray,italics', 'black'),
     ('table-column:title:focused', 'light gray,italics', 'dark gray', 'standout'),
     ('table-column:tag', 'brown', 'black'),
     ('table-column:tag:focused', 'brown', 'dark gray', 'standout'),
 
     # Syntax highlighting
-    ('cmd:default', 'light gray', 'black'),
+    ('cmd:default', 'dark green', 'black'),
     ('cmd:param', 'dark magenta', 'black'),
     ('cmd:conv', 'dark cyan', 'black'),
     ('cmd:spec', 'brown', 'black'),
@@ -32,6 +32,7 @@ palette = [
     ('doc:parameter', 'dark magenta', 'black'),
     ('doc:type-hint', 'dark cyan', 'black'),
     ('doc:value-hint', 'brown', 'black'),
+    ('doc:value-hint:default', 'light cyan', 'black'),
     ('doc:string', 'dark green', 'black'),
     ('doc:number', 'yellow', 'black'),
     ('doc:code-fence', 'dark red', 'black'),

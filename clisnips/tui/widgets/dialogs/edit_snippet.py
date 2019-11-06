@@ -67,12 +67,14 @@ class EditSnippetDialog(Dialog):
         return urwid.Divider('─')
 
     def _command_factory(self, edit_text: str):
-        entry = SourceEdit(edit_text=edit_text, multiline=True)
+        entry = SourceEdit(edit_text='', multiline=True)
+        entry.set_edit_markup(highlight_command(edit_text))
         urwid.connect_signal(entry, 'change', self._on_command_changed)
         return entry
 
     def _documentation_factory(self, edit_text: str):
-        entry = SourceEdit(edit_text=edit_text, multiline=True)
+        entry = SourceEdit(edit_text='', multiline=True)
+        entry.set_edit_markup(highlight_documentation(edit_text))
         urwid.connect_signal(entry, 'change', self._on_documentation_changed)
         return entry
 

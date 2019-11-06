@@ -8,12 +8,13 @@ def highlight_command(cmd_string) -> TextMarkup:
     if not cmd_string:
         return ''
     try:
-        tokens = _CommandParser().parse(cmd_string)
+        # We have to convert to list, otherwise exceptions will be throw during iteration
+        tokens = list(_CommandParser().parse(cmd_string))
     except Exception as err:
         raise ParsingError.from_exception(err)
     markup = []
     for prefix, param, spec, conv in tokens:
-        markup.append(prefix)
+        markup.append(('cmd:default', prefix))
         if not param:
             continue
         field = [('cmd:param', '{%s' % param)]
