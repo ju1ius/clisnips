@@ -61,3 +61,30 @@ class EmacsEdit(urwid.Edit):
         if key == 'space':
             return super().keypress(size, ' ')
         return super().keypress(size, key)
+
+
+class SourceEdit(EmacsEdit):
+    """
+    Edit subclass that supports markup.
+    This works by calling set_edit_markup from the change event
+    as well as whenever markup changes while text does not.
+    """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._edit_attrs = []
+
+    def set_edit_markup(self, markup):
+        """
+        Call this when markup changes but the underlying text does not.
+        You should arrange for this to be called from the 'change' signal.
+        """
+        if markup:
+            self._edit_text, self._edit_attrs = urwid.decompose_tagmarkup(markup)
+        else:
+            self._edit_text, self._edit_attrs = '', []
+        # This is redundant when we're called off the 'change' signal.
+        # I'm assuming this is cheap, making that ok.
+        self._invalidate()
+
+    def get_text(self):
+        return self._caption + self._edit_text, self._attrib + self._edit_attrs

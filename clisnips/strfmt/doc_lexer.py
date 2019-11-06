@@ -9,7 +9,7 @@ _RE_CACHE: Dict[Tuple[str, bool], Pattern[str]] = {}
 WSP_CHARS = '\t\f\x20'
 WSP_RX = re.compile(r'[\t\f ]*')
 
-PARAM_START_RX = re.compile(r'^[\t\f ]*(?=\{)', re.MULTILINE)
+PARAM_START_RX = re.compile(r'^[\t\f ]*(?={)', re.MULTILINE)
 CODEBLOCK_START_RX = re.compile(r'^[\t\f ]*(?=```$)', re.MULTILINE)
 FREETEXT_BOUNDS_RX = re.compile(
     r'''

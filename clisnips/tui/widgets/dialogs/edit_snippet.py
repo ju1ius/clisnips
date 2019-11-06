@@ -1,9 +1,12 @@
+from contextlib import suppress
 from typing import Callable
 
 import urwid
 
 from ..dialog import Dialog, ResponseType
-from ..edit import EmacsEdit
+from ..edit import EmacsEdit, SourceEdit
+from ...syntax import highlight_command, highlight_documentation
+from ....exceptions import ParsingError
 
 
 class EditSnippetDialog(Dialog):
@@ -17,9 +20,9 @@ class EditSnippetDialog(Dialog):
             self._create_divider(),
             self._create_field('tag', 'Tags'),
             self._create_divider(),
-            self._create_field('cmd', 'Command', multiline=True),
+            self._create_field('cmd', 'Command', entry_factory=self._command_factory),
             self._create_divider(),
-            self._create_field('doc', 'Documentation', multiline=True),
+            self._create_field('doc', 'Documentation', entry_factory=self._documentation_factory),
             # self._create_divider(),
         ]))
 
@@ -47,14 +50,40 @@ class EditSnippetDialog(Dialog):
         snippet.update(values)
         return snippet
 
-    def _create_field(self, name, label, multiline=False):
+    def _create_field(self, name, label, multiline=False, entry_factory=None):
         value = self._snippet[name]
-        entry = EmacsEdit(edit_text=value, multiline=multiline)
+        if callable(entry_factory):
+            entry = entry_factory(edit_text=value)
+        else:
+            entry = EmacsEdit(edit_text=value, multiline=multiline)
         self._fields[name] = entry
         return urwid.Pile([
             urwid.Text(label),
             entry,
         ])
 
-    def _create_divider(self):
+    @staticmethod
+    def _create_divider():
         return urwid.Divider('─')
+
+    def _command_factory(self, edit_text: str):
+        entry = SourceEdit(edit_text=edit_text, multiline=True)
+        urwid.connect_signal(entry, 'change', self._on_command_changed)
+        return entry
+
+    def _documentation_factory(self, edit_text: str):
+        entry = SourceEdit(edit_text=edit_text, multiline=True)
+        urwid.connect_signal(entry, 'change', self._on_documentation_changed)
+        return entry
+
+    @staticmethod
+    def _on_command_changed(entry, text):
+        with suppress(ParsingError):
+            markup = highlight_command(text)
+            entry.set_edit_markup(markup)
+
+    @staticmethod
+    def _on_documentation_changed(entry, text):
+        with suppress(ParsingError):
+            markup = highlight_documentation(text)
+            entry.set_edit_markup(markup)

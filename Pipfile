@@ -8,6 +8,7 @@ pycairo = "*"
 pygobject = "*"
 urwid = "*"
 typing-extensions = "*"
+pygments = "*"
 
 [dev-packages]
 mypy = "*"

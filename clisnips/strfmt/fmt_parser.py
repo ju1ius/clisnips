@@ -22,7 +22,7 @@ def parse(text):
     try:
         stream = __lexer.parse(text)
     except Exception as err:
-        raise ParsingError(str(err))
+        raise ParsingError.from_exception(err)
     fields = []
     auto_count = -1
     has_explicit_numeric_field = False

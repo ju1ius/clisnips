@@ -1,7 +1,7 @@
 import urwid
 
 from ..dialog import Dialog
-from ...highlighter import highlight_command, highlight_documentation
+from ...syntax import highlight_command, highlight_documentation
 
 
 class ShowSnippetDialog(Dialog):
