@@ -29,9 +29,11 @@ palette = [
 
     # Syntax highlighting
     ('cmd:default', 'dark green', 'black'),
-    ('cmd:param', 'dark magenta', 'black'),
-    ('cmd:conv', 'dark cyan', 'black'),
-    ('cmd:spec', 'brown', 'black'),
+    ('cmd:punctuation', 'light gray', 'black'),
+    ('cmd:field-marker', 'dark magenta', 'black'),
+    ('cmd:field-name', 'dark magenta', 'black'),
+    ('cmd:field-conversion', 'dark cyan', 'black'),
+    ('cmd:field-format', 'dark cyan', 'black'),
 
     ('doc:default', 'light gray', 'black'),
     ('doc:parameter', 'dark magenta', 'black'),

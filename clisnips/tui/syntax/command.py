@@ -1,27 +1,76 @@
-from string import Formatter as _CommandParser
+import re
 
+from pygments import highlight
+from pygments.formatter import Formatter
+from pygments.lexer import RegexLexer, bygroups
+from pygments.token import Punctuation, Text, Token
+
+from .writer import UrwidMarkupWriter
 from ..urwid_types import TextMarkup
-from ...exceptions import ParsingError
+
+Command = Token.Command
+
+IDENTIFIER = r'[a-z][a-z0-]*'
+DIGIT = r'\d+'
+ARG_NAME = rf'(?: {IDENTIFIER} | {DIGIT} )'
+INDEX_STR = r'[^\]]+'
+ELEMENT_INDEX = rf'\[ {DIGIT} | {INDEX_STR} \]'
 
 
-def highlight_command(cmd_string) -> TextMarkup:
-    if not cmd_string:
+class CommandLexer(RegexLexer):
+
+    name = 'ClisnipsCommand'
+    aliases = 'cmd'
+    flags = re.X | re.I
+
+    tokens = {
+        'root': [
+            (r'(?<!{) (?:{{)+', Text),
+            (r'{', Command.Start, 'format-string'),
+            (r'[^{]+', Text),
+        ],
+        'format-string': [
+            (r'}', Command.End, '#pop'),
+            (ARG_NAME, Command.ArgName),
+            (rf'(\.) ({IDENTIFIER})', bygroups(Punctuation, Command.Identifier)),
+            (rf'(\[) ({ELEMENT_INDEX})', bygroups(Punctuation, Command.ElementIndex)),
+            (r'(!) ([rsa])', bygroups(Punctuation, Command.Conversion)),
+            (r'(:) ([^}]+)', bygroups(Punctuation, Command.FormatSpec)),
+        ],
+    }
+
+
+class CommandFormatter(Formatter):
+
+    color_scheme = {
+        Text: 'cmd:default',
+        Punctuation: 'cmd:punctuation',
+        Command.Start: 'cmd:field-marker',
+        Command.End: 'cmd:field-marker',
+        Command.ArgName: 'cmd:field-name',
+        Command.Identifier: 'cmd:field-name',
+        Command.ElementIndex: 'cmd:field-name',
+        Command.Conversion: 'cmd:field-conversion',
+        Command.FormatSpec: 'cmd:field-format',
+    }
+
+    def format(self, token_stream, outfile):
+        for token_type, value in token_stream:
+            try:
+                style = self.color_scheme[token_type]
+            except KeyError:
+                style = 'cmd:default'
+            outfile.write((style, value))
+
+
+_lexer = CommandLexer()
+_formatter = CommandFormatter()
+_writer = UrwidMarkupWriter()
+
+
+def highlight_command(text: str) -> TextMarkup:
+    if not text:
         return ''
-    try:
-        # We have to convert to list, otherwise exceptions will be throw during iteration
-        tokens = list(_CommandParser().parse(cmd_string))
-    except Exception as err:
-        raise ParsingError.from_exception(err)
-    markup = []
-    for prefix, param, spec, conv in tokens:
-        markup.append(('cmd:default', prefix))
-        if not param:
-            continue
-        field = [('cmd:param', '{%s' % param)]
-        if conv:
-            field.append(('cmd:conv', f'!{conv}'))
-        if spec:
-            field.append(('cmd:spec', f':{spec}'))
-        field.append(('cmd:param', '}'))
-        markup.append(field)
-    return markup
+    _writer.clear()
+    highlight(text, _lexer, _formatter, _writer)
+    return _writer.get_markup()

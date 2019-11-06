@@ -53,5 +53,6 @@
     - [x] Syntax highlighting
     - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup
     - [ ] Help / About dialog
+    - [ ] Provide default snippets as a tutorial for first-time users ?
     - [ ] scrollbars? nontrivial...
-    - [ ] job control: handle SIGTSTP / SIGCONT
+    - [ ] job control - handle SIGTSTP / SIGCONT: currently a bug in urwid...

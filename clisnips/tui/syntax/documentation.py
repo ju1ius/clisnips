@@ -6,6 +6,8 @@ from pygments.lexer import RegexLexer, bygroups, using
 from pygments.lexers.python import Python3Lexer
 from pygments.token import *
 
+from .writer import UrwidMarkupWriter
+
 __all__ = ['highlight_documentation']
 
 Parameter = Token.Parameter
@@ -137,27 +139,14 @@ class DocFormatter(Formatter):
             outfile.write((style, value))
 
 
-class UrwidMarkupWriter:
-
-    def __init__(self):
-        self._markup = []
-
-    def write(self, text_attr):
-        self._markup.append(text_attr)
-
-    def clear(self):
-        self._markup = []
-
-    def get_markup(self):
-        return self._markup
-
-
 _lexer = DocLexer()
 _formatter = DocFormatter()
 _writer = UrwidMarkupWriter()
 
 
 def highlight_documentation(text: str):
+    if not text:
+        return ''
     _writer.clear()
     highlight(text, _lexer, _formatter, _writer)
     return _writer.get_markup()
