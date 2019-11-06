@@ -55,6 +55,6 @@ palette = [
     ('python:number', 'yellow', 'black'),
 
     # Diffs
-    ('diff:ins', 'black,bold', 'dark green', 'standout'),
-    ('diff:del', 'white,bold', 'dark red'),
+    ('diff:insert', 'dark magenta', 'black', 'standout'),
+    ('diff:delete', 'light gray,bold', 'dark red'),
 ]

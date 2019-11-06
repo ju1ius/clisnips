@@ -6,6 +6,7 @@ import urwid
 from ..dialog import Dialog, ResponseType
 from ..field import field_from_documentation
 from ..field.field import Field
+from ....diff import InlineMyersSequenceMatcher
 from ....strfmt import doc_parser, fmt_parser
 from ....strfmt.doc_nodes import Documentation
 from ....utils import iterable
@@ -17,6 +18,8 @@ class InsertSnippetDialog(Dialog):
         self._command = snippet['cmd']
         self._doc = doc_parser.parse(snippet['doc'])
         self._fields = self._create_fields(self._command, self._doc)
+        self._differ = InlineMyersSequenceMatcher()
+        self._diff_base = self._get_diff_base(self._command)
 
         title = urwid.Text(snippet['title'])
         doc_text = urwid.Text('')
@@ -30,7 +33,7 @@ class InsertSnippetDialog(Dialog):
         output_field = urwid.Pile([
             urwid.Divider('─'),
             urwid.Text('Output:'),
-            self._output_text,
+            urwid.AttrMap(self._output_text, 'cmd:default'),
         ])
 
         body = urwid.ListBox(urwid.SimpleFocusListWalker([
@@ -71,7 +74,7 @@ class InsertSnippetDialog(Dialog):
         self._update_output(silent=True)
 
     def _create_fields(self, command: str, documentation: Documentation) -> Dict[str, Field]:
-        field_names = [f['name'] for f in fmt_parser.parse(command)]
+        field_names = [str(f['name']) for f in fmt_parser.parse(command)]
         fields = {}
         for name in field_names:
             field = field_from_documentation(name, documentation)
@@ -82,15 +85,22 @@ class InsertSnippetDialog(Dialog):
     def _update_output(self, silent=False):
         fields = {n: f.get_value() for n, f in self._fields.items()}
         fields = self._apply_code_blocks(fields, silent)
-        int_keys = sorted(k for k in fields.keys() if isinstance(k, int))
-        args = [fields[k] for k in int_keys]
-        kwargs = {k: v for k, v in fields.items() if not isinstance(k, int)}
+        int_keys, str_keys = [], []
+        for k in fields.keys():
+            if k.isdigit():
+                int_keys.append(k)
+            else:
+                str_keys.append(k)
+        args = [fields[k] for k in sorted(int_keys)]
+        kwargs = {k: fields[k] for k in str_keys}
         output = self._command.format(*args, **kwargs)
         #
+        output = self._get_output_markup(output)
         self._output_text.set_text(output)
-        # self._update_diffs(output)
 
     def _apply_code_blocks(self, field_values, ignore_exceptions=False):
+        if not self._doc.code_blocks:
+            return field_values
         _vars = {'fields': field_values.copy()}
         for code in self._doc.code_blocks:
             try:
@@ -110,6 +120,23 @@ class InsertSnippetDialog(Dialog):
             return False
         return True
 
-    def _get_diff_string(self, command: str):
+    def _get_output_markup(self, text):
+        self._differ.set_seqs(self._diff_base, text)
+        markup = []
+        for op, start1, end1, start2, end2 in self._differ.get_opcodes():
+            if op == 'equal':
+                markup.append(text[start2:end2])
+            elif op == 'insert':
+                markup.append(('diff:insert', text[start2:end2]))
+            elif op == 'delete':
+                # shouldn't happen...
+                pass
+            elif op == 'replace':
+                # shouldn't happen either but left for completeness
+                markup.append(('diff:insert', text[start2:end2]))
+        return markup
+
+    @staticmethod
+    def _get_diff_base(command: str):
         formatter = string.Formatter()
         return ''.join(f[0] for f in formatter.parse(command))

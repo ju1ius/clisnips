@@ -50,7 +50,7 @@
         - [ ] error messages
     - [ ] Import / Export
     - [ ] Color palette
-    - [ ] Syntax highlighting
+    - [x] Syntax highlighting
     - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup
     - [ ] Help / About dialog
     - [ ] scrollbars? nontrivial...
