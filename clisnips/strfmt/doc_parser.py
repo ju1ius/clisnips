@@ -244,8 +244,8 @@ class Parser(LLkParser):
         T_STAR? (T_STRING | digit)
         """
         is_default = False
-        token = self._match(T_STAR, T_STRING, T_INTEGER, T_FLOAT)
-        if token.type == T_STAR:
+        token = self._match(T_DEFAULT_MARKER, T_STRING, T_INTEGER, T_FLOAT)
+        if token.type == T_DEFAULT_MARKER:
             is_default = True
             token = self._match(T_STRING, T_INTEGER, T_FLOAT)
         if token.type == T_STRING:
@@ -266,7 +266,7 @@ class Parser(LLkParser):
             self._consume()
             step = self._digit().value
             token = self._lookahead()
-        if token.type == T_STAR:
+        if token.type == T_DEFAULT_MARKER:
             self._consume()
             default = self._digit().value
         return ValueRange(

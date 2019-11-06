@@ -66,7 +66,7 @@ def test_automatic_numbering():
 
 def test_parse_value_list():
     # digit list
-    text = '{par1} [1, *-2, 0.3]'
+    text = '{par1} [1, =>-2, 0.3]'
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
@@ -79,7 +79,7 @@ def test_parse_value_list():
     assert values.values == [1, -2, 0.3]
     assert values.default == 1
     # string list
-    text = '{par1} ["foo", *"bar", "baz"]'
+    text = '{par1} ["foo", =>"bar", "baz"]'
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
@@ -94,7 +94,7 @@ def test_parse_value_list():
 
 
 def test_parse_value_range():
-    text = '{par1} [1:10:2*5]'
+    text = '{par1} [1:10:2=>5]'
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
@@ -109,7 +109,7 @@ def test_parse_value_range():
     assert hint.step == 2
     assert hint.default == 5
     # default step
-    text = '{par1} [1:10*5]'
+    text = '{par1} [1:10=>5]'
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']

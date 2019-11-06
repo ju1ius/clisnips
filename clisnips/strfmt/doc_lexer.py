@@ -31,7 +31,7 @@ INTEGER_RX = re.compile(r'\d+')
 FLOAT_RX = re.compile(r'\d*\.\d+')
 TYPEHINT_RX = re.compile(r'\(\s*({ident})\s*\)'.format(ident=IDENT_RX.pattern))
 DIGIT_RX = re.compile(r'-?(?:({float})|({int}))'.format(float=FLOAT_RX.pattern, int=INTEGER_RX.pattern))
-STRING_RX = re.compile(r'"((?:\\"|[^"])*)"')
+STRING_RX = re.compile(r'''(["']) ( (?: \\. | (?!\1) . )* ) \1''', re.X)
 DSTR_RX = re.compile(r'"(?:\\.|[^"])*"')
 SSTR_RX = re.compile(r"'(?:\\.|[^'])*'")
 TSTR_RX = re.compile(r'(\'\'\'|""")(?:\\.|[^\\])*\1')
@@ -320,7 +320,7 @@ class Lexer(StringLexer):
                 self.token_queue.append(token)
                 self.state = self.freetext_state
                 break
-            elif char == '"':
+            elif char in ('"', "'"):
                 token = self._handle_quoted_string()
                 if not token:
                     self.state = self.freetext_state
@@ -333,9 +333,16 @@ class Lexer(StringLexer):
             elif char == ':':
                 token = self.init_token(T_COLON, ':')
                 self.token_queue.append(token)
-            elif char == '*':
-                token = self.init_token(T_STAR, '*')
-                self.token_queue.append(token)
+            elif char == '=':
+                if self.lookahead() == '>':
+                    token = self.init_token(T_DEFAULT_MARKER, '=>')
+                    self.advance()
+                    self.finalize_token(token)
+                    self.token_queue.append(token)
+                else:
+                    self.recede()
+                    self.state = self.freetext_state
+                    break
             else:
                 token = self._handle_digit()
                 if not token:
@@ -421,7 +428,7 @@ class Lexer(StringLexer):
         m = STRING_RX.match(self.text, self.pos)
         if not m:
             return None
-        token = self.init_token(T_STRING, m.group(1))
+        token = self.init_token(T_STRING, m.group(2))
         self._consume_match(m)
         return self.finalize_token(token)
 

@@ -82,7 +82,7 @@ def test_type_hint_only():
 
 def test_value_hint_string_list():
     # string list
-    text = '{par1} ["value1", *"value2"]'
+    text = '{par1} ["value1", =>"value2"]'
     tokens = tokenize(text)
     expected = [
         {'type': T_LBRACE},
@@ -91,7 +91,7 @@ def test_value_hint_string_list():
         {'type': T_LBRACK},
         {'type': T_STRING, 'value': 'value1'},
         {'type': T_COMMA},
-        {'type': T_STAR},
+        {'type': T_DEFAULT_MARKER},
         {'type': T_STRING, 'value': 'value2'},
         {'type': T_RBRACK},
         {'type': T_EOF}
@@ -101,7 +101,7 @@ def test_value_hint_string_list():
 
 def test_value_hint_digit_list():
     # digit list
-    text = '{par1} [1, *-2, 0.3]'
+    text = '{par1} [1, =>-2, 0.3]'
     tokens = tokenize(text)
     expected = [
         {'type': T_LBRACE},
@@ -110,7 +110,7 @@ def test_value_hint_digit_list():
         {'type': T_LBRACK},
         {'type': T_INTEGER, 'value': '1'},
         {'type': T_COMMA},
-        {'type': T_STAR},
+        {'type': T_DEFAULT_MARKER},
         {'type': T_INTEGER, 'value': '-2'},
         {'type': T_COMMA},
         {'type': T_FLOAT, 'value': '0.3'},
@@ -154,7 +154,7 @@ def test_value_hint_range():
     ]
     assert_token_list_equal(tokens, expected)
     # range with step and default
-    text = '{ par1 } [1 : 10 : 2 * 5]'
+    text = '{ par1 } [1 : 10 : 2 => 5]'
     tokens = tokenize(text)
     expected = [
         {'type': T_LBRACE},
@@ -166,7 +166,7 @@ def test_value_hint_range():
         {'type': T_INTEGER, 'value': '10'},
         {'type': T_COLON},
         {'type': T_INTEGER, 'value': '2'},
-        {'type': T_STAR},
+        {'type': T_DEFAULT_MARKER},
         {'type': T_INTEGER, 'value': '5'},
         {'type': T_RBRACK},
         {'type': T_EOF}

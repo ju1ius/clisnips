@@ -54,7 +54,7 @@ class DocLexer(RegexLexer):
             (NUMBER_RX, Number),
             (r'(?-x: +)', Whitespace),
             (r'[,:]', Punctuation),
-            (r'\*', ValueHint.Default),
+            (r'=>', ValueHint.Default),
         ],
         'code-content': [
             (r'(?m) (?<!^```) ((?:.|\n)+) (^```\n)', bygroups(using(Python3Lexer), Code.End), '#pop'),

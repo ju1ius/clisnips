@@ -15,7 +15,7 @@ from typing import Dict, Union
     T_LPAREN, T_RPAREN,
     T_COMMA,
     T_COLON,
-    T_STAR
+    T_DEFAULT_MARKER
 ) = range(19)
 
 __TOKEN_NAMES: Dict[int, str] = {}
