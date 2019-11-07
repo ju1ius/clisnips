@@ -1,6 +1,7 @@
 import os
 
 import urwid
+from urwid.util import decompose_tagmarkup
 
 from ..tui.urwid_types import TextMarkup
 
@@ -21,7 +22,6 @@ class UrwidMarkupHelper:
 
     def __init__(self):
         self._screen = urwid.raw_display.Screen(input=os.devnull, output=os.devnull)
-        self._parser = urwid.Text('')
         self._palette_escapes = {}
         for name, attrs in self.palette.items():
             escape = self._convert_attr_spec(urwid.AttrSpec(*attrs))
@@ -29,8 +29,7 @@ class UrwidMarkupHelper:
         self._palette_escapes[None] = self._palette_escapes['default']
 
     def convert_markup(self, markup: TextMarkup, tty=True) -> str:
-        self._parser.set_text(markup)
-        text, attributes = self._parser.get_text()
+        text, attributes = decompose_tagmarkup(markup)
         if not tty:
             return text
         pos, output = 0, []

@@ -3,21 +3,24 @@ import urwid
 from ..models.snippets import SnippetsModel
 from ..screen import Screen
 from ..views.snippets_list import SnippetListView
+from ...config import Config
 from ...exceptions import ParsingError
 from ...strfmt import fmt_parser
 
 
 class SnippetsListScreen(Screen):
 
-    def __init__(self, model: SnippetsModel):
+    def __init__(self, config: Config, model: SnippetsModel):
         super().__init__(['snippet-applied'])
 
+        self._config = config
         self._model = model
 
         self.view = SnippetListView(self._model)
         urwid.connect_signal(self.view, 'search-changed', self. _on_search_term_changed)
         urwid.connect_signal(self.view, 'snippet-selected', self._on_snippet_selected)
         urwid.connect_signal(self.view, 'sort-column-selected', self._on_sort_column_selected)
+        urwid.connect_signal(self.view, 'page-size-changed', self._on_page_size_changed)
         urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
         urwid.connect_signal(self.view, 'apply-snippet-requested', self._on_apply_snippet_requested)
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
@@ -44,13 +47,17 @@ class SnippetsListScreen(Screen):
         self.view.open_insert_snippet_dialog(snippet)
 
     def _on_sort_column_selected(self, view, column, order):
-        # self._config.pager_sort_column = column
-        # self._config.save()
         self._model.set_sort_column(column, order)
+        self._config.pager_sort_column = column
+        self._config.pager_sort_order = order
         if self._model.is_searching:
             self._model.search(self.view.get_search_text())
         else:
             self._model.list()
+
+    def _on_page_size_changed(self, view, page_size):
+        self._model.set_page_size(page_size)
+        self._config.pager_page_size = page_size
 
     def _on_page_requested(self, view, page):
         if not self._model.must_paginate:

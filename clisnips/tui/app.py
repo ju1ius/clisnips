@@ -1,3 +1,4 @@
+import atexit
 import logging
 
 from .logging import logger
@@ -16,16 +17,16 @@ class Application:
         self._db = None
         self.ui = TUI()
         self.ui.register_screen('snippets-list', self._build_snippets_list)
+        atexit.register(self._on_exit)
 
     def run(self, argv):
         self._db = SnippetsDatabase.open(argv.database or self.config.database_path)
         self.ui.build_screen('snippets-list', display=True)
         self.ui.main()
-        self._db.close()
 
     def _build_snippets_list(self, *args, **kwargs):
         model = SnippetsModel(self._db)
-        screen = SnippetsListScreen(model)
+        screen = SnippetsListScreen(self.config, model)
         self.ui.connect(screen, 'snippet-applied', self._on_snippet_applied)
         return screen
 
@@ -37,3 +38,7 @@ class Application:
 
     def _on_snippet_applied(self, command):
         self.ui.exit_with_message(command)
+
+    def _on_exit(self):
+        self.config.save()
+        self._db.close()

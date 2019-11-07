@@ -38,6 +38,13 @@ class SnippetsModel:
         return self._pager.page_count
 
     @property
+    def page_size(self):
+        return self._pager.page_size
+
+    def set_page_size(self, size):
+        self._pager.set_page_size(size)
+
+    @property
     def current_page(self):
         return self._pager.current_page
 

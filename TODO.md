@@ -49,7 +49,7 @@
             - [x] choice
             - [x] path
             - [ ] range
-    - [ ] Import / Export
+    - [x] Import / Export
     - [ ] Color palette
     - [x] Syntax highlighting
     - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup

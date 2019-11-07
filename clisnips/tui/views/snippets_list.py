@@ -7,7 +7,7 @@ from ..widgets.dialogs.confirm import ConfirmDialog
 from ..widgets.dialogs.edit_snippet import EditSnippetDialog
 from ..widgets.dialogs.insert_snippet import InsertSnippetDialog
 from ..widgets.dialogs.show_snippet import ShowSnippetDialog
-from ..widgets.dialogs.sort_snippets import SortSnippetsDialog
+from ..widgets.dialogs.list_options import ListOptionsDialog
 from ..widgets.pager_infos import PagerInfos
 from ..widgets.search_entry import SearchEntry
 from ..widgets.snippets_list_footer import SnippetListFooter
@@ -21,6 +21,7 @@ class SnippetListView(View):
         'snippet-selected',
         'sort-column-selected',
         'sort-order-selected',
+        'page-size-changed',
         'page-requested',
         'apply-snippet-requested',
         'create-snippet-requested',
@@ -62,9 +63,10 @@ class SnippetListView(View):
         self.open_dialog(dialog, title='Insert snippet')
 
     def _open_sort_dialog(self):
-        dialog = SortSnippetsDialog(self, self._model)
+        dialog = ListOptionsDialog(self, self._model)
         urwid.connect_signal(dialog, 'sort-changed', self._on_sort_column_selected)
-        self.open_dialog(dialog, title='Sort Options', width=35, height=12)
+        urwid.connect_signal(dialog, 'page-size-changed', self._on_page_size_changed)
+        self.open_dialog(dialog, title='List Options', width=35, height=14)
 
     def _open_show_dialog(self):
         row = self.snippet_list.get_selected()
@@ -165,11 +167,14 @@ class SnippetListView(View):
     def _on_sort_column_selected(self, dialog, column, order):
         self._emit('sort-column-selected', column, order)
 
+    def _on_page_size_changed(self, dialog, page_size):
+        self._emit('page-size-changed', page_size)
+
     def _on_delete_snippet_requested(self):
         row = self.snippet_list.get_selected()
         if not row:
             return
-        msg = 'Are you shure you want to delete this snippet ?'
+        msg = 'Are you sure you want to delete this snippet ?'
         dialog = ConfirmDialog(self, msg)
         dialog.on_accept(lambda *x: self._emit('delete-snippet-requested', row['id']))
         self.open_dialog(dialog, 'Caution !')

@@ -3,10 +3,12 @@ import urwid
 from ..dialog import Dialog
 from ..divider import HorizontalDivider
 from ...logging import logger
+from ...models.snippets import SnippetsModel
 
 
-class SortSnippetsDialog(Dialog):
-    signals = ['sort-changed']
+class ListOptionsDialog(Dialog):
+
+    signals = ['sort-changed', 'page-size-changed']
 
     column_choices = {
         'ranking': 'Sort by popularity',
@@ -15,11 +17,11 @@ class SortSnippetsDialog(Dialog):
         'created_at': 'Sort by creation date',
     }
     order_choices = {
-        'ASC': 'Ascending',
-        'DESC': 'Descending',
+        'ASC': 'Sort Ascending',
+        'DESC': 'Sort Descending',
     }
 
-    def __init__(self, parent, model):
+    def __init__(self, parent, model: SnippetsModel):
 
         self._model = model
         sort_column, sort_order = model.sort_column
@@ -41,10 +43,15 @@ class SortSnippetsDialog(Dialog):
             order_choices.append(btn)
         order_list = urwid.ListBox(urwid.SimpleListWalker(order_choices))
 
+        page_size = urwid.IntEdit('Page size: ', model.page_size)
+        urwid.connect_signal(page_size, 'postchange', self._on_page_size_changed)
+
         body = urwid.Pile([
             column_list,
             ('pack', HorizontalDivider()),
-            order_list
+            order_list,
+            ('pack', HorizontalDivider()),
+            ('pack', page_size),
         ])
 
         super().__init__(parent, body)
@@ -58,3 +65,6 @@ class SortSnippetsDialog(Dialog):
         if selected:
             sort_column, sort_order = self._model.sort_column
             self._emit('sort-changed', sort_column, value)
+
+    def _on_page_size_changed(self, edit, value):
+        self._emit('page-size-changed', value)
