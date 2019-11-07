@@ -4,7 +4,6 @@ from ..models.snippets import SnippetsModel
 from ..screen import Screen
 from ..views.snippets_list import SnippetListView
 from ...exceptions import ParsingError
-from ...exporters import export_xml
 from ...strfmt import fmt_parser
 
 
