@@ -3,6 +3,8 @@ from typing import Optional
 
 import urwid
 
+from .divider import HorizontalDivider
+
 
 class ResponseType(enum.Enum):
     NONE = 0
@@ -72,7 +74,7 @@ class Dialog(urwid.WidgetWrap):
             buttons.append(button)
         cell_width += 4  # account for urwid internal button decorations
         self._action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align='center')
-        footer = urwid.Pile([urwid.Divider(), self._action_area], focus_item=1)
+        footer = urwid.Pile([HorizontalDivider(), self._action_area], focus_item=1)
         self._frame.contents = [
             (self._body, ('weight', 1)),
             (footer, ('pack', None)),

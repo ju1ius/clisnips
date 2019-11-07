@@ -4,6 +4,7 @@ from typing import Callable
 import urwid
 
 from ..dialog import Dialog, ResponseType
+from ..divider import HorizontalDivider
 from ..edit import EmacsEdit, SourceEdit
 from ...syntax import highlight_command, highlight_documentation
 from ....exceptions import ParsingError
@@ -17,13 +18,13 @@ class EditSnippetDialog(Dialog):
 
         body = urwid.ListBox(urwid.SimpleListWalker([
             self._create_field('title', 'Title'),
-            self._create_divider(),
+            HorizontalDivider(),
             self._create_field('tag', 'Tags'),
-            self._create_divider(),
+            HorizontalDivider(),
             self._create_field('cmd', 'Command', entry_factory=self._command_factory),
-            self._create_divider(),
+            HorizontalDivider(),
             self._create_field('doc', 'Documentation', entry_factory=self._documentation_factory),
-            # self._create_divider(),
+            # HorizontalDivider(),
         ]))
 
         super().__init__(parent, body)
@@ -61,10 +62,6 @@ class EditSnippetDialog(Dialog):
             urwid.Text(label),
             entry,
         ])
-
-    @staticmethod
-    def _create_divider():
-        return urwid.Divider('─')
 
     def _command_factory(self, edit_text: str):
         entry = SourceEdit(edit_text='', multiline=True)

@@ -23,6 +23,9 @@ class SnippetsModel:
 
         urwid.register_signal(self.__class__, list(self.Signals))
 
+    def get_database(self):
+        return self._db
+
     def connect(self, signal, callback, weak_args=None, user_args=None):
         urwid.connect_signal(self, signal, callback, weak_args=weak_args, user_args=user_args)
 

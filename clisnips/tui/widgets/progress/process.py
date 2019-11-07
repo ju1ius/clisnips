@@ -41,8 +41,9 @@ class Process(multiprocessing.Process):
         except KeyboardInterrupt as e:
             logger.debug('Process %s catched KeyboardInterrupt', self.pid)
             self._message_queue.cancel()
-        except Exception as e:
-            self._message_queue.error(e)
+        except Exception as err:
+            msg = ' '.join(err.args) if len(err.args) else str(err)
+            self._message_queue.error(msg)
         finally:
             self._message_queue.finish()
             self._message_queue.close()

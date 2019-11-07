@@ -27,7 +27,9 @@
     - [ ] load user CSS from XDG_CONFIG_HOME
     - [ ] Replace FileChooserButton by Button + FileChooserDialog
 - [ ] Terminal UI
+    - [ ] error handling
     - [ ] Config / preferences
+    - [ ] Refactor dialogs to screens
     - [x] Insert text in command line
     - [ ] List View
         - [x] list & search results
@@ -47,7 +49,6 @@
             - [x] choice
             - [x] path
             - [ ] range
-        - [ ] error messages
     - [ ] Import / Export
     - [ ] Color palette
     - [x] Syntax highlighting

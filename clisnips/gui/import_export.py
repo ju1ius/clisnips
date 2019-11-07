@@ -2,27 +2,27 @@ from gi.repository import Gtk
 
 from .progress import ProgressDialog
 from ..database.snippets_db import SnippetsDatabase
-from ..exporters.clisnips import Exporter
+from ..exporters import export_xml
+from ..importers import import_xml, import_cli_companion
 
 
 def _import_snippets(db: SnippetsDatabase, filename: str, type: str):
     if type == 'CliCompanion 2':
-        from ..importers.clicompanion import Importer
+        importer = import_cli_companion
     else:
-        from ..importers.clisnips import Importer
+        importer = import_xml
 
     def _task(fn):
-        Importer(db).process(fn)
+        yield from importer(db, fn)
 
     dlg = ProgressDialog(f'Importing snippets from {filename}')
     dlg.run(_task, filename)
 
 
 def _export_snippets(db: SnippetsDatabase, filename: str):
-    exporter = Exporter(db)
 
-    def _task(fn):
-        exporter.export(fn)
+    def _task(path):
+        yield from export_xml(db, path)
 
     dlg = ProgressDialog(f'Exporting snippets to {filename}')
     dlg.run(_task, filename)

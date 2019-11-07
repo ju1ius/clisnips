@@ -58,8 +58,8 @@ class MessageQueueListener:
         """Ensures signal is emitted in main thread"""
         idle_add(lambda *x: urwid.emit_signal(self, signal, *args))
 
-    def connect(self, signal, callback):
-        urwid.connect_signal(self, signal, callback)
+    def connect(self, signal, callback, *args):
+        urwid.connect_signal(self, signal, callback, user_args=args)
 
     def start(self):
         self._thread.start()

@@ -4,6 +4,7 @@ from typing import Callable, Dict
 import urwid
 
 from ..dialog import Dialog, ResponseType
+from ..divider import HorizontalDivider
 from ..field import field_from_documentation
 from ..field.field import Field
 from ....diff import InlineMyersSequenceMatcher
@@ -28,10 +29,10 @@ class InsertSnippetDialog(Dialog):
         self._output_text = urwid.Text('')
         self._update_output()
 
-        fields = list(iterable.join(urwid.Divider('─'), self._fields.values()))
+        fields = list(iterable.join(HorizontalDivider(), self._fields.values()))
 
         output_field = urwid.Pile([
-            urwid.Divider('─'),
+            HorizontalDivider(),
             urwid.Text('Output:'),
             urwid.AttrMap(self._output_text, 'cmd:default'),
         ])
@@ -40,7 +41,7 @@ class InsertSnippetDialog(Dialog):
             urwid.Pile([
                 title,
                 doc_text,
-                urwid.Divider('─'),
+                HorizontalDivider(),
             ]),
             urwid.Pile(fields),
             output_field,

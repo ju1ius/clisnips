@@ -1,6 +1,7 @@
 import urwid
 
 from ..dialog import Dialog
+from ..divider import HorizontalDivider
 from ...logging import logger
 
 
@@ -42,7 +43,7 @@ class SortSnippetsDialog(Dialog):
 
         body = urwid.Pile([
             column_list,
-            ('pack', urwid.Divider('─')),
+            ('pack', HorizontalDivider()),
             order_list
         ])
 

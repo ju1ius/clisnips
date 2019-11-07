@@ -4,6 +4,7 @@ from ..models.snippets import SnippetsModel
 from ..screen import Screen
 from ..views.snippets_list import SnippetListView
 from ...exceptions import ParsingError
+from ...exporters import export_xml
 from ...strfmt import fmt_parser
 
 
@@ -23,6 +24,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
         urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
         urwid.connect_signal(self.view, 'create-snippet-requested', self._on_create_snippet_requested)
+        urwid.connect_signal(self.view, 'export-requested', self._on_export_requested)
 
         self._model.list()
 
@@ -77,3 +79,20 @@ class SnippetsListScreen(Screen):
     def _on_create_snippet_requested(self, view, snippet):
         # TODO: validate and proceed or cancel
         self._model.create(snippet)
+
+    def _on_export_requested(self, view):
+        db = self._model.get_database()
+
+        # def exporter(path):
+        #     yield from export_xml(db, path)
+
+        def exporter(path):
+            import time
+            yield f'Exporting to {path}'
+            for i in range(10):
+                yield i / 10
+                time.sleep(0.5)
+            yield 1.0
+            yield 'Done'
+
+        self.view.open_export_dialog(exporter)
