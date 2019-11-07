@@ -8,6 +8,7 @@ from ..widgets.dialogs.edit_snippet import EditSnippetDialog
 from ..widgets.dialogs.insert_snippet import InsertSnippetDialog
 from ..widgets.dialogs.show_snippet import ShowSnippetDialog
 from ..widgets.dialogs.sort_snippets import SortSnippetsDialog
+from ..widgets.pager_infos import PagerInfos
 from ..widgets.search_entry import SearchEntry
 from ..widgets.snippets_list_footer import SnippetListFooter
 from ..widgets.table import Column, Table, TableStore
@@ -37,6 +38,8 @@ class SnippetListView(View):
 
         self.search_entry = SearchEntry('Search term: ')
         urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
+        pager_infos = PagerInfos(model)
+        header = urwid.Columns([('weight', 1, self.search_entry), ('pack', pager_infos)], dividechars=1)
 
         self._table_store = TableStore()
         self.snippet_list = Table(self._table_store)
@@ -47,7 +50,7 @@ class SnippetListView(View):
 
         self._footer = SnippetListFooter(model)
 
-        frame = urwid.Frame(self.snippet_list, header=self.search_entry, footer=self._footer, focus_part='header')
+        frame = urwid.Frame(self.snippet_list, header=header, footer=self._footer, focus_part='header')
         super().__init__(frame)
 
     def get_search_text(self):
