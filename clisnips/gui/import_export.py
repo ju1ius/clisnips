@@ -3,7 +3,7 @@ from gi.repository import Gtk
 from .progress import ProgressDialog
 from ..database.snippets_db import SnippetsDatabase
 from ..exporters import export_xml
-from ..importers import import_xml, import_cli_companion
+from ..importers import import_cli_companion, import_xml
 
 
 def _import_snippets(db: SnippetsDatabase, filename: str, type: str):

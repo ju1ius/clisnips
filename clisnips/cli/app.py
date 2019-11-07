@@ -1,10 +1,10 @@
 import sys
 from argparse import ArgumentParser, FileType
 
+from .config_command import ShowConfigCommand
 from .dump_command import DumpCommand
 from .export_command import ExportCommand
 from .import_command import ImportCommand
-from .config_command import ShowConfigCommand
 from .optimize_command import OptimizeCommand
 
 

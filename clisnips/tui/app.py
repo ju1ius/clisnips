@@ -1,27 +1,27 @@
 import logging
-from pathlib import Path
 
 from .logging import logger
 from .models.snippets import SnippetsModel
 from .screens.snippets_list import SnippetsListScreen
 from .tui import TUI
+from ..config import Config, xdg_data_home
 from ..database.snippets_db import SnippetsDatabase
 
 
 class Application:
 
     def __init__(self):
+        self.config = Config()
         self._configure_logging()
-        db_path = Path('~/.config/clisnips/snippets.sqlite').expanduser()
-        self._db = SnippetsDatabase.open(db_path)
+        self._db = None
         self.ui = TUI()
         self.ui.register_screen('snippets-list', self._build_snippets_list)
 
-    def run(self):
-        # TODO: setup database connection, etc...
+    def run(self, argv):
+        self._db = SnippetsDatabase.open(argv.database or self.config.database_path)
         self.ui.build_screen('snippets-list', display=True)
         self.ui.main()
-        # TODO: cleanup database connection, etc...
+        self._db.close()
 
     def _build_snippets_list(self, *args, **kwargs):
         model = SnippetsModel(self._db)
@@ -30,7 +30,7 @@ class Application:
         return screen
 
     def _configure_logging(self):
-        log_file = Path('~/.local/share/clisnips/tui.log').expanduser()
+        log_file = xdg_data_home() / 'clisnips' / 'tui.log'
         log_file.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         logger.addHandler(logging.FileHandler(log_file, 'w'))
         logger.setLevel(logging.DEBUG)

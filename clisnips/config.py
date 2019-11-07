@@ -38,26 +38,26 @@ page_size: 25
 HOME = Path('~').expanduser()
 
 
-def _xdg_config_home():
+def xdg_config_home():
     home = os.environ.get('XDG_CONFIG_HOME')
     if not home:
         return HOME / '.config'
 
 
-def _xdg_config_dirs():
+def xdg_config_dirs():
     dirs = (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':')
-    return [_xdg_config_home()] + [Path(d) for d in dirs]
+    return [xdg_config_home()] + [Path(d) for d in dirs]
 
 
-def _xdg_data_home():
+def xdg_data_home():
     home = os.environ.get('XDG_DATA_HOME')
     if not home:
         return HOME / '.local' / 'share'
 
 
-def _xdg_data_dirs():
+def xdg_data_dirs():
     dirs = (os.environ.get('XDG_DATA_DIRS') or '/usr/local/share:/usr/share').split(':')
-    return [_xdg_data_home()] + [Path(d) for d in dirs]
+    return [xdg_data_home()] + [Path(d) for d in dirs]
 
 
 class Config(configparser.RawConfigParser):
@@ -68,7 +68,7 @@ class Config(configparser.RawConfigParser):
         self._read_configs()
 
     def _read_configs(self):
-        for conf_dir in reversed(_xdg_config_dirs()):
+        for conf_dir in reversed(xdg_config_dirs()):
             path = conf_dir / 'clisnips' / 'clisnips.ini'
             if path.exists():
                 self.read(path)
@@ -109,7 +109,7 @@ class Config(configparser.RawConfigParser):
         self.set('default', 'page_size', str(value))
 
     def save(self):
-        conf_dir = _xdg_config_home() / 'clisnips'
+        conf_dir = xdg_config_home() / 'clisnips'
         try:
             conf_dir.mkdir(parents=True, exist_ok=True)
         except OSError as why:

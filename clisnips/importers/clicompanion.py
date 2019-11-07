@@ -5,9 +5,8 @@ http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plu
 
 import re
 import time
-from typing import TextIO, Callable
+from typing import Callable, TextIO
 
-from .._types import AnyPath
 from ..database.snippets_db import SnippetsDatabase
 from ..utils.list import pad_list
 
