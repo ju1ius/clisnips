@@ -5,6 +5,7 @@ http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plu
 
 import re
 import time
+from typing import TextIO, Callable
 
 from .._types import AnyPath
 from ..database.snippets_db import SnippetsDatabase
@@ -13,51 +14,52 @@ from ..utils.list import pad_list
 _ARGS_RE = re.compile(r'(?<!\\)((?:\\\\)*\?)')
 
 
-def import_cli_companion(db: SnippetsDatabase, file_path: AnyPath):
+def import_cli_companion(db: SnippetsDatabase, file: TextIO, log: Callable):
     start_time = time.time()
-    yield f'Importing snippets from {file_path}...'
+    log(('info', f'Importing snippets from {file.name}...'))
 
-    with db.connection:
-        db.insertmany(_get_snippets(file_path))
+    db.insertmany(_get_snippets(file))
+    log(('info', 'Rebuilding & optimizing search index...'))
+    db.rebuild_index()
+    db.optimize_index()
 
     elapsed_time = time.time() - start_time
-    yield f'Finished importing in {elapsed_time:.1f} seconds.'
+    log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
 
 
-def _get_snippets(file_path):
-    for row in _parse(file_path):
+def _get_snippets(file):
+    for row in _parse(file):
         yield _translate(row)
 
 
-def _parse(file_path):
+def _parse(file):
     commands, seen = [], set()
-    with open(file_path, 'r') as fp:
-        # try to detect if the line is a old fashion config line
-        # (separated by ':')
-        no_tabs = True
-        some_colon = False
-        for line in fp:
-            line = line.strip()
-            if not line:
-                continue
-            fields = [f.strip() for f in line.split('\t', 2)]
+    # try to detect if the line is a old fashion config line
+    # (separated by ':')
+    no_tabs = True
+    some_colon = False
+    for line in file:
+        line = line.strip()
+        if not line:
+            continue
+        fields = [f.strip() for f in line.split('\t', 2)]
+        cmd, ui, desc = pad_list(fields, '', 3)
+        if ':' in cmd:
+            some_colon = True
+        if ui or desc:
+            no_tabs = False
+        row = (cmd, ui, desc)
+        if cmd and row not in seen:
+            seen.add(row)
+            commands.append(row)
+    if no_tabs and some_colon:
+        # None of the commands had tabs,
+        # and at least one had ':' in the cmd...
+        # This is most probably an old config style.
+        for i, (cmd, ui, desc) in enumerate(commands):
+            fields = [f.strip() for f in cmd.split('\t', 2)]
             cmd, ui, desc = pad_list(fields, '', 3)
-            if ':' in cmd:
-                some_colon = True
-            if ui or desc:
-                no_tabs = False
-            row = (cmd, ui, desc)
-            if cmd and row not in seen:
-                seen.add(row)
-                commands.append(row)
-        if no_tabs and some_colon:
-            # None of the commands had tabs,
-            # and at least one had ':' in the cmd...
-            # This is most probably an old config style.
-            for i, (cmd, ui, desc) in enumerate(commands):
-                fields = [f.strip() for f in cmd.split('\t', 2)]
-                cmd, ui, desc = pad_list(fields, '', 3)
-                commands[i] = (cmd, ui, desc)
+            commands[i] = (cmd, ui, desc)
     return commands
 
 

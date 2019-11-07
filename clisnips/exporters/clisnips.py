@@ -1,31 +1,31 @@
 import sqlite3
 import time
+from typing import Callable, TextIO
 from xml.dom.minidom import Document, Element
 
-from .._types import AnyPath
 from ..database.snippets_db import SnippetsDatabase
 
 
-def export(db: SnippetsDatabase, file_path: AnyPath):
+def export(db: SnippetsDatabase, file: TextIO, log: Callable):
     start_time = time.time()
     num_rows = len(db)
-    yield f'Converting {num_rows} snippets to XML...'
+    msg = f'{{progress:.0%}} Converting {num_rows:n} snippets to XML...'
 
     doc = Document()
     root = doc.createElement('snippets')
     for n, row in enumerate(db):
         snip = _create_snippet(doc, row)
         root.appendChild(snip)
-        yield min(n / num_rows, 0.9)
+        progress = msg.format(progress=n / num_rows)
+        log(('info', progress), end='\r')
     doc.appendChild(root)
 
-    yield f'Writing {file_path} ...'
-    with open(file_path, 'w') as fp:
-        xml = doc.toprettyxml(indent='  ')
-        fp.write(xml)
+    log(('info', f'\nWriting {file.name} ...'))
+    xml = doc.toprettyxml(indent='  ')
+    file.write(xml)
+
     elapsed_time = time.time() - start_time
-    yield 1.0
-    yield f'Finished exporting {num_rows} snippets in {elapsed_time:.1f} seconds.'
+    log(('success', f'Success: exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.'))
 
 
 def _create_snippet(doc: Document, row: sqlite3.Row) -> Element:

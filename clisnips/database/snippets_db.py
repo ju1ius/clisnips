@@ -90,15 +90,6 @@ class SnippetsDatabase:
         with self.connection:
             self.cursor.execute(query)
 
-    def backup(self, to: sqlite3.Connection, progress=None):
-        with to:
-            self.connection.backup(to, pages=1, progress=progress)
-
-    def dump(self, to: AnyPath):
-        with open(to, 'w') as fp:
-            for line in self.connection.iterdump():
-                fp.write(f'{line}\n')
-
     def __iter__(self):
         return self.iter('*')
 
