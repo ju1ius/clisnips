@@ -7,6 +7,7 @@ import urwid
 
 from . import theme
 from .builder import Builder
+from .loop import get_event_loop
 from .screen import Screen
 
 
@@ -23,7 +24,8 @@ class TUI:
             handle_mouse=False,
             pop_ups=True,
             palette=theme.palette,
-            screen=screen
+            screen=screen,
+            event_loop=urwid.AsyncioEventLoop(loop=get_event_loop())
         )
         self.main_loop.screen.set_terminal_properties(colors=256)
 
