@@ -24,7 +24,6 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
         urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
         urwid.connect_signal(self.view, 'create-snippet-requested', self._on_create_snippet_requested)
-        urwid.connect_signal(self.view, 'export-requested', self._on_export_requested)
 
         self._model.list()
 

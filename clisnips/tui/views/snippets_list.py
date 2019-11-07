@@ -5,7 +5,6 @@ from ..models.snippets import SnippetsModel
 from ..view import View
 from ..widgets.dialogs.confirm import ConfirmDialog
 from ..widgets.dialogs.edit_snippet import EditSnippetDialog
-from ..widgets.dialogs.export_snippets import ExportSnippetsDialog
 from ..widgets.dialogs.insert_snippet import InsertSnippetDialog
 from ..widgets.dialogs.show_snippet import ShowSnippetDialog
 from ..widgets.dialogs.sort_snippets import SortSnippetsDialog
@@ -26,7 +25,6 @@ class SnippetListView(View):
         'create-snippet-requested',
         'delete-snippet-requested',
         'edit-snippet-requested',
-        'export-requested',
     ]
 
     def __init__(self, model: SnippetsModel):
@@ -59,10 +57,6 @@ class SnippetListView(View):
         dialog = InsertSnippetDialog(self, snippet)
         dialog.on_accept(lambda v: self._emit('apply-snippet-requested', v))
         self.open_dialog(dialog, title='Insert snippet')
-
-    def open_export_dialog(self, exporter):
-        dialog = ExportSnippetsDialog(self, exporter)
-        self.open_dialog(dialog, title='Export snippets')
 
     def _open_sort_dialog(self):
         dialog = SortSnippetsDialog(self, self._model)
@@ -113,9 +107,6 @@ class SnippetListView(View):
     def keypress(self, size, key):
         if key == 'f2':
             self._open_sort_dialog()
-            return
-        if key == 'f3':
-            self._emit('export-requested')
             return
         key = super().keypress(size, key)
         if not key:
