@@ -110,13 +110,14 @@ class SnippetListView(View):
         self.close_dialog()
 
     def keypress(self, size, key):
-        if key == 'f2':
-            self._open_sort_dialog()
-            return
         key = super().keypress(size, key)
         if not key:
             return
         if key == '?':
+            # TODO: help screen
+            return
+        if key == 'f2':
+            self._open_sort_dialog()
             return
         if key in ('tab', 'shift tab'):
             if self.view.focus_position == 'header':
