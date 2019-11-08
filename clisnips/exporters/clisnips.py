@@ -3,7 +3,7 @@ import time
 from typing import Callable, TextIO
 from xml.dom.minidom import Document, Element
 
-from ..database.snippets_db import SnippetsDatabase
+from clisnips.database.snippets_db import SnippetsDatabase
 
 
 def export(db: SnippetsDatabase, file: TextIO, log: Callable):

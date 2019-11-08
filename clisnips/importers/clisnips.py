@@ -2,12 +2,12 @@ import time
 from textwrap import dedent
 from typing import Callable, TextIO
 
-from ..database.snippets_db import SnippetsDatabase
+from clisnips.database.snippets_db import SnippetsDatabase
 
 try:
-    from xml.etree import cElementTree as etree
+    from xml.etree import cElementTree as ElementTree
 except ImportError:
-    from xml.etree import ElementTree as etree
+    from xml.etree import ElementTree
 
 
 def import_xml(db: SnippetsDatabase, file: TextIO, log: Callable):
@@ -25,7 +25,7 @@ def import_xml(db: SnippetsDatabase, file: TextIO, log: Callable):
 
 def _parse_snippets(file):
     now = int(time.time())
-    for event, el in etree.iterparse(file):
+    for event, el in ElementTree.iterparse(file):
         if el.tag != 'snippet':
             continue
         row = {

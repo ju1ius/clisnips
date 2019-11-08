@@ -1,17 +1,17 @@
 import urwid
 
-from ..logging import logger
-from ..models.snippets import SnippetsModel
-from ..view import View
-from ..widgets.dialogs.confirm import ConfirmDialog
-from ..widgets.dialogs.edit_snippet import EditSnippetDialog
-from ..widgets.dialogs.insert_snippet import InsertSnippetDialog
-from ..widgets.dialogs.list_options import ListOptionsDialog
-from ..widgets.dialogs.show_snippet import ShowSnippetDialog
-from ..widgets.pager_infos import PagerInfos
-from ..widgets.search_entry import SearchEntry
-from ..widgets.snippets_list_footer import SnippetListFooter
-from ..widgets.table import Column, Table, TableStore
+from clisnips.tui.logging import logger
+from clisnips.tui.models.snippets import SnippetsModel
+from clisnips.tui.view import View
+from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
+from clisnips.tui.widgets.dialogs.edit_snippet import EditSnippetDialog
+from clisnips.tui.widgets.dialogs.insert_snippet import InsertSnippetDialog
+from clisnips.tui.widgets.dialogs.list_options import ListOptionsDialog
+from clisnips.tui.widgets.dialogs.show_snippet import ShowSnippetDialog
+from clisnips.tui.widgets.pager_infos import PagerInfos
+from clisnips.tui.widgets.search_entry import SearchEntry
+from clisnips.tui.widgets.snippets_list_footer import SnippetListFooter
+from clisnips.tui.widgets.table import Column, Table, TableStore
 
 
 class SnippetListView(View):

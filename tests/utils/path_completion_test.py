@@ -75,7 +75,7 @@ class TestPathCompletion:
             PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
         ]
         assert expected == completion.get_completions(path)
-        assert '/foo/bar/bazar', completion.complete(path == expected[1])
+        assert '/foo/bar/baz' == completion.complete(path, expected[1])
 
     def test_simple_dirname_completion(self):
         path = '/foo/bar/'
@@ -87,7 +87,7 @@ class TestPathCompletion:
         provider = StubProvider(expected)
         completion = PathCompletion(provider)
         assert expected == completion.get_completions(path)
-        assert '/foo/bar/woot/', completion.complete(path == expected[2])
+        assert '/foo/bar/bazar' == completion.complete(path, expected[2])
 
     def test_root_directory_completion(self):
         path = '/'
@@ -99,7 +99,7 @@ class TestPathCompletion:
         provider = StubProvider(expected)
         completion = PathCompletion(provider)
         assert expected == completion.get_completions(path)
-        assert '/usr/', completion.complete(path == expected[1])
+        assert '/usr/' == completion.complete(path, expected[1])
 
     def test_home_directory_completion(self):
         path = '~/'
@@ -110,7 +110,7 @@ class TestPathCompletion:
         provider = StubProvider(expected)
         completion = PathCompletion(provider)
         assert expected == completion.get_completions(path)
-        assert '~/.config/', completion.complete(path == expected[0])
+        assert '~/.config/' == completion.complete(path, expected[0])
 
     def test_no_directory_completion(self):
         path = 'ba'
@@ -125,7 +125,7 @@ class TestPathCompletion:
             PathCompletionEntry('baz', '/home/user/baz', FA.IS_FILE),
         ]
         assert expected == completion.get_completions(path)
-        assert 'bar/', completion.complete(path == expected[0])
+        assert 'bar/' == completion.complete(path, expected[0])
 
 
 @pytest.mark.usefixtures('fs')

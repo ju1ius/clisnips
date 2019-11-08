@@ -1,6 +1,6 @@
 import urwid
 
-from ...urwid_types import TextMarkup
+from clisnips.tui.urwid_types import TextMarkup
 
 
 class Field:

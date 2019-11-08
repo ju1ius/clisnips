@@ -2,7 +2,7 @@ from typing import Callable
 
 import urwid
 
-from ..dialog import Dialog, ResponseType
+from clisnips.tui.widgets.dialog import Dialog, ResponseType
 
 
 class ConfirmDialog(Dialog):

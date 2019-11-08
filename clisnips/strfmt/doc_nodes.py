@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from ..utils.number import get_num_decimals
+from clisnips.utils.number import get_num_decimals
 
 
 class Documentation(object):
@@ -21,14 +21,14 @@ class Documentation(object):
 
 class Parameter(object):
 
-    def __init__(self, name: str, typehint=None, valuehint=None, text: str = ''):
+    def __init__(self, name: str, type_hint=None, value_hint=None, text: str = ''):
         self.name = name
-        self.typehint = typehint
-        self.valuehint = valuehint
+        self.type_hint = type_hint
+        self.value_hint = value_hint
         self.text = text
 
     def __str__(self):
-        return f'{{{self.name}}} ({self.typehint}) {self.valuehint} "{self.text}"'
+        return f'{{{self.name}}} ({self.type_hint}) {self.value_hint} {self.text!r}'
 
     def __repr__(self):
         return str(self)
@@ -78,7 +78,7 @@ class ValueList(object):
         for i, value in enumerate(self.values):
             value = repr(value)
             if i == self.default:
-                value = '*' + value
+                value = f'=>{value}'
             values.append(value)
         return '[%s]' % ', '.join(values)
 

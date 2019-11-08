@@ -1,7 +1,7 @@
 import urwid
 
-from ..list_box import CyclingFocusListBox
-from ..utils import original_widget
+from clisnips.tui.widgets.list_box import CyclingFocusListBox
+from clisnips.tui.widgets.utils import original_widget
 
 
 class Body(CyclingFocusListBox):

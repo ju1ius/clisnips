@@ -1,65 +1,53 @@
-from typing import Dict, Union
-
-(
-    T_EOF,
-    T_TEXT,
-    T_IDENTIFIER,
-    T_FLAG,
-    T_INTEGER, T_FLOAT,
-    T_STRING,
-    T_PARAM,
-    T_TYPEHINT,
-    T_CODEMARK,
-    T_LBRACE, T_RBRACE,
-    T_LBRACK, T_RBRACK,
-    T_LPAREN, T_RPAREN,
-    T_COMMA,
-    T_COLON,
-    T_DEFAULT_MARKER
-) = range(19)
-
-__TOKEN_NAMES: Dict[int, str] = {}
-
-for k, v in dict(vars()).items():
-    if k.startswith('T_'):
-        __TOKEN_NAMES[v] = k
-del k, v
+import enum
 
 
-def token_name(token_type: Union[int, 'Token']):
-    """Returns the token name given its type"""
-    if isinstance(token_type, Token):
-        token_type = token_type.type
-    return __TOKEN_NAMES[token_type]
+class Tokens(enum.IntEnum):
+    EOF = enum.auto()
+    TEXT = enum.auto()
+    IDENTIFIER = enum.auto()
+    FLAG = enum.auto()
+    INTEGER = enum.auto()
+    FLOAT = enum.auto()
+    STRING = enum.auto()
+    CODE_FENCE = enum.auto()
+    LEFT_BRACE = enum.auto()
+    RIGHT_BRACE = enum.auto()
+    LEFT_BRACKET = enum.auto()
+    RIGHT_BRACKET = enum.auto()
+    LEFT_PAREN = enum.auto()
+    RIGHT_PAREN = enum.auto()
+    COMMA = enum.auto()
+    COLON = enum.auto()
+    DEFAULT_MARKER = enum.auto()
 
 
 class Token:
 
     __slots__ = (
         'type', 'value',
-        'startline', 'startcol', 'endline', 'endcol',
-        'startpos', 'endpos'
+        'start_line', 'start_col', 'end_line', 'end_col',
+        'start_pos', 'end_pos'
     )
 
     @property
     def name(self) -> str:
-        return token_name(self.type)
+        return self.type.name
 
-    def __init__(self, type: int, startline: int, startcol: int, value: str = ''):
+    def __init__(self, type: Tokens, start_line: int, start_col: int, value: str = ''):
         self.type = type
-        self.startline = startline
-        self.startcol = startcol
+        self.start_line = start_line
+        self.start_col = start_col
         self.value = value
-        self.endline = startline
-        self.endcol = startcol
-        self.startpos = self.endpos = -1
+        self.end_line = start_line
+        self.end_col = start_col
+        self.start_pos = self.end_pos = -1
 
     def __str__(self):
-        return f'{self.name} {self.value!r} on line {self.startline}, column {self.startcol}'
+        return f'{self.type.name} {self.value!r} on line {self.start_line}, column {self.start_col}'
 
     def __repr__(self):
         pos = ''
-        if self.startpos >= 0:
-            pos = f' {self.startpos}->{self.endpos}'
-        return (f'<Token {self.name} @{pos} '
-                f'({self.startline},{self.startcol})->({self.endline},{self.endcol}) : {self.value!r}>')
+        if self.start_pos >= 0:
+            pos = f' {self.start_pos}->{self.end_pos}'
+        return (f'<Token {self.type.name} @{pos} '
+                f'({self.start_line},{self.start_col})->({self.end_line},{self.end_col}) : {self.value!r}>')

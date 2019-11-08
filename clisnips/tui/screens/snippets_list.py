@@ -1,11 +1,11 @@
 import urwid
 
-from ..models.snippets import SnippetsModel
-from ..screen import Screen
-from ..views.snippets_list import SnippetListView
-from ...config import Config
-from ...exceptions import ParsingError
-from ...strfmt import fmt_parser
+from clisnips.config import Config
+from clisnips.exceptions import ParsingError
+from clisnips.strfmt import fmt_parser
+from clisnips.tui.models.snippets import SnippetsModel
+from clisnips.tui.screen import Screen
+from clisnips.tui.views.snippets_list import SnippetListView
 
 
 class SnippetsListScreen(Screen):

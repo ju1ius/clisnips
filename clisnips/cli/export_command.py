@@ -1,7 +1,7 @@
 from typing import Optional
 
+from clisnips.exporters import export_xml
 from .command import Command
-from ..exporters import export_xml
 
 
 class ExportCommand(Command):

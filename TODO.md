@@ -29,7 +29,7 @@
             - [x] choice
             - [x] path
             - [ ] range
-    - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup
+    - [ ] Allow some markdown in documentation header
     - [ ] Help / About dialog
     - [ ] scrollbars? nontrivial...
     - [ ] job control - handle SIGTSTP / SIGCONT: currently a bug in urwid...

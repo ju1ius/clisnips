@@ -24,7 +24,7 @@ def test_parse_parameter():
     param = doc.parameters['par1']
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
-    assert param.typehint == 'file'
+    assert param.type_hint == 'file'
     assert param.text == 'Param doc'
 
 
@@ -37,14 +37,14 @@ def test_parse_flag():
     param = doc.parameters['--flag']
     assert isinstance(param, Parameter)
     assert param.name == '--flag'
-    assert param.typehint == 'flag'
+    assert param.type_hint == 'flag'
     assert param.text == 'Some flag\n'
     #
     assert '-f' in doc.parameters
     param = doc.parameters['-f']
     assert isinstance(param, Parameter)
     assert param.name == '-f'
-    assert param.typehint == 'flag'
+    assert param.type_hint == 'flag'
     assert param.text == 'Other flag'
 
 
@@ -52,8 +52,8 @@ def test_automatic_numbering():
     text = '{} foo\n{} bar'
     doc = parse(text)
     assert len(doc.parameters) == 2
-    assert 0 in doc.parameters
-    assert 1 in doc.parameters
+    assert '0' in doc.parameters
+    assert '1' in doc.parameters
     #
     text = '{} foo\n{1} bar'
     with pytest.raises(ParsingError, match='field numbering'):
@@ -72,9 +72,9 @@ def test_parse_value_list():
     param = doc.parameters['par1']
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
-    assert param.typehint is None
+    assert param.type_hint is None
     assert param.text is ''
-    values = param.valuehint
+    values = param.value_hint
     assert isinstance(values, ValueList)
     assert values.values == [1, -2, 0.3]
     assert values.default == 1
@@ -85,9 +85,9 @@ def test_parse_value_list():
     param = doc.parameters['par1']
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
-    assert param.typehint is None
+    assert param.type_hint is None
     assert param.text is ''
-    values = param.valuehint
+    values = param.value_hint
     assert isinstance(values, ValueList)
     assert values.values == ["foo", "bar", "baz"]
     assert values.default == 1
@@ -100,9 +100,9 @@ def test_parse_value_range():
     param = doc.parameters['par1']
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
-    assert param.typehint is None
+    assert param.type_hint is None
     assert param.text is ''
-    hint = param.valuehint
+    hint = param.value_hint
     assert isinstance(hint, ValueRange)
     assert hint.start == 1
     assert hint.end == 10
@@ -113,7 +113,7 @@ def test_parse_value_range():
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
-    hint = param.valuehint
+    hint = param.value_hint
     assert hint.step == 1
     assert hint.default == 5
     # default step
@@ -121,14 +121,14 @@ def test_parse_value_range():
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
-    hint = param.valuehint
+    hint = param.value_hint
     assert hint.step == 0.01
     # default step
     text = '{par1} [1:1.255]'
     doc = parse(text)
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
-    hint = param.valuehint
+    hint = param.value_hint
     assert hint.step == 0.001
 
 
@@ -150,14 +150,14 @@ if fields['infile'] and not fields['outfile']:
     param = doc.parameters['infile']
     assert isinstance(param, Parameter)
     assert param.name == 'infile'
-    assert param.typehint == 'path'
+    assert param.type_hint == 'path'
     assert param.text == 'The input file\n'
     #
     assert 'outfile' in doc.parameters
     param = doc.parameters['outfile']
     assert isinstance(param, Parameter)
     assert param.name == 'outfile'
-    assert param.typehint == 'path'
+    assert param.type_hint == 'path'
     assert param.text == 'The output file\n'
     #
     assert len(doc.code_blocks) == 1
@@ -191,11 +191,11 @@ def test_error_handling():
     text = '{1}\n{}'
     with pytest.raises(ParsingError):
         parse(text)
-    # flags cannot have a typehint
+    # flags cannot have a type_hint
     text = '{-f} (string)'
     with pytest.raises(ParsingError):
         parse(text)
-    # flags cannot have a valuehint
+    # flags cannot have a value_hint
     text = '{-f} ["foo", "bar"]'
     with pytest.raises(ParsingError):
         parse(text)

@@ -3,14 +3,14 @@ from typing import Callable, Dict
 
 import urwid
 
-from ..dialog import Dialog, ResponseType
-from ..divider import HorizontalDivider
-from ..field import field_from_documentation
-from ..field.field import Field
-from ....diff import InlineMyersSequenceMatcher
-from ....strfmt import doc_parser, fmt_parser
-from ....strfmt.doc_nodes import Documentation
-from ....utils import iterable
+from clisnips.diff import InlineMyersSequenceMatcher
+from clisnips.strfmt import doc_parser, fmt_parser
+from clisnips.strfmt.doc_nodes import Documentation
+from clisnips.tui.widgets.dialog import Dialog, ResponseType
+from clisnips.tui.widgets.divider import HorizontalDivider
+from clisnips.tui.widgets.field import field_from_documentation
+from clisnips.tui.widgets.field.field import Field
+from clisnips.utils import iterable
 
 
 class InsertSnippetDialog(Dialog):

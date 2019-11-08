@@ -1,12 +1,12 @@
 import urwid
 
+from clisnips.tui.widgets.utils import original_widget
 from .body import Body
 from .column import Column
 from .input_processor import InputProcessor
 from .layout import TableLayout
 from .row import Row
 from .store import TableStore
-from ..utils import original_widget
 
 
 class Table(urwid.Frame):

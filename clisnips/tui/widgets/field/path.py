@@ -1,11 +1,11 @@
 import urwid
 
+from clisnips._types import AnyPath
+from clisnips.tui.urwid_types import TextMarkup
+from clisnips.tui.widgets.edit import EmacsEdit
+from clisnips.tui.widgets.menu import PopupMenu
+from clisnips.utils.path_completion import FileSystemPathCompletionProvider, PathCompletion, PathCompletionEntry
 from .field import Entry, SimpleField
-from ..edit import EmacsEdit
-from ..menu import PopupMenu
-from ...urwid_types import TextMarkup
-from ...._types import AnyPath
-from ....utils.path_completion import FileSystemPathCompletionProvider, PathCompletion, PathCompletionEntry
 
 
 class PathField(SimpleField):

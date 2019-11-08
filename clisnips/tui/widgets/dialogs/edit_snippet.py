@@ -3,11 +3,11 @@ from typing import Callable
 
 import urwid
 
-from ..dialog import Dialog, ResponseType
-from ..divider import HorizontalDivider
-from ..edit import EmacsEdit, SourceEdit
-from ...syntax import highlight_command, highlight_documentation
-from ....exceptions import ParsingError
+from clisnips.exceptions import ParsingError
+from clisnips.tui.syntax import highlight_command, highlight_documentation
+from clisnips.tui.widgets.dialog import Dialog, ResponseType
+from clisnips.tui.widgets.divider import HorizontalDivider
+from clisnips.tui.widgets.edit import EmacsEdit, SourceEdit
 
 
 class EditSnippetDialog(Dialog):
