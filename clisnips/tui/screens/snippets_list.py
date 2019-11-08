@@ -84,20 +84,3 @@ class SnippetsListScreen(Screen):
     def _on_create_snippet_requested(self, view, snippet):
         # TODO: validate and proceed or cancel
         self._model.create(snippet)
-
-    def _on_export_requested(self, view):
-        db = self._model.get_database()
-
-        # def exporter(path):
-        #     yield from export_xml(db, path)
-
-        def exporter(path):
-            import time
-            yield f'Exporting to {path}'
-            for i in range(10):
-                yield i / 10
-                time.sleep(0.5)
-            yield 1.0
-            yield 'Done'
-
-        self.view.open_export_dialog(exporter)
