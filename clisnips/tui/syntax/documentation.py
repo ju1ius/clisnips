@@ -35,7 +35,7 @@ class DocLexer(RegexLexer):
         'root': [
             (r'(?m) ^ [\x20\t\f]* (?=\{)', Text, 'param_name'),
             (r'(?m)^```\n', Code.Start, 'code-content'),
-            (r'[\w \t\f]+', Text),
+            (r'.+', Text),
             # (r'[ \t\f]+', Whitespace),
         ],
         'param_name': [
