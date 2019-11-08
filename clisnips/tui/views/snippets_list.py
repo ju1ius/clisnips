@@ -119,6 +119,9 @@ class SnippetListView(View):
         if key == 'f2':
             self._open_sort_dialog()
             return
+        if key == '/':
+            self.view.focus_position = 'header'
+            return
         if key in ('tab', 'shift tab'):
             if self.view.focus_position == 'header':
                 self.view.focus_position = 'body'
