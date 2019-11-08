@@ -74,4 +74,5 @@ class SyncPointMyersSequenceMatcher(MyersSequenceMatcher):
                 # sentinel with size 0
                 if size:
                     opcodes.append(('equal', ai, i, bj, j))
+        # noinspection PyProtectedMember
         return [DiffChunk._make(chunk) for chunk in opcodes]

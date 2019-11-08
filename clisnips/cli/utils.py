@@ -44,4 +44,5 @@ class UrwidMarkupHelper:
         return ''.join(output)
 
     def _convert_attr_spec(self, attr_spec: urwid.AttrSpec) -> str:
+        # noinspection PyProtectedMember
         return self._screen._attrspec_to_escape(attr_spec)
