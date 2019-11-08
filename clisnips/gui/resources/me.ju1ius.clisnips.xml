@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8" ?>
-<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN" "https://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
-<node>
-  <interface name="me.ju1ius.clisnips">
-    <signal name="insert_snippet">
-      <arg type="s" name="snippet" direction="out" />
-    </signal>
-  </interface>
-</node>

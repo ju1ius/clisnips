@@ -2,7 +2,7 @@
 function __clisnips__() {
   local snip
   local ret
-  snip="$(/usr/bin/env python3 clisnips-tui.py 2> "$(tty)")"
+  snip="$(clisnips.py 2> "$(tty)")"
   ret=$?
   LBUFFER="${LBUFFER}${snip}"
   zle reset-prompt

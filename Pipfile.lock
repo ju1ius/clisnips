@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "18fd349f681146a2a16a0da1ef29a80fedfb764145771577766e3df4837ade20"
+            "sha256": "4138f9c7546c13f2aa393df9cf54bc2bbcbc70d58cd11ee37390c34ed198a742"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -16,13 +16,6 @@
         ]
     },
     "default": {
-        "pycairo": {
-            "hashes": [
-                "sha256:dcb853fd020729516e8828ad364084e752327d4cff8505d20b13504b32b16531"
-            ],
-            "index": "pypi",
-            "version": "==1.18.2"
-        },
         "pygments": {
             "hashes": [
                 "sha256:71e430bc85c88a430f000ac1d9b331d2407f681d6f6aec95e8bcfbc3df5b0127",
@@ -30,13 +23,6 @@
             ],
             "index": "pypi",
             "version": "==2.4.2"
-        },
-        "pygobject": {
-            "hashes": [
-                "sha256:2acb0daf2b3a23a90f52066cc23d1053339fee2f5f7f4275f8baa3704ae0c543"
-            ],
-            "index": "pypi",
-            "version": "==3.34.0"
         },
         "typing-extensions": {
             "hashes": [
