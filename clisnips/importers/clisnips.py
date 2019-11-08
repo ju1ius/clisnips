@@ -1,5 +1,8 @@
 import time
 from textwrap import dedent
+from typing import Callable, TextIO
+
+from ..database.snippets_db import SnippetsDatabase
 
 try:
     from xml.etree import cElementTree as etree
@@ -7,31 +10,31 @@ except ImportError:
     from xml.etree import ElementTree as etree
 
 
-class Importer(object):
+def import_xml(db: SnippetsDatabase, file: TextIO, log: Callable):
+    start_time = time.time()
+    log(('info', f'Importing snippets from {file.name}...'))
 
-    def __init__(self, db):
-        self.db = db
+    db.insertmany(_parse_snippets(file))
+    log(('info', 'Rebuilding & optimizing search index...'))
+    db.rebuild_index()
+    db.optimize_index()
 
-    def process(self, filepath):
-        try:
-            self.db.insertmany(self.get_snippets(filepath))
-        except Exception:
-            raise
-        else:
-            self.db.save()
+    elapsed_time = time.time() - start_time
+    log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
 
-    def get_snippets(self, filepath):
-        now = int(time.time())
-        for event, el in etree.iterparse(filepath):
-            if el.tag != 'snippet':
-                continue
-            row = {
-                'title': el.findtext('title').strip(),
-                'tag': el.findtext('tag').strip(),
-                'cmd': dedent(el.findtext('command')),
-                'doc': dedent(el.findtext('doc').strip()),
-                'created_at': el.attrib.get('created-at', now),
-                'last_used_at': el.attrib.get('last-used-at', now),
-                'usage_count': el.attrib.get('usage-count', 0)
-            }
-            yield row
+
+def _parse_snippets(file):
+    now = int(time.time())
+    for event, el in etree.iterparse(file):
+        if el.tag != 'snippet':
+            continue
+        row = {
+            'title': el.findtext('title').strip(),
+            'tag': el.findtext('tag').strip(),
+            'cmd': dedent(el.findtext('command')),
+            'doc': dedent(el.findtext('doc').strip()),
+            'created_at': el.attrib.get('created-at', now),
+            'last_used_at': el.attrib.get('last-used-at', now),
+            'usage_count': el.attrib.get('usage-count', 0)
+        }
+        yield row

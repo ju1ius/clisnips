@@ -93,7 +93,6 @@ class Parser(LLkParser):
         super().__init__(lexer, 2)
 
     def parse(self):
-
         self.reset()
         self._auto_field_count = -1
         self._has_numeric_field = False
@@ -109,7 +108,6 @@ class Parser(LLkParser):
         """
         T_TEXT*
         """
-
         text = []
         while True:
             t = self._lookahead()
@@ -124,7 +122,6 @@ class Parser(LLkParser):
         """
         param_doc*
         """
-
         while True:
             t = self._lookahead()
             if t.type == T_LBRACE:
@@ -136,7 +133,6 @@ class Parser(LLkParser):
         """
         T_CODEBLOCK*
         """
-
         code_blocks = []
         while self._lookahead_type() == T_CODEMARK:
             self._match(T_CODEMARK)
@@ -157,7 +153,6 @@ class Parser(LLkParser):
         T_LBRACE param_id T_RBRACE
         typehint? valuehint? doctext?
         """
-
         typehint, valuehint, text = None, None, None
         self._match(T_LBRACE)
         param = self._param_id()
@@ -179,7 +174,6 @@ class Parser(LLkParser):
         return param
 
     def _param_id(self):
-
         # no identifier, try automatic numbering
         if self._lookahead_type() == T_RBRACE:
             if self._has_numeric_field:
@@ -203,7 +197,6 @@ class Parser(LLkParser):
         """
         T_LPAREN T_IDENTIFIER T_RPAREN
         """
-
         self._match(T_LPAREN)
         hint = self._match(T_IDENTIFIER).value
         self._match(T_RPAREN)
@@ -213,7 +206,6 @@ class Parser(LLkParser):
         """
         T_LBRACK (value_list | value_range) T_RBRACK
         """
-
         self._match(T_LBRACK)
         token = self._lookahead()
         if (
@@ -230,7 +222,6 @@ class Parser(LLkParser):
         """
         value (T_COMMA value)*
         """
-
         values = []
         default, count = 0, 0
         initial = self._value()
@@ -252,10 +243,9 @@ class Parser(LLkParser):
         """
         T_STAR? (T_STRING | digit)
         """
-
         is_default = False
-        token = self._match(T_STAR, T_STRING, T_INTEGER, T_FLOAT)
-        if token.type == T_STAR:
+        token = self._match(T_DEFAULT_MARKER, T_STRING, T_INTEGER, T_FLOAT)
+        if token.type == T_DEFAULT_MARKER:
             is_default = True
             token = self._match(T_STRING, T_INTEGER, T_FLOAT)
         if token.type == T_STRING:
@@ -267,7 +257,6 @@ class Parser(LLkParser):
         """
         digit T_COLON digit (T_COLON digit)? (T_STAR digit)?
         """
-
         start = self._digit().value
         self._match(T_COLON)
         end = self._digit().value
@@ -277,7 +266,7 @@ class Parser(LLkParser):
             self._consume()
             step = self._digit().value
             token = self._lookahead()
-        if token.type == T_STAR:
+        if token.type == T_DEFAULT_MARKER:
             self._consume()
             default = self._digit().value
         return ValueRange(
@@ -291,5 +280,5 @@ class Parser(LLkParser):
         return self._match(T_INTEGER, T_FLOAT)
 
 
-def parse(docstring):
+def parse(docstring: str) -> Documentation:
     return Parser(Lexer(docstring)).parse()

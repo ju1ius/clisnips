@@ -3,7 +3,7 @@ import os
 import os.path
 from pathlib import Path
 
-from .utils.color import get_contrast_fgcolor, interpolate_colors, parse_color
+from ._types import AnyPath
 
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']
@@ -18,7 +18,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -26,89 +26,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """.format(authors=', '.join(AUTHORS))
 
 DEFAULTS = '''
-[Default]
+[default]
 
-[Database]
-path: ~/.config/clisnips/snippets.sqlite
-
-[Pager]
+database: ~/.config/clisnips/snippets.sqlite
 sort_column: ranking
-page_size: 100
+sort_order: DESC
+page_size: 25
 
 '''
-
-# TODO: fetch these from CSS
-_DIFF_INS_BG_BASE = '#2ba143'  # green
-_DIFF_DEL_BG_BASE = '#d13b2e'  # red
 
 HOME = Path('~').expanduser()
 
 
-def _xdg_config_home():
+def xdg_config_home():
     home = os.environ.get('XDG_CONFIG_HOME')
     if not home:
         return HOME / '.config'
 
 
-def _xdg_config_dirs():
+def xdg_config_dirs():
     dirs = (os.environ.get('XDG_CONFIG_DIRS') or '/etc/xdg').split(':')
-    return [_xdg_config_home()] + [Path(d) for d in dirs]
+    return [xdg_config_home()] + [Path(d) for d in dirs]
 
 
-def _xdg_data_home():
+def xdg_data_home():
     home = os.environ.get('XDG_DATA_HOME')
     if not home:
         return HOME / '.local' / 'share'
 
 
-def _xdg_data_dirs():
+def xdg_data_dirs():
     dirs = (os.environ.get('XDG_DATA_DIRS') or '/usr/local/share:/usr/share').split(':')
-    return [_xdg_data_home()] + [Path(d) for d in dirs]
-
-
-class _Styles:
-
-    def __init__(self):
-        self._bgcolor = parse_color('#282c34')
-        self._fgcolor = parse_color('#abb2bf')
-
-    @property
-    def diff_insert_bg(self):
-        fg = get_contrast_fgcolor(self._bgcolor)
-        return interpolate_colors(_DIFF_INS_BG_BASE, fg, 0.33)
-
-    @property
-    def diff_insert_fg(self):
-        return get_contrast_fgcolor(self.diff_insert_bg)
-
-    @property
-    def diff_delete_bg(self):
-        fg = get_contrast_fgcolor(self._bgcolor)
-        return interpolate_colors(_DIFF_DEL_BG_BASE, fg, 0.33)
-
-    @property
-    def diff_delete_fg(self):
-        return get_contrast_fgcolor(self.diff_delete_bg)
-
-
-for pub in ('bgcolor', 'fgcolor', 'cursor_color'):
-
-    def _prop():
-        priv = '_' + pub
-
-        def fget(self):
-            return getattr(self, priv)
-
-        def fset(self, value):
-            setattr(self, priv, parse_color(value))
-
-        return {'fget': fget, 'fset': fset}
-
-    setattr(_Styles, pub, property(**_prop()))
-
-del pub, _prop
-
-styles = _Styles()
+    return [xdg_data_home()] + [Path(d) for d in dirs]
 
 
 class Config(configparser.RawConfigParser):
@@ -119,53 +68,51 @@ class Config(configparser.RawConfigParser):
         self._read_configs()
 
     def _read_configs(self):
-        for confdir in reversed(_xdg_config_dirs()):
-            path = confdir / 'clisnips' / 'clisnips.conf'
+        for conf_dir in reversed(xdg_config_dirs()):
+            path = conf_dir / 'clisnips' / 'clisnips.ini'
             if path.exists():
                 self.read(path)
 
     @property
-    def database_path(self):
-        path = self.get('Database', 'path')
+    def database_path(self) -> AnyPath:
+        path = self.get('default', 'database')
         if path == ':memory:':
             return path
         return Path(path).expanduser().absolute()
 
     @database_path.setter
     def database_path(self, value):
-        self.set('Database', 'path', value)
+        self.set('default', 'database', str(value))
 
     @property
-    def pager_sort_column(self):
-        return self.get('Pager', 'sort_column')
+    def pager_sort_column(self) -> str:
+        return self.get('default', 'sort_column')
 
     @pager_sort_column.setter
     def pager_sort_column(self, value):
-        self.set('Pager', 'sort_column', str(value))
+        self.set('default', 'sort_column', str(value))
 
     @property
-    def pager_page_size(self):
-        return self.getint('Pager', 'page_size')
+    def pager_sort_order(self) -> str:
+        return self.get('default', 'sort_order')
+
+    @pager_sort_order.setter
+    def pager_sort_order(self, value: str):
+        self.set('default', 'sort_order', str(value))
+
+    @property
+    def pager_page_size(self) -> int:
+        return self.getint('default', 'page_size')
 
     @pager_page_size.setter
-    def pager_page_size(self, value):
-        self.set('Pager', 'page_size', str(value))
+    def pager_page_size(self, value: int):
+        self.set('default', 'page_size', str(value))
 
     def save(self):
-        conf_dir = _xdg_config_home() / 'clisnips'
+        conf_dir = xdg_config_home() / 'clisnips'
         try:
             conf_dir.mkdir(parents=True, exist_ok=True)
         except OSError as why:
             raise RuntimeError(f'Could not create config directory {conf_dir}: {why}')
-        with open(conf_dir / 'clisnips.conf', 'w') as fp:
+        with open(conf_dir / 'clisnips.ini', 'w') as fp:
             self.write(fp)
-
-
-pager = {
-    'sort_column': 'ranking',
-    'page_size': 100
-}
-
-database_path = None
-
-config = Config()

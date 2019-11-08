@@ -1,196 +1,201 @@
-import unittest
+import pytest
 
 from clisnips.exceptions import ParsingError
 from clisnips.strfmt.doc_nodes import (CodeBlock, Parameter, ValueList, ValueRange)
 from clisnips.strfmt.doc_parser import parse
 
 
-class DocParserTest(unittest.TestCase):
+def test_parse_free_text():
+    text = """
+        This is the global description of the command.
+        It's all text until a {parameter} is seen.
+        A {param} must start a line (possibly indented).
+    """
+    doc = parse(text)
+    assert doc.header == text
+    assert list(doc.parameters.values()) == []
 
-    def testParseFreeText(self):
-        text = """
-            This is the global description of the command.
-            It's all text until a {parameter} is seen.
-            A {param} must start a line (possibly indented).
-        """
-        doc = parse(text)
-        self.assertEqual(doc.header, text)
-        self.assertListEqual(list(doc.parameters.values()), [])
 
-    def testParseParameter(self):
-        text = 'Global doc\n{par1} (file) Param doc'
-        doc = parse(text)
-        self.assertEqual(doc.header, 'Global doc\n')
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, 'par1')
-        self.assertEqual(param.typehint, 'file')
-        self.assertEqual(param.text, 'Param doc')
+def test_parse_parameter():
+    text = 'Global doc\n{par1} (file) Param doc'
+    doc = parse(text)
+    assert doc.header == 'Global doc\n'
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    assert isinstance(param, Parameter)
+    assert param.name == 'par1'
+    assert param.typehint == 'file'
+    assert param.text == 'Param doc'
 
-    def testParseFlag(self):
-        text = 'Global doc\n{--flag} Some flag\n{-f} Other flag'
-        doc = parse(text)
-        self.assertEqual(doc.header, 'Global doc\n')
-        #
-        self.assertIn('--flag', doc.parameters)
-        param = doc.parameters['--flag']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, '--flag')
-        self.assertEqual(param.typehint, 'flag')
-        self.assertEqual(param.text, 'Some flag\n')
-        #
-        self.assertIn('-f', doc.parameters)
-        param = doc.parameters['-f']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, '-f')
-        self.assertEqual(param.typehint, 'flag')
-        self.assertEqual(param.text, 'Other flag')
 
-    def testAutomaticNumbering(self):
-        text = '{} foo\n{} bar'
-        doc = parse(text)
-        self.assertEqual(len(doc.parameters), 2)
-        self.assertIn(0, doc.parameters)
-        self.assertIn(1, doc.parameters)
-        #
-        text = '{} foo\n{1} bar'
-        with self.assertRaisesRegex(ParsingError, 'field numbering'):
-            doc = parse(text)
-        #
-        text = '{1} foo\n{} bar'
-        with self.assertRaisesRegex(ParsingError, 'field numbering'):
-            doc = parse(text)
+def test_parse_flag():
+    text = 'Global doc\n{--flag} Some flag\n{-f} Other flag'
+    doc = parse(text)
+    assert doc.header == 'Global doc\n'
+    #
+    assert '--flag' in doc.parameters
+    param = doc.parameters['--flag']
+    assert isinstance(param, Parameter)
+    assert param.name == '--flag'
+    assert param.typehint == 'flag'
+    assert param.text == 'Some flag\n'
+    #
+    assert '-f' in doc.parameters
+    param = doc.parameters['-f']
+    assert isinstance(param, Parameter)
+    assert param.name == '-f'
+    assert param.typehint == 'flag'
+    assert param.text == 'Other flag'
 
-    def testParseValueList(self):
-        # digit list
-        text = '{par1} [1, *-2, 0.3]'
-        doc = parse(text)
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, 'par1')
-        self.assertIsNone(param.typehint)
-        self.assertIsNone(param.text)
-        values = param.valuehint
-        self.assertIsInstance(values, ValueList)
-        self.assertListEqual(values.values, [1, -2, 0.3])
-        self.assertEqual(values.default, 1)
-        # string list
-        text = '{par1} ["foo", *"bar", "baz"]'
-        doc = parse(text)
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, 'par1')
-        self.assertIsNone(param.typehint)
-        self.assertIsNone(param.text)
-        values = param.valuehint
-        self.assertIsInstance(values, ValueList)
-        self.assertListEqual(values.values, ["foo", "bar", "baz"])
-        self.assertEqual(values.default, 1)
 
-    def testParseValueRange(self):
-        text = '{par1} [1:10:2*5]'
+def test_automatic_numbering():
+    text = '{} foo\n{} bar'
+    doc = parse(text)
+    assert len(doc.parameters) == 2
+    assert 0 in doc.parameters
+    assert 1 in doc.parameters
+    #
+    text = '{} foo\n{1} bar'
+    with pytest.raises(ParsingError, match='field numbering'):
         doc = parse(text)
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, 'par1')
-        self.assertIsNone(param.typehint)
-        self.assertIsNone(param.text)
-        hint = param.valuehint
-        self.assertIsInstance(hint, ValueRange)
-        self.assertEqual(hint.start, 1)
-        self.assertEqual(hint.end, 10)
-        self.assertEqual(hint.step, 2)
-        self.assertEqual(hint.default, 5)
-        # default step
-        text = '{par1} [1:10*5]'
+    #
+    text = '{1} foo\n{} bar'
+    with pytest.raises(ParsingError, match='field numbering'):
         doc = parse(text)
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        hint = param.valuehint
-        self.assertEqual(hint.step, 1)
-        self.assertEqual(hint.default, 5)
-        # default step
-        text = '{par1} [0.1:0.25]'
-        doc = parse(text)
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        hint = param.valuehint
-        self.assertEqual(hint.step, 0.01)
-        # default step
-        text = '{par1} [1:1.255]'
-        doc = parse(text)
-        self.assertIn('par1', doc.parameters)
-        param = doc.parameters['par1']
-        hint = param.valuehint
-        self.assertEqual(hint.step, 0.001)
 
-    def testParseCodeBlock(self):
-        code_str = '''
+
+def test_parse_value_list():
+    # digit list
+    text = '{par1} [1, =>-2, 0.3]'
+    doc = parse(text)
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    assert isinstance(param, Parameter)
+    assert param.name == 'par1'
+    assert param.typehint is None
+    assert param.text is ''
+    values = param.valuehint
+    assert isinstance(values, ValueList)
+    assert values.values == [1, -2, 0.3]
+    assert values.default == 1
+    # string list
+    text = '{par1} ["foo", =>"bar", "baz"]'
+    doc = parse(text)
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    assert isinstance(param, Parameter)
+    assert param.name == 'par1'
+    assert param.typehint is None
+    assert param.text is ''
+    values = param.valuehint
+    assert isinstance(values, ValueList)
+    assert values.values == ["foo", "bar", "baz"]
+    assert values.default == 1
+
+
+def test_parse_value_range():
+    text = '{par1} [1:10:2=>5]'
+    doc = parse(text)
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    assert isinstance(param, Parameter)
+    assert param.name == 'par1'
+    assert param.typehint is None
+    assert param.text is ''
+    hint = param.valuehint
+    assert isinstance(hint, ValueRange)
+    assert hint.start == 1
+    assert hint.end == 10
+    assert hint.step == 2
+    assert hint.default == 5
+    # default step
+    text = '{par1} [1:10=>5]'
+    doc = parse(text)
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    hint = param.valuehint
+    assert hint.step == 1
+    assert hint.default == 5
+    # default step
+    text = '{par1} [0.1:0.25]'
+    doc = parse(text)
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    hint = param.valuehint
+    assert hint.step == 0.01
+    # default step
+    text = '{par1} [1:1.255]'
+    doc = parse(text)
+    assert 'par1' in doc.parameters
+    param = doc.parameters['par1']
+    hint = param.valuehint
+    assert hint.step == 0.001
+
+
+def test_parse_code_block():
+    code_str = '''
 import os.path
-if params['infile'] and not params['outfile']:
-    path, ext = os.path.splitext(params['infile'])
-    params['outfile'] = path + '.mp4'
+if fields['infile'] and not fields['outfile']:
+    path, ext = os.path.splitext(fields['infile'])
+    fields['outfile'] = path + '.mp4'
 '''
-        text = '''
+    text = '''
 {infile} (path) The input file
 {outfile} (path) The output file
 ```%s```
-        ''' % code_str
-        doc = parse(text)
-        #
-        self.assertIn('infile', doc.parameters)
-        param = doc.parameters['infile']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, 'infile')
-        self.assertEqual(param.typehint, 'path')
-        self.assertEqual(param.text, 'The input file\n')
-        #
-        self.assertIn('outfile', doc.parameters)
-        param = doc.parameters['outfile']
-        self.assertIsInstance(param, Parameter)
-        self.assertEqual(param.name, 'outfile')
-        self.assertEqual(param.typehint, 'path')
-        self.assertEqual(param.text, 'The output file\n')
-        #
-        self.assertEqual(len(doc.code_blocks), 1)
-        code = doc.code_blocks[0]
-        self.assertIsInstance(code, CodeBlock)
-        self.assertEqual(code.code, code_str)
-        # execute code
-        _vars = {
-            'params': {
-                'infile': '/foo/bar.wav',
-                'outfile': ''
-            }
+    ''' % code_str
+    doc = parse(text)
+    #
+    assert 'infile' in doc.parameters
+    param = doc.parameters['infile']
+    assert isinstance(param, Parameter)
+    assert param.name == 'infile'
+    assert param.typehint == 'path'
+    assert param.text == 'The input file\n'
+    #
+    assert 'outfile' in doc.parameters
+    param = doc.parameters['outfile']
+    assert isinstance(param, Parameter)
+    assert param.name == 'outfile'
+    assert param.typehint == 'path'
+    assert param.text == 'The output file\n'
+    #
+    assert len(doc.code_blocks) == 1
+    code = doc.code_blocks[0]
+    assert isinstance(code, CodeBlock)
+    assert code.code == code_str
+    # execute code
+    _vars = {
+        'fields': {
+            'infile': '/foo/bar.wav',
+            'outfile': ''
         }
-        code.execute(_vars)
-        self.assertEqual(_vars['params']['outfile'], '/foo/bar.mp4')
+    }
+    code.execute(_vars)
+    assert _vars['fields']['outfile'] == '/foo/bar.mp4'
 
-    def testErrorHandling(self):
-        text = '{$$$}'
-        with self.assertRaises(ParsingError):
-            parse(text)
-        text = '{} ($$$)'
-        with self.assertRaises(ParsingError):
-            parse(text)
-        text = '{} (string) [$$$]'
-        with self.assertRaises(ParsingError):
-            parse(text)
-        text = '{}\n{1}'
-        with self.assertRaises(ParsingError):
-            parse(text)
-        text = '{1}\n{}'
-        with self.assertRaises(ParsingError):
-            parse(text)
-        # flags cannot have a typehint
-        text = '{-f} (string)'
-        with self.assertRaises(ParsingError):
-            parse(text)
-        # flags cannot have a valuehint
-        text = '{-f} ["foo", "bar"]'
-        with self.assertRaises(ParsingError):
-            parse(text)
+
+def test_error_handling():
+    text = '{$$$}'
+    with pytest.raises(ParsingError):
+        parse(text)
+    text = '{} ($$$)'
+    with pytest.raises(ParsingError):
+        parse(text)
+    text = '{} (string) [$$$]'
+    with pytest.raises(ParsingError):
+        parse(text)
+    text = '{}\n{1}'
+    with pytest.raises(ParsingError):
+        parse(text)
+    text = '{1}\n{}'
+    with pytest.raises(ParsingError):
+        parse(text)
+    # flags cannot have a typehint
+    text = '{-f} (string)'
+    with pytest.raises(ParsingError):
+        parse(text)
+    # flags cannot have a valuehint
+    text = '{-f} ["foo", "bar"]'
+    with pytest.raises(ParsingError):
+        parse(text)

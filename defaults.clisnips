@@ -204,7 +204,7 @@ In other words, show everything that is unique to {branch_a}, relatively to {bra
         <tag>pdf,ghostscript,compression</tag>
         <doc>{infile} (file) The PDF file to compress.
 {outfile} (path) The output file path.
-{quality} (string) ["screen", "ebook", *"printer", "prepress"]
+{quality} (string) ["screen", "ebook", =>"printer", "prepress"]
     PDF quality from "screen" (lowest) to "prepress" (highest)</doc>
     </snippet>
 

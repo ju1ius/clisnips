@@ -1,27 +1,25 @@
-import unittest
-
 from clisnips.utils.number import get_num_decimals
 
 
-class GetNumDecimalsTest(unittest.TestCase):
+def test_it_returns_zero_for_integers():
+    result = get_num_decimals(42)
+    assert result == 0
 
-    def testItReturnsZeroForIntegers(self):
-        result = get_num_decimals(42)
-        self.assertEqual(result, 0)
 
-    def testItReturnsNumberOfDecimalForStrings(self):
-        result = get_num_decimals('0.25')
-        self.assertEqual(result, 2)
+def test_it_returns_number_of_decimal_for_strings():
+    result = get_num_decimals('0.25')
+    assert result == 2
 
-        result = get_num_decimals('-1.25e-3')
-        self.assertEqual(result, 5)
+    result = get_num_decimals('-1.25e-3')
+    assert result == 5
 
-    def testItReturnsNumberOfDecimalForFloats(self):
-        result = get_num_decimals(0.25)
-        self.assertEqual(result, 2)
 
-        result = get_num_decimals(1.255)
-        self.assertEqual(result, 3)
+def test_it_returns_number_of_decimal_for_floats():
+    result = get_num_decimals(0.25)
+    assert result == 2
 
-        result = get_num_decimals(0.0169)
-        self.assertEqual(result, 4)
+    result = get_num_decimals(1.255)
+    assert result == 3
+
+    result = get_num_decimals(0.0169)
+    assert result == 4

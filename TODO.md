@@ -1,33 +1,35 @@
 - [ ] Documentation !!!
 - [ ] Implement soft delete / trashcan
-- [ ] validate config
-- [x] Allow communication with terminal via dbus.
--  Parser
-    - [x] Handle command-line flags (-h, -R, -i, etc...)
-- Database
-    - [x] Maintenace operations (rebuild index, optimize, integrity check, etc...)
-    - [x] Upgrade to FTS5 and remove word_tokenizer
-    - [x] Backup / dump
-- [x] Import/Export
-    - [x] Export popularity, timestamps, etc
-- Preferences
-    - [x] store independent config file (use configparser)
-    - [x] sort columns
-    - [x] page size
-    - [x] db file path
-- Provide a default xml file to import on install, with a useful set of snippets.
+- [ ] Provide default snippets as a tutorial for first-time users ?
+- [ ] Provide a default xml file to import on install, with a useful set of snippets.
     - [x] tar
     - [ ] git
     - [ ] find
     - [ ] apt
-- [ ] Replace FileChooserButton by Button + FileChooserDialog
-- [ ] Gtk3 port
-    - [x] Use CSS / StyleContext API
-    - [x] Migrate to Gio.Action API
-    - [ ] fix path completion entry
-    - [ ] load user CSS from XDG_CONFIG_HOME
-- [ ] Curses GUI
-    - [ ] Find a framework:
-        * [Urwid](https://github.com/urwid/urwid/wiki/Application-list)
-        * [Panwid data-table](https://github.com/tonycpsu/panwid)
-        * [Console Applications with Urwid](https://www.youtube.com/watch?v=4UwhXC1OP2A)
+- [ ] Terminal UI
+    - [ ] error handling
+    - [ ] Config / preferences
+    - [ ] Refactor dialogs to screens
+    - [ ] keyoard handling / shortcuts
+    - [ ] List View
+        - [x] list & search results
+        - [x] pagination
+        - [x] sorting
+        - [x] Delete snippet action
+        - [x] table layout
+    - [x] Show view
+    - [ ] Edit / Create view
+        - [x] edit in TUI
+        - [x] synchronize pager state
+        - [ ] validate documentation / command syntax
+    - [ ] Insert snippet dialog
+        - [ ] field types
+            - [x] text
+            - [x] flag
+            - [x] choice
+            - [x] path
+            - [ ] range
+    - [ ] basic html tag (b, i, u) conversion to urwid TextMarkup
+    - [ ] Help / About dialog
+    - [ ] scrollbars? nontrivial...
+    - [ ] job control - handle SIGTSTP / SIGCONT: currently a bug in urwid...
