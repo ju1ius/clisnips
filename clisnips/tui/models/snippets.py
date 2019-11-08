@@ -1,10 +1,11 @@
 import enum
 from contextlib import suppress
+from typing import Tuple
 
 import urwid
 
 from ...database.pager import Pager
-from ...database.search_pager import SearchPager, SearchPagerType, SearchSyntaxError
+from ...database.search_pager import SearchPagerType, SearchSyntaxError
 from ...database.snippets_db import SnippetsDatabase
 
 
@@ -16,11 +17,9 @@ class SnippetsModel:
         ROW_DELETED = 'row-deleted'
         ROW_UPDATED = 'row-updated'
 
-    def __init__(self, db: SnippetsDatabase):
+    def __init__(self, db: SnippetsDatabase, pager: SearchPagerType):
         self._db = db
-        self._pager: SearchPagerType = SearchPager(db, page_size=50)
-        self._pager.set_sort_column('ranking', 'DESC')
-
+        self._pager = pager
         urwid.register_signal(self.__class__, list(self.Signals))
 
     def get_database(self):
@@ -30,42 +29,42 @@ class SnippetsModel:
         urwid.connect_signal(self, signal, callback, weak_args=weak_args, user_args=user_args)
 
     @property
-    def must_paginate(self):
+    def must_paginate(self) -> bool:
         return self._pager.must_paginate
 
     @property
-    def page_count(self):
+    def page_count(self) -> int:
         return self._pager.page_count
 
     @property
-    def page_size(self):
+    def page_size(self) -> int:
         return self._pager.page_size
 
-    def set_page_size(self, size):
+    def set_page_size(self, size: int):
         self._pager.set_page_size(size)
 
     @property
-    def current_page(self):
+    def current_page(self) -> int:
         return self._pager.current_page
 
     @property
-    def is_first_page(self):
+    def is_first_page(self) -> bool:
         return self._pager.is_first_page
 
     @property
-    def is_last_page(self):
+    def is_last_page(self) -> bool:
         return self._pager.is_last_page
 
     @property
-    def row_count(self):
+    def row_count(self) -> int:
         return self._pager.total_rows
 
     @property
-    def is_searching(self):
+    def is_searching(self) -> bool:
         return self._pager.is_searching
 
     @property
-    def sort_column(self):
+    def sort_column(self) -> Tuple[str, str]:
         column, order = self._pager.get_sort_columns()[0]
         return column, 'ASC' if order is Pager.SORT_ASC else 'DESC'
 

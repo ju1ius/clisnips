@@ -1,11 +1,11 @@
 import sys
 from typing import Optional
 
-from .command import ConfigCommand
+from .command import Command
 
 
-class ShowConfigCommand(ConfigCommand):
+class ShowConfigCommand(Command):
 
     def run(self, argv) -> Optional[int]:
-        self.config.write(sys.stdout)
+        self.container.config.write(sys.stdout)
         return 0

@@ -6,8 +6,8 @@ from ..view import View
 from ..widgets.dialogs.confirm import ConfirmDialog
 from ..widgets.dialogs.edit_snippet import EditSnippetDialog
 from ..widgets.dialogs.insert_snippet import InsertSnippetDialog
-from ..widgets.dialogs.show_snippet import ShowSnippetDialog
 from ..widgets.dialogs.list_options import ListOptionsDialog
+from ..widgets.dialogs.show_snippet import ShowSnippetDialog
 from ..widgets.pager_infos import PagerInfos
 from ..widgets.search_entry import SearchEntry
 from ..widgets.snippets_list_footer import SnippetListFooter

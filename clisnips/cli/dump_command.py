@@ -1,15 +1,15 @@
 import time
 from typing import Optional
 
-from .command import DatabaseCommand
+from .command import Command
 
 
-class DumpCommand(DatabaseCommand):
+class DumpCommand(Command):
 
     def run(self, argv) -> Optional[int]:
         start_time = time.time()
 
-        db = self.open_database(argv)
+        db = self.container.database
         for line in db.connection.iterdump():
             argv.file.write(f'{line}\n')
 

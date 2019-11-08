@@ -1,15 +1,15 @@
 import time
 from typing import Optional
 
-from .command import DatabaseCommand
+from .command import Command
 
 
-class OptimizeCommand(DatabaseCommand):
+class OptimizeCommand(Command):
 
     def run(self, argv) -> Optional[int]:
         start_time = time.time()
 
-        db = self.open_database(argv)
+        db = self.container.database
         if argv.rebuild:
             self.print(('info', 'Rebuilding search index...'))
             db.rebuild_index()

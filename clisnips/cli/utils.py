@@ -13,7 +13,7 @@ class UrwidMarkupHelper:
         'success': ('dark green', 'default'),
         'success:inverse': ('black', 'dark green'),
         'error': ('dark red', 'default'),
-        'error:inverse': ('white', 'dark red'),
+        'error:inverse': ('black', 'dark red'),
         'warning': ('brown', 'default'),
         'warning:inverse': ('black', 'brown'),
         'info': ('dark blue', 'default'),

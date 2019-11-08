@@ -2,31 +2,29 @@ import atexit
 import logging
 
 from .logging import logger
-from .models.snippets import SnippetsModel
 from .screens.snippets_list import SnippetsListScreen
 from .tui import TUI
-from ..config import Config, xdg_data_home
-from ..database.snippets_db import SnippetsDatabase
+from ..config import xdg_data_home
+from ..dic import DependencyInjectionContainer
 
 
 class Application:
 
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, dic: DependencyInjectionContainer):
+        self.container = dic
+        self.config = dic.config
         self._configure_logging()
-        self._db = None
+        self.database = dic.database
         self.ui = TUI()
         self.ui.register_screen('snippets-list', self._build_snippets_list)
         atexit.register(self._on_exit)
 
-    def run(self, argv):
-        self._db = SnippetsDatabase.open(argv.database or self.config.database_path)
+    def run(self):
         self.ui.build_screen('snippets-list', display=True)
         self.ui.main()
 
     def _build_snippets_list(self, *args, **kwargs):
-        model = SnippetsModel(self._db)
-        screen = SnippetsListScreen(self.config, model)
+        screen = SnippetsListScreen(self.config, self.container.list_model)
         self.ui.connect(screen, 'snippet-applied', self._on_snippet_applied)
         return screen
 
@@ -41,4 +39,4 @@ class Application:
 
     def _on_exit(self):
         self.config.save()
-        self._db.close()
+        self.database.close()

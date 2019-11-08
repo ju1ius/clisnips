@@ -1,9 +1,9 @@
 import sqlite3
 from contextlib import contextmanager
-from typing import Union
+from typing import Iterable, Union
 
 from .pager import Pager
-from .scrolling_pager import ScrollingPager
+from .scrolling_pager import ScrollingPager, SortColumnDefinition
 from .snippets_db import SnippetsDatabase
 
 SearchPagerType = Union[Pager, 'SearchPager']
@@ -15,7 +15,9 @@ class SearchSyntaxError(RuntimeError):
 
 class SearchPager:
 
-    def __init__(self, db: SnippetsDatabase, page_size: int):
+    def __init__(self, db: SnippetsDatabase,
+                 sort_column: SortColumnDefinition = ('ranking', 'DESC'),
+                 page_size: int = 50):
         self._page_size = page_size
         self._list_pager = ScrollingPager(db.connection, page_size)
         self._list_pager.set_query(db.get_listing_query())
@@ -27,6 +29,7 @@ class SearchPager:
 
         self._is_searching = False
         self._current_pager = self._list_pager
+        self.set_sort_column(*sort_column)
 
     @property
     def is_searching(self) -> bool:
@@ -58,7 +61,7 @@ class SearchPager:
             ('id', 'ASC', True)
         ])
 
-    def set_sort_columns(self, columns):
+    def set_sort_columns(self, columns: Iterable[SortColumnDefinition]):
         self._list_pager.set_sort_columns(columns)
         self._search_pager.set_sort_columns(columns)
 

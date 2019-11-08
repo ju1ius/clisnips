@@ -1,13 +1,15 @@
+from typing import Iterable, Optional, Tuple, Union
 
 from .offset_pager import OffsetPager
 
+SortColumnDefinition = Union[Tuple[str, str], Tuple[str, str, bool]]
+
 
 class ScrollingPager(OffsetPager):
-
     FORWARD = 1
     BACKWARD = 2
 
-    def __init__(self, connection, page_size=100, sort_columns=None):
+    def __init__(self, connection, page_size: int = 100, sort_columns: Optional[Iterable[SortColumnDefinition]] = None):
         super().__init__(connection, page_size)
 
         self._sort_columns = []
@@ -23,7 +25,7 @@ class ScrollingPager(OffsetPager):
     def get_sort_columns(self):
         return self._sort_columns[:]
 
-    def set_sort_columns(self, columns):
+    def set_sort_columns(self, columns: Iterable[SortColumnDefinition]):
         """
         columns: [
             (name[, order [, unique]]),
@@ -202,7 +204,7 @@ class ScrollingPager(OffsetPager):
     def _precompile_where_clause(self, direction):
         cursor = 'last' if direction == self.FORWARD else 'first'
         comp_fmt = '{col} {op} {value}'
-        value_fmt = '{cursor[%s][%s]!r}' 
+        value_fmt = '{cursor[%s][%s]!r}'
         # add non-unique columns
         exprs_1, exprs_2 = [], []
         for name, order in self._sort_columns:

@@ -6,6 +6,7 @@ from .dump_command import DumpCommand
 from .export_command import ExportCommand
 from .import_command import ImportCommand
 from .optimize_command import OptimizeCommand
+from ..dic import DependencyInjectionContainer
 
 
 class Application:
@@ -55,18 +56,27 @@ class Application:
 
         return parser.parse_args()
 
-    @staticmethod
-    def _run_command(cls, argv) -> int:
-        command = cls()
+    def _run_command(self, cls, argv) -> int:
+        dic = DependencyInjectionContainer(argv.database)
+        command = cls(dic)
         try:
             ret_code = command.run(argv)
             return ret_code if ret_code is not None else 0
         except Exception as err:
-            print(err, file=sys.stderr)
+            self._print_exception(err)
             return 128
 
     @staticmethod
     def _run_tui(argv) -> int:
         from ..tui.app import Application
-        app = Application()
-        return app.run(argv)
+        dic = DependencyInjectionContainer(argv.database)
+        app = Application(dic)
+        return app.run()
+
+    def _print_exception(self, err: Exception):
+        from traceback import format_exc
+        from .utils import UrwidMarkupHelper
+        helper = UrwidMarkupHelper()
+        msg = f'{err}\n{format_exc()}'
+        output = helper.convert_markup(('error', msg), tty=True)
+        print(output, file=sys.stderr)
