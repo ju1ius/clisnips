@@ -23,6 +23,7 @@ __TOKEN_NAMES: Dict[int, str] = {}
 for k, v in dict(vars()).items():
     if k.startswith('T_'):
         __TOKEN_NAMES[v] = k
+# noinspection PyUnboundLocalVariable
 del k, v
 
 

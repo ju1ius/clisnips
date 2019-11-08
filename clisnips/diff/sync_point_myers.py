@@ -7,6 +7,7 @@ class SyncPointMyersSequenceMatcher(MyersSequenceMatcher):
         super().__init__(isjunk, a, b)
         self.isjunk = isjunk
         self.sync_points = syncpoints
+        self.split_matching_blocks = []
 
     def initialise(self):
         if self.sync_points is None or len(self.sync_points) == 0:

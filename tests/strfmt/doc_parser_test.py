@@ -52,8 +52,8 @@ def test_automatic_numbering():
     text = '{} foo\n{} bar'
     doc = parse(text)
     assert len(doc.parameters) == 2
-    assert 0 in doc.parameters
-    assert 1 in doc.parameters
+    assert '0' in doc.parameters
+    assert '1' in doc.parameters
     #
     text = '{} foo\n{1} bar'
     with pytest.raises(ParsingError, match='field numbering'):

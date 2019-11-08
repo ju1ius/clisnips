@@ -91,6 +91,9 @@ class Parser(LLkParser):
 
     def __init__(self, lexer):
         super().__init__(lexer, 2)
+        self._auto_field_count = -1
+        self._has_numeric_field = False
+        self._ast = None
 
     def parse(self):
         self.reset()
@@ -179,7 +182,7 @@ class Parser(LLkParser):
             if self._has_numeric_field:
                 raise ParsingError('Cannot switch from manual to automatic field numbering')
             self._auto_field_count += 1
-            return Parameter(self._auto_field_count)
+            return Parameter(str(self._auto_field_count))
         token = self._match(T_IDENTIFIER, T_INTEGER, T_FLAG)
         # it's a flag
         if token.type == T_FLAG:
