@@ -25,7 +25,8 @@ class TUI:
             pop_ups=True,
             palette=theme.palette,
             screen=screen,
-            event_loop=urwid.AsyncioEventLoop(loop=get_event_loop())
+            event_loop=urwid.AsyncioEventLoop(loop=get_event_loop()),
+            unhandled_input=self._on_unhandled_input,
         )
         self.main_loop.screen.set_terminal_properties(colors=256)
 
@@ -59,6 +60,11 @@ class TUI:
     def exit_with_message(self, message: str):
         atexit.register(lambda: print(message, sep=''))
         self.stop()
+
+    def _on_unhandled_input(self, key):
+        if key in ('esc', 'q'):
+            self.stop()
+            return
 
     def _on_suspend_signal(self, signum, frame):
         # self.main_loop.screen.clear()
