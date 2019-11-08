@@ -2,24 +2,24 @@
 GRAMMAR
 =======
 documentation:  header param_list code
-header:         T_TEXT*
+header:         TEXT*
 param_list:     param_doc*
-code:           T_CODEMARK T_TEXT T_CODEMARK
-param_doc:      T_LBRACE param_id? T_RBRACE typehint? valuehint? doctext?
+code:           CODE_FENCE TEXT CODE_FENCE
+param_doc:      LEFT_BRACE param_id? RIGHT_BRACE type_hint? value_hint? TEXT*
 param_id:       identifier | flag
-identifier:     T_IDENTIFIER | T_INTEGER
-flag:           T_FLAG
-typehint:       T_LPAREN T_IDENTIFIER T_RPAREN
-valuehint:      T_LBRACK (value_list | value_range) T_RBRACK
-value_list:     value (T_COMMA value)*
-value_range:    T_DIGIT T_COLON digit (T_COLON digit)? (T_STAR digit)?
-value:          T_STAR? (T_STRING | digit)
-digit:          T_INTEGER | T_FLOAT
+identifier:     IDENTIFIER | INTEGER
+flag:           FLAG
+type_hint:      LEFT_PAREN IDENTIFIER RIGHT_PAREN
+value_hint:     LEFT_BRACKET (value_list | value_range) RIGHT_BRACKET
+value_list:     value (COMMA value)*
+value_range:    DIGIT COLON digit (COLON digit)? (STAR digit)?
+value:          STAR? (STRING | digit)
+digit:          INTEGER | FLOAT
 """
 from clisnips.exceptions import ParsingError
 from .doc_lexer import Lexer
 from .doc_nodes import *
-from .doc_tokens import *
+from .doc_tokens import Tokens
 
 
 def _to_number(string):
@@ -83,8 +83,8 @@ class LLkParser(object):
         return self._lookahead(offset).type
 
     def _unexpected_token(self, token, *expected):
-        expected = ', '.join(token_name(t) for t in expected)
-        raise ParsingError(f'Unexpected token: {token} (expected {expected})')
+        expected = ', '.join(t.name for t in expected)
+        raise ParsingError(f'Unexpected token: {token.name} (expected {expected})')
 
 
 class Parser(LLkParser):
@@ -109,12 +109,12 @@ class Parser(LLkParser):
 
     def _text(self):
         """
-        T_TEXT*
+        TEXT*
         """
         text = []
         while True:
             t = self._lookahead()
-            if t.type == T_TEXT:
+            if t.type is Tokens.TEXT:
                 self._consume()
                 text.append(t.value)
             else:
@@ -127,19 +127,19 @@ class Parser(LLkParser):
         """
         while True:
             t = self._lookahead()
-            if t.type == T_LBRACE:
+            if t.type is Tokens.LEFT_BRACE:
                 yield self._param_doc()
             else:
                 break
 
     def _code(self):
         """
-        T_CODEBLOCK*
+        CODEBLOCK*
         """
         code_blocks = []
-        while self._lookahead_type() == T_CODEMARK:
-            self._match(T_CODEMARK)
-            code = self._match(T_TEXT).value
+        while self._lookahead_type() is Tokens.CODE_FENCE:
+            self._match(Tokens.CODE_FENCE)
+            code = self._match(Tokens.TEXT).value
             try:
                 block = CodeBlock(code)
             except SyntaxError as err:
@@ -148,49 +148,49 @@ class Parser(LLkParser):
                 raise ParsingError(f'Null bytes in code block: {code!r}')
             else:
                 code_blocks.append(block)
-            self._match(T_CODEMARK)
+            self._match(Tokens.CODE_FENCE)
         return code_blocks
 
     def _param_doc(self):
         """
-        T_LBRACE param_id T_RBRACE
-        typehint? valuehint? doctext?
+        LEFT_BRACE param_id RIGHT_BRACE
+        type_hint? value_hint? TEXT*
         """
         typehint, valuehint, text = None, None, None
-        self._match(T_LBRACE)
+        self._match(Tokens.LEFT_BRACE)
         param = self._param_id()
-        self._match(T_RBRACE)
+        self._match(Tokens.RIGHT_BRACE)
 
         token = self._lookahead()
-        if token.type == T_LPAREN:
-            if param.typehint == 'flag':
+        if token.type is Tokens.LEFT_PAREN:
+            if param.type_hint == 'flag':
                 raise ParsingError('A flag cannot have a type hint.')
-            param.typehint = self._typehint()
+            param.type_hint = self._typehint()
             token = self._lookahead()
-        if token.type == T_LBRACK:
-            if param.typehint == 'flag':
+        if token.type is Tokens.LEFT_BRACKET:
+            if param.type_hint == 'flag':
                 raise ParsingError('A flag cannot have a value hint.')
-            param.valuehint = self._valuehint()
+            param.value_hint = self._valuehint()
             token = self._lookahead()
-        if token.type == T_TEXT:
+        if token.type is Tokens.TEXT:
             param.text = self._text()
         return param
 
     def _param_id(self):
         # no identifier, try automatic numbering
-        if self._lookahead_type() == T_RBRACE:
+        if self._lookahead_type() is Tokens.RIGHT_BRACE:
             if self._has_numeric_field:
                 raise ParsingError('Cannot switch from manual to automatic field numbering')
             self._auto_field_count += 1
             return Parameter(str(self._auto_field_count))
-        token = self._match(T_IDENTIFIER, T_INTEGER, T_FLAG)
+        token = self._match(Tokens.IDENTIFIER, Tokens.INTEGER, Tokens.FLAG)
         # it's a flag
-        if token.type == T_FLAG:
+        if token.type is Tokens.FLAG:
             param = Parameter(token.value)
-            param.typehint = 'flag'
+            param.type_hint = 'flag'
             return param
         # it's an integer, check that numbering is correct
-        if token.type == T_INTEGER:
+        if token.type is Tokens.INTEGER:
             if self._auto_field_count > -1:
                 raise ParsingError('Cannot switch from automatic to manual field numbering')
             self._has_numeric_field = True
@@ -198,32 +198,32 @@ class Parser(LLkParser):
 
     def _typehint(self):
         """
-        T_LPAREN T_IDENTIFIER T_RPAREN
+        LEFT_PAREN IDENTIFIER RIGHT_PAREN
         """
-        self._match(T_LPAREN)
-        hint = self._match(T_IDENTIFIER).value
-        self._match(T_RPAREN)
+        self._match(Tokens.LEFT_PAREN)
+        hint = self._match(Tokens.IDENTIFIER).value
+        self._match(Tokens.RIGHT_PAREN)
         return hint 
 
     def _valuehint(self):
         """
-        T_LBRACK (value_list | value_range) T_RBRACK
+        LEFT_BRACKET (value_list | value_range) RIGHT_BRACKET
         """
-        self._match(T_LBRACK)
+        self._match(Tokens.LEFT_BRACKET)
         token = self._lookahead()
         if (
-            token.type in (T_INTEGER, T_FLOAT)
-            and self._lookahead_type(2) == T_COLON
+            token.type in (Tokens.INTEGER, Tokens.FLOAT)
+            and self._lookahead_type(2) is Tokens.COLON
         ):
             valuehint = self._value_range()
         else:
             valuehint = self._value_list()
-        self._match(T_RBRACK)
+        self._match(Tokens.RIGHT_BRACKET)
         return valuehint
 
     def _value_list(self):
         """
-        value (T_COMMA value)*
+        value (COMMA value)*
         """
         values = []
         default, count = 0, 0
@@ -232,7 +232,7 @@ class Parser(LLkParser):
         while True:
             count += 1
             t = self._lookahead()
-            if t.type == T_COMMA:
+            if t.type is Tokens.COMMA:
                 self._consume()
                 value = self._value()
                 values.append(value['value'])
@@ -244,32 +244,32 @@ class Parser(LLkParser):
 
     def _value(self):
         """
-        T_STAR? (T_STRING | digit)
+        STAR? (STRING | digit)
         """
         is_default = False
-        token = self._match(T_DEFAULT_MARKER, T_STRING, T_INTEGER, T_FLOAT)
-        if token.type == T_DEFAULT_MARKER:
+        token = self._match(Tokens.DEFAULT_MARKER, Tokens.STRING, Tokens.INTEGER, Tokens.FLOAT)
+        if token.type is Tokens.DEFAULT_MARKER:
             is_default = True
-            token = self._match(T_STRING, T_INTEGER, T_FLOAT)
-        if token.type == T_STRING:
+            token = self._match(Tokens.STRING, Tokens.INTEGER, Tokens.FLOAT)
+        if token.type is Tokens.STRING:
             return {'value': token.value, 'default': is_default}
         else:
             return {'value': _to_number(token.value), 'default': is_default}
 
     def _value_range(self):
         """
-        digit T_COLON digit (T_COLON digit)? (T_STAR digit)?
+        digit COLON digit (COLON digit)? (STAR digit)?
         """
         start = self._digit().value
-        self._match(T_COLON)
+        self._match(Tokens.COLON)
         end = self._digit().value
         step, default = None, None
         token = self._lookahead()
-        if token.type == T_COLON:
+        if token.type is Tokens.COLON:
             self._consume()
             step = self._digit().value
             token = self._lookahead()
-        if token.type == T_DEFAULT_MARKER:
+        if token.type is Tokens.DEFAULT_MARKER:
             self._consume()
             default = self._digit().value
         return ValueRange(
@@ -280,7 +280,7 @@ class Parser(LLkParser):
         )
 
     def _digit(self):
-        return self._match(T_INTEGER, T_FLOAT)
+        return self._match(Tokens.INTEGER, Tokens.FLOAT)
 
 
 def parse(docstring: str) -> Documentation:

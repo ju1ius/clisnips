@@ -1,8 +1,8 @@
 import re
 from collections import deque
-from typing import Match, Optional, Pattern, Tuple
+from typing import Dict, Match, Optional, Pattern, Tuple, Union
 
-from .doc_tokens import *
+from .doc_tokens import Token, Tokens
 
 _RE_CACHE: Dict[Tuple[str, bool], Pattern[str]] = {}
 
@@ -196,7 +196,7 @@ class Lexer(StringLexer):
         self.token_queue = deque()
         while True:
             if not self.state():
-                yield Token(T_EOF, self.line, self.col)
+                yield Token(Tokens.EOF, self.line, self.col)
                 break
             while self.token_queue:
                 token = self.token_queue.popleft()
@@ -204,16 +204,16 @@ class Lexer(StringLexer):
 
     def init_token(self, type: int, value: str = EMPTY) -> Token:
         token = Token(type, self.line, self.col, value)
-        token.startpos = self.pos
+        token.start_pos = self.pos
         return token
 
     def finalize_token(self, token: Token, line: Optional[int] = None, col: Optional[int] = None,
                        pos: Optional[int] = None, value: Optional[str] = None):
         if value is not None:
             token.value = value
-        token.endpos = pos if pos is not None else self.pos
-        token.endline = line if line is not None else self.line
-        token.endcol = col if col is not None else self.col
+        token.end_pos = pos if pos is not None else self.pos
+        token.end_line = line if line is not None else self.line
+        token.end_col = col if col is not None else self.col
         return token
 
     def freetext_state(self) -> bool:
@@ -221,20 +221,20 @@ class Lexer(StringLexer):
         if char is EMPTY:
             return False
         if char == '{':
-            token = self.init_token(T_LBRACE, '{')
+            token = self.init_token(Tokens.LEFT_BRACE, '{')
             self.finalize_token(token)
             self.token_queue.append(token)
             self.state = self.param_state
             return True
         if char == '`':
             if self.lookahead(2, True) == '``':
-                token = self.init_token(T_CODEMARK, '```')
+                token = self.init_token(Tokens.CODE_FENCE, '```')
                 self.advance(2)
                 self.finalize_token(token)
                 self.token_queue.append(token)
                 self.state = self.codeblock_state
                 return True
-        token = self.init_token(T_TEXT)
+        token = self.init_token(Tokens.TEXT)
         text = self._consume_freetext()
         if not text:
             text = self.read_until('$')
@@ -247,7 +247,7 @@ class Lexer(StringLexer):
             token = None
             char = self._skip_whitespace()
             if char == '}':
-                token = self.init_token(T_RBRACE, '}')
+                token = self.init_token(Tokens.RIGHT_BRACE, '}')
                 self.finalize_token(token)
                 self.token_queue.append(token)
                 self.state = self.after_param_state
@@ -274,12 +274,12 @@ class Lexer(StringLexer):
         if char is EMPTY:
             return False
         if char == '(':
-            token = self.init_token(T_LPAREN, '(')
+            token = self.init_token(Tokens.LEFT_PAREN, '(')
             self.token_queue.append(token)
             self.state = self.typehint_state
             return True
         if char == '[':
-            token = self.init_token(T_LBRACK, '[')
+            token = self.init_token(Tokens.LEFT_BRACKET, '[')
             self.token_queue.append(token)
             self.state = self.valuehint_state
             return True
@@ -293,7 +293,7 @@ class Lexer(StringLexer):
             if char is EMPTY:
                 return False
             if char == ')':
-                token = self.init_token(T_RPAREN, ')')
+                token = self.init_token(Tokens.RIGHT_PAREN, ')')
                 self.token_queue.append(token)
                 self.state = self.after_param_state
                 break
@@ -302,7 +302,7 @@ class Lexer(StringLexer):
                 self.recede()
                 self.state = self.freetext_state
                 break
-            token = self.init_token(T_IDENTIFIER, m.group(0))
+            token = self.init_token(Tokens.IDENTIFIER, m.group(0))
             self._consume_match(m)
             self.finalize_token(token)
             self.token_queue.append(token)
@@ -315,7 +315,7 @@ class Lexer(StringLexer):
             if char is EMPTY:
                 return False
             if char == ']':
-                token = self.init_token(T_RBRACK, ']')
+                token = self.init_token(Tokens.RIGHT_BRACKET, ']')
                 self.finalize_token(token)
                 self.token_queue.append(token)
                 self.state = self.freetext_state
@@ -327,15 +327,15 @@ class Lexer(StringLexer):
                     break
                 self.token_queue.append(token)
             elif char == ',':
-                token = self.init_token(T_COMMA, ',')
+                token = self.init_token(Tokens.COMMA, ',')
                 self.finalize_token(token)
                 self.token_queue.append(token)
             elif char == ':':
-                token = self.init_token(T_COLON, ':')
+                token = self.init_token(Tokens.COLON, ':')
                 self.token_queue.append(token)
             elif char == '=':
                 if self.lookahead() == '>':
-                    token = self.init_token(T_DEFAULT_MARKER, '=>')
+                    token = self.init_token(Tokens.DEFAULT_MARKER, '=>')
                     self.advance()
                     self.finalize_token(token)
                     self.token_queue.append(token)
@@ -353,7 +353,7 @@ class Lexer(StringLexer):
         return True
 
     def codeblock_state(self) -> bool:
-        code = self.init_token(T_TEXT, '')
+        code = self.init_token(Tokens.TEXT, '')
         while True:
             code.value += self.read_until(r'"\'`')
             char = self.advance()
@@ -395,7 +395,7 @@ class Lexer(StringLexer):
                 if self.lookahead(2, True) == '``':
                     self.finalize_token(code)
                     self.token_queue.append(code)
-                    token = self.init_token(T_CODEMARK, '```')
+                    token = self.init_token(Tokens.CODE_FENCE, '```')
                     self.advance(2)
                     self.finalize_token(token)
                     self.token_queue.append(token)
@@ -409,9 +409,9 @@ class Lexer(StringLexer):
         if not m:
             return None
         if m.group(1):
-            _type = T_INTEGER
+            _type = Tokens.INTEGER
         elif m.group(2):
-            _type = T_IDENTIFIER
+            _type = Tokens.IDENTIFIER
         token = self.init_token(_type, m.group(0))
         self._consume_match(m)
         return self.finalize_token(token)
@@ -420,7 +420,7 @@ class Lexer(StringLexer):
         m = FLAG_RX.match(self.text, self.pos)
         if not m:
             return None
-        token = self.init_token(T_FLAG, m.group(0))
+        token = self.init_token(Tokens.FLAG, m.group(0))
         self._consume_match(m)
         return self.finalize_token(token)
 
@@ -428,7 +428,7 @@ class Lexer(StringLexer):
         m = STRING_RX.match(self.text, self.pos)
         if not m:
             return None
-        token = self.init_token(T_STRING, m.group(2))
+        token = self.init_token(Tokens.STRING, m.group(2))
         self._consume_match(m)
         return self.finalize_token(token)
 
@@ -437,9 +437,9 @@ class Lexer(StringLexer):
         if not m:
             return None
         if m.group(1):
-            _type = T_FLOAT
+            _type = Tokens.FLOAT
         elif m.group(2):
-            _type = T_INTEGER
+            _type = Tokens.INTEGER
         token = self.init_token(_type, m.group(0))
         self._consume_match(m)
         return self.finalize_token(token)

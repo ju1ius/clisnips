@@ -20,8 +20,8 @@ def field_from_documentation(field_name: str, doc: Documentation) -> Field:
 
 def _field_from_param(param: Parameter) -> Field:
     label = _label_from_param(param)
-    type_hint = param.typehint
-    value_hint = param.valuehint
+    type_hint = param.type_hint
+    value_hint = param.value_hint
     default = ''
     if isinstance(value_hint, ValueRange):
         return RangeField(
@@ -44,8 +44,8 @@ def _field_from_param(param: Parameter) -> Field:
 
 def _label_from_param(param: Parameter) -> TextMarkup:
     markup = [('bold', param.name)]
-    if param.typehint:
-        markup.extend([' (', ('italics', param.typehint), ')'])
+    if param.type_hint:
+        markup.extend([' (', ('italics', param.type_hint), ')'])
     if param.text:
         markup.append(f' {param.text.strip()}')
     return markup
