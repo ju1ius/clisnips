@@ -1,12 +1,12 @@
 import sys
 from argparse import ArgumentParser, FileType
 
+from clisnips.dic import DependencyInjectionContainer
 from .config_command import ShowConfigCommand
 from .dump_command import DumpCommand
 from .export_command import ExportCommand
 from .import_command import ImportCommand
 from .optimize_command import OptimizeCommand
-from ..dic import DependencyInjectionContainer
 
 
 class Application:
@@ -68,14 +68,14 @@ class Application:
 
     @staticmethod
     def _run_tui(argv) -> int:
-        from ..tui.app import Application
+        from clisnips.tui.app import Application
         dic = DependencyInjectionContainer(argv.database)
         app = Application(dic)
         return app.run()
 
     def _print_exception(self, err: Exception):
         from traceback import format_exc
-        from .utils import UrwidMarkupHelper
+        from clisnips.cli.utils import UrwidMarkupHelper
         helper = UrwidMarkupHelper()
         msg = f'{err}\n{format_exc()}'
         output = helper.convert_markup(('error', msg), tty=True)

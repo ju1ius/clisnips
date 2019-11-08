@@ -1,11 +1,11 @@
 import atexit
 import logging
 
+from clisnips.config import xdg_data_home
+from clisnips.dic import DependencyInjectionContainer
 from .logging import logger
 from .screens.snippets_list import SnippetsListScreen
 from .tui import TUI
-from ..config import xdg_data_home
-from ..dic import DependencyInjectionContainer
 
 
 class Application:

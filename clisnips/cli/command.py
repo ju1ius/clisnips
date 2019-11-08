@@ -2,8 +2,8 @@ import os
 import sys
 from typing import Optional
 
+from clisnips.dic import DependencyInjectionContainer
 from .utils import UrwidMarkupHelper
-from ..dic import DependencyInjectionContainer
 
 
 class Command:

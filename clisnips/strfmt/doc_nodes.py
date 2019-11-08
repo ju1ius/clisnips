@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from ..utils.number import get_num_decimals
+from clisnips.utils.number import get_num_decimals
 
 
 class Documentation(object):

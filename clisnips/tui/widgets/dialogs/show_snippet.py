@@ -1,8 +1,8 @@
 import urwid
 
-from ..dialog import Dialog
-from ..divider import HorizontalDivider
-from ...syntax import highlight_command, highlight_documentation
+from clisnips.tui.syntax import highlight_command, highlight_documentation
+from clisnips.tui.widgets.dialog import Dialog
+from clisnips.tui.widgets.divider import HorizontalDivider
 
 
 class ShowSnippetDialog(Dialog):

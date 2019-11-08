@@ -2,7 +2,7 @@ import time
 from textwrap import dedent
 from typing import Callable, TextIO
 
-from ..database.snippets_db import SnippetsDatabase
+from clisnips.database.snippets_db import SnippetsDatabase
 
 try:
     from xml.etree import cElementTree as etree

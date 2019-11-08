@@ -3,7 +3,7 @@ import os
 import urwid
 from urwid.util import decompose_tagmarkup
 
-from ..tui.urwid_types import TextMarkup
+from clisnips.tui.urwid_types import TextMarkup
 
 
 class UrwidMarkupHelper:

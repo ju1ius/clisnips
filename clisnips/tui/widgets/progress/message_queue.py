@@ -5,7 +5,7 @@ import threading
 
 import urwid
 
-from ...loop import idle_add
+from clisnips.tui.loop import idle_add
 
 
 class MessageType(enum.Enum):

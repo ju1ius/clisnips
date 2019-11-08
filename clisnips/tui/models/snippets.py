@@ -4,9 +4,9 @@ from typing import Tuple
 
 import urwid
 
-from ...database.pager import Pager
-from ...database.search_pager import SearchPagerType, SearchSyntaxError
-from ...database.snippets_db import SnippetsDatabase
+from clisnips.database.pager import Pager
+from clisnips.database.search_pager import SearchPagerType, SearchSyntaxError
+from clisnips.database.snippets_db import SnippetsDatabase
 
 
 class SnippetsModel:

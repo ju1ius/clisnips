@@ -7,8 +7,8 @@ import re
 import time
 from typing import Callable, TextIO
 
-from ..database.snippets_db import SnippetsDatabase
-from ..utils.list import pad_list
+from clisnips.database.snippets_db import SnippetsDatabase
+from clisnips.utils.list import pad_list
 
 _ARGS_RE = re.compile(r'(?<!\\)((?:\\\\)*\?)')
 

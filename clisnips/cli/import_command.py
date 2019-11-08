@@ -1,8 +1,8 @@
 import shutil
 from typing import Optional
 
+from clisnips.importers import import_cli_companion, import_xml
 from .command import Command
-from ..importers import import_cli_companion, import_xml
 
 
 class ImportCommand(Command):

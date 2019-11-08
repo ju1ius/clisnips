@@ -2,8 +2,8 @@ import multiprocessing
 import os
 import signal
 
+from clisnips.tui.logging import logger
 from .message_queue import MessageQueue
-from ...logging import logger
 
 
 class Process(multiprocessing.Process):

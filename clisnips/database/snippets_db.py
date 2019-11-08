@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Iterable, Optional, Union
 
-from .._types import AnyPath
+from clisnips._types import AnyPath
 
 __DIR__ = Path(__file__).absolute().parent
 

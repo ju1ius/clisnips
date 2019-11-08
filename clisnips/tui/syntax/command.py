@@ -5,8 +5,8 @@ from pygments.formatter import Formatter
 from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Punctuation, Text, Token
 
+from clisnips.tui.urwid_types import TextMarkup
 from .writer import UrwidMarkupWriter
-from ..urwid_types import TextMarkup
 
 Command = Token.Command
 

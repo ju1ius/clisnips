@@ -1,7 +1,7 @@
 import re
 from string import Formatter
 
-from ..exceptions import ParsingError
+from clisnips.exceptions import ParsingError
 
 FIELD_NAME_RX = re.compile(r'''
 ^(?:

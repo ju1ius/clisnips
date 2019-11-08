@@ -1,11 +1,11 @@
+from clisnips.strfmt.doc_nodes import Documentation, Parameter, ValueList, ValueRange
+from clisnips.tui.urwid_types import TextMarkup
 from .field import Field
 from .flag import FlagField
 from .path import PathField
 from .range import RangeField
 from .select import SelectField
 from .text import TextField
-from ...urwid_types import TextMarkup
-from ....strfmt.doc_nodes import Documentation, Parameter, ValueList, ValueRange
 
 
 def field_from_documentation(field_name: str, doc: Documentation) -> Field:

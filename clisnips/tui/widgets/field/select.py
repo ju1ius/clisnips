@@ -1,8 +1,8 @@
 from typing import Iterable, Optional
 
+from clisnips.tui.urwid_types import TextMarkup
+from clisnips.tui.widgets.combobox import ComboBox
 from .field import Entry, SimpleField
-from ..combobox import ComboBox
-from ...urwid_types import TextMarkup
 
 
 class SelectField(SimpleField):

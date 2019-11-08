@@ -1,6 +1,6 @@
 import urwid
 
-from ..animation import AnimationController
+from clisnips.tui.animation import AnimationController
 
 
 class Spinner(urwid.Widget):
