@@ -31,7 +31,8 @@ class DialogOverlay(urwid.Overlay):
             self.parent.close_dialog()
             return
         else:
-            return super().keypress(size, key)
+            super().keypress(size, key)
+            return
 
 
 class Dialog(urwid.WidgetWrap):
