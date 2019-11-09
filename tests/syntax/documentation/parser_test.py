@@ -1,8 +1,8 @@
 import pytest
 
 from clisnips.exceptions import ParsingError
-from clisnips.strfmt.doc_nodes import (CodeBlock, Parameter, ValueList, ValueRange)
-from clisnips.strfmt.doc_parser import parse
+from clisnips.syntax.documentation import parse
+from clisnips.syntax.documentation.nodes import CodeBlock, Parameter, ValueList, ValueRange
 
 
 def test_parse_free_text():

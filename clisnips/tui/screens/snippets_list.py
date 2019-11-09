@@ -2,7 +2,7 @@ import urwid
 
 from clisnips.config import Config
 from clisnips.exceptions import ParsingError
-from clisnips.strfmt import fmt_parser
+from clisnips.syntax import parse_command
 from clisnips.tui.models.snippets import SnippetsModel
 from clisnips.tui.screen import Screen
 from clisnips.tui.views.snippets_list import SnippetListView
@@ -37,7 +37,7 @@ class SnippetsListScreen(Screen):
 
     def _on_snippet_selected(self, view, snippet):
         try:
-            field_names = [f['name'] for f in fmt_parser.parse(snippet['cmd'])]
+            field_names = [f['name'] for f in parse_command(snippet['cmd'])]
         except ParsingError as err:
             # TODO: show error
             return

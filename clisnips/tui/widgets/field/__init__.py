@@ -1,4 +1,4 @@
-from clisnips.strfmt.doc_nodes import Documentation, Parameter, ValueList, ValueRange
+from clisnips.syntax.documentation.nodes import Documentation, Parameter, ValueList, ValueRange
 from clisnips.tui.urwid_types import TextMarkup
 from .field import Field
 from .flag import FlagField

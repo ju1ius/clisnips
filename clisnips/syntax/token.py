@@ -1,24 +1,4 @@
-import enum
-
-
-class Tokens(enum.IntEnum):
-    EOF = enum.auto()
-    TEXT = enum.auto()
-    IDENTIFIER = enum.auto()
-    FLAG = enum.auto()
-    INTEGER = enum.auto()
-    FLOAT = enum.auto()
-    STRING = enum.auto()
-    CODE_FENCE = enum.auto()
-    LEFT_BRACE = enum.auto()
-    RIGHT_BRACE = enum.auto()
-    LEFT_BRACKET = enum.auto()
-    RIGHT_BRACKET = enum.auto()
-    LEFT_PAREN = enum.auto()
-    RIGHT_PAREN = enum.auto()
-    COMMA = enum.auto()
-    COLON = enum.auto()
-    DEFAULT_MARKER = enum.auto()
+from enum import Enum
 
 
 class Token:
@@ -33,7 +13,7 @@ class Token:
     def name(self) -> str:
         return self.type.name
 
-    def __init__(self, type: Tokens, start_line: int, start_col: int, value: str = ''):
+    def __init__(self, type: Enum, start_line: int, start_col: int, value: str = ''):
         self.type = type
         self.start_line = start_line
         self.start_col = start_col
