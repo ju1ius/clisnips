@@ -1,5 +1,4 @@
-from clisnips.strfmt.doc_lexer import Lexer
-from clisnips.strfmt.doc_tokens import *
+from clisnips.syntax.documentation.lexer import Lexer, Tokens
 
 
 def assert_token_list_equal(actual_tokens, expected_tokens):

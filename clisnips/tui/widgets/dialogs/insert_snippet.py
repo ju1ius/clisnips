@@ -4,8 +4,8 @@ from typing import Callable, Dict
 import urwid
 
 from clisnips.diff import InlineMyersSequenceMatcher
-from clisnips.strfmt import doc_parser, fmt_parser
-from clisnips.strfmt.doc_nodes import Documentation
+from clisnips.syntax import parse_command, parse_documentation
+from clisnips.syntax.documentation.nodes import Documentation
 from clisnips.tui.widgets.dialog import Dialog, ResponseType
 from clisnips.tui.widgets.divider import HorizontalDivider
 from clisnips.tui.widgets.field import field_from_documentation
@@ -17,7 +17,7 @@ class InsertSnippetDialog(Dialog):
 
     def __init__(self, parent, snippet):
         self._command = snippet['cmd']
-        self._doc = doc_parser.parse(snippet['doc'])
+        self._doc = parse_documentation(snippet['doc'])
         self._fields = self._create_fields(self._command, self._doc)
         self._differ = InlineMyersSequenceMatcher()
         self._diff_base = self._get_diff_base(self._command)
@@ -75,7 +75,7 @@ class InsertSnippetDialog(Dialog):
         self._update_output(silent=True)
 
     def _create_fields(self, command: str, documentation: Documentation) -> Dict[str, Field]:
-        field_names = [str(f['name']) for f in fmt_parser.parse(command)]
+        field_names = [str(f['name']) for f in parse_command(command)]
         fields = {}
         for name in field_names:
             field = field_from_documentation(name, documentation)
