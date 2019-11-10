@@ -38,8 +38,8 @@ class UrwidMarkupHelper:
                 escape = self._palette_escapes[attr]
             except KeyError:
                 escape = self._palette_escapes['default']
-            text_part = text[pos:pos + length]
-            output.append(f'{escape}{text_part}')
+            chunk = text[pos:pos + length]
+            output.append(f'{escape}{chunk}')
             pos += length
         return ''.join(output)
 

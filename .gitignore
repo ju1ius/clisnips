@@ -1,6 +1,5 @@
 *~
 /.idea
-*.ui#
 *.bak
 *.sqlite
 *.pyc
@@ -8,5 +7,4 @@ __pycache__
 .pytest_cache
 .mypy_cache
 
-/main.py
 /tmp
