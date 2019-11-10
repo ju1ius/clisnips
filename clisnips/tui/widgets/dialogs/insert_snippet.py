@@ -1,11 +1,11 @@
-import string
 from typing import Callable, Dict
 
 import urwid
 
-from clisnips.diff import InlineMyersSequenceMatcher
 from clisnips.syntax import parse_command, parse_documentation
+from clisnips.syntax.command.nodes import CommandTemplate
 from clisnips.syntax.documentation.nodes import Documentation
+from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.dialog import Dialog, ResponseType
 from clisnips.tui.widgets.divider import HorizontalDivider
 from clisnips.tui.widgets.field import field_from_documentation
@@ -16,18 +16,16 @@ from clisnips.utils import iterable
 class InsertSnippetDialog(Dialog):
 
     def __init__(self, parent, snippet):
-        self._command = snippet['cmd']
+        self._command = parse_command(snippet['cmd'])
         self._doc = parse_documentation(snippet['doc'])
         self._fields = self._create_fields(self._command, self._doc)
-        self._differ = InlineMyersSequenceMatcher()
-        self._diff_base = self._get_diff_base(self._command)
 
         title = urwid.Text(snippet['title'])
         doc_text = urwid.Text('')
         if self._doc.header:
             doc_text.set_text(self._doc.header.strip())
         self._output_text = urwid.Text('')
-        self._update_output()
+        self._update_output(silent=True)
 
         fields = list(iterable.join(HorizontalDivider(), self._fields.values()))
 
@@ -62,7 +60,7 @@ class InsertSnippetDialog(Dialog):
     def on_accept(self, callback: Callable, *args):
         def handler(dialog, response_type):
             if response_type == ResponseType.ACCEPT:
-                if self._accept():
+                if self._validate():
                     callback(self.get_output(), *args)
                     self._parent.close_dialog()
         urwid.connect_signal(self, self.Signals.RESPONSE, handler)
@@ -74,46 +72,35 @@ class InsertSnippetDialog(Dialog):
     def _on_field_changed(self, field):
         self._update_output(silent=True)
 
-    def _create_fields(self, command: str, documentation: Documentation) -> Dict[str, Field]:
-        field_names = [str(f['name']) for f in parse_command(command)]
+    def _create_fields(self, command: CommandTemplate, documentation: Documentation) -> Dict[str, Field]:
         fields = {}
-        for name in field_names:
+        for name in command.field_names:
             field = field_from_documentation(name, documentation)
             urwid.connect_signal(field, 'changed', self._on_field_changed)
             fields[name] = field
         return fields
 
     def _update_output(self, silent=False):
-        fields = {n: f.get_value() for n, f in self._fields.items()}
-        fields = self._apply_code_blocks(fields, silent)
-        int_keys, str_keys = [], []
-        for k in fields.keys():
-            if k.isdigit():
-                int_keys.append(k)
-            else:
-                str_keys.append(k)
-        args = [fields[k] for k in sorted(int_keys)]
-        kwargs = {k: fields[k] for k in str_keys}
-        output = self._command.format(*args, **kwargs)
-        #
-        output = self._get_output_markup(output)
+        fields = self._get_field_values(silent)
+        output = self._get_output_markup(fields)
         self._output_text.set_text(output)
 
-    def _apply_code_blocks(self, field_values, ignore_exceptions=False):
-        if not self._doc.code_blocks:
-            return field_values
-        _vars = {'fields': field_values.copy()}
-        for code in self._doc.code_blocks:
-            try:
-                code.execute(_vars)
-            except Exception as err:
-                if ignore_exceptions:
-                    return field_values
-                else:
-                    raise
-        return _vars['fields']
+    def _get_field_values(self, silent=False):
+        fields = {n: f.get_value() for n, f in self._fields.items()}
+        return self._apply_code_blocks(fields, silent)
 
-    def _accept(self):
+    def _apply_code_blocks(self, field_values, silent=False):
+        context = {'fields': field_values}
+        try:
+            context = self._doc.execute_code(context)
+        except Exception:
+            if silent:
+                return field_values
+            else:
+                raise
+        return context['fields'] or field_values
+
+    def _validate(self):
         try:
             self._update_output(silent=False)
         except:
@@ -121,23 +108,11 @@ class InsertSnippetDialog(Dialog):
             return False
         return True
 
-    def _get_output_markup(self, text):
-        self._differ.set_seqs(self._diff_base, text)
+    def _get_output_markup(self, fields) -> TextMarkup:
         markup = []
-        for op, start1, end1, start2, end2 in self._differ.get_opcodes():
-            if op == 'equal':
-                markup.append(text[start2:end2])
-            elif op == 'insert':
-                markup.append(('diff:insert', text[start2:end2]))
-            elif op == 'delete':
-                # shouldn't happen...
-                pass
-            elif op == 'replace':
-                # shouldn't happen either but left for completeness
-                markup.append(('diff:insert', text[start2:end2]))
+        for is_field, value in self._command.apply(fields):
+            if is_field:
+                markup.append(('diff:insert', value))
+            else:
+                markup.append(value)
         return markup
-
-    @staticmethod
-    def _get_diff_base(command: str):
-        formatter = string.Formatter()
-        return ''.join(f[0] for f in formatter.parse(command))

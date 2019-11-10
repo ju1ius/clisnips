@@ -37,11 +37,11 @@ class SnippetsListScreen(Screen):
 
     def _on_snippet_selected(self, view, snippet):
         try:
-            field_names = [f['name'] for f in parse_command(snippet['cmd'])]
+            cmd = parse_command(snippet['cmd'])
         except ParsingError as err:
             # TODO: show error
             return
-        if not field_names:
+        if not cmd.field_names:
             urwid.emit_signal(self, 'snippet-applied', snippet['cmd'])
             return
         self.view.open_insert_snippet_dialog(snippet)
