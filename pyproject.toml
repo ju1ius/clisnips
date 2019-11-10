@@ -6,6 +6,7 @@ authors = ["ju1ius <jules.bernable@gmail.com>"]
 license = "GPL-3.0+"
 readme = "README.md"
 repository = "https://github.com/ju1ius/clisnips"
+keywords = "snippet snippets cli tui"
 classifiers = [
   'Development Status :: 3 - Alpha',
   'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
