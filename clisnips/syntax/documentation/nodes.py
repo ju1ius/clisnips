@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Dict, List
 
 from clisnips.utils.number import get_num_decimals
@@ -9,6 +10,14 @@ class Documentation(object):
         self.header: str = ''
         self.parameters: Dict[str, Parameter] = dict()
         self.code_blocks: List[CodeBlock] = []
+
+    def execute_code(self, context: Dict):
+        if not self.code_blocks:
+            return context
+        ctx = deepcopy(context)
+        for code in self.code_blocks:
+            code.execute(ctx)
+        return ctx
 
     def __str__(self):
         code = '\n'.join(str(c) for c in self.code_blocks)
@@ -92,10 +101,8 @@ class CodeBlock(object):
         self.code = code
         self._bytecode = compile(code, '<codeblock>', 'exec')
 
-    def execute(self, _vars=None):
-        if not _vars:
-            _vars = {}
-        exec(self._bytecode, _vars)
+    def execute(self, context: Dict):
+        exec(self._bytecode, context)
 
     def __str__(self):
         return f'```\n{self.code}\n```'
