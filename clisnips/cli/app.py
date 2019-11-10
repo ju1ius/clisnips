@@ -7,6 +7,7 @@ from .dump_command import DumpCommand
 from .export_command import ExportCommand
 from .import_command import ImportCommand
 from .optimize_command import OptimizeCommand
+from .install_key_bindings_command import InstallShellKeyBindingsCommand
 
 
 class Application:
@@ -17,6 +18,7 @@ class Application:
         'optimize': OptimizeCommand,
         'dump': DumpCommand,
         'config': ShowConfigCommand,
+        'key-bindings': InstallShellKeyBindingsCommand,
     }
 
     def run(self) -> int:
@@ -53,6 +55,9 @@ class Application:
         optimize_cmd.add_argument('--rebuild', action='store_true', help='Rebuilds the search index before optimizing.')
         #
         config_cmd = sub_parsers.add_parser('config', help='Shows the current configuration.')
+        #
+        bindings_cmd = sub_parsers.add_parser('key-bindings', help='Installs clisnips key bindings for the given shell.')
+        bindings_cmd.add_argument('shell', choices=['bash', 'zsh'])
 
         return parser.parse_args()
 
