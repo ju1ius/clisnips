@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "clisnips"
+version = "0.1.0"
+description = "A command-line snippets manager."
+authors = ["ju1ius <jules.bernable@gmail.com>"]
+license = "GPL-3.0+"
+readme = "README.md"
+repository = "https://github.com/ju1ius/clisnips"
+classifiers = [
+  'Development Status :: 3 - Alpha',
+  'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+  'Environment :: Console',
+  'Environment :: Console :: Curses',
+  'Operating System :: Unix',
+  'Operating System :: POSIX',
+  'Operating System :: Microsoft :: Windows',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3.7',
+  'Programming Language :: Python :: Implementation :: CPython',
+  'Topic :: Terminals',
+  'Topic :: Terminals :: Terminal Emulators/X Terminals',
+  'Topic :: System :: System Shells',
+  'Topic :: Utilities',
+]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+urwid = "^2.0"
+pygments = "^2.4"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+pyfakefs = "^3.6"
+mypy = "^0.740.0"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
