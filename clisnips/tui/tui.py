@@ -46,8 +46,6 @@ class TUI:
         urwid.connect_signal(obj, name, callback, weak_args=weak_args, user_args=user_args)
 
     def main(self):
-        # signal.signal(signal.SIGTSTP, self._on_suspend_signal)
-
         signal.signal(signal.SIGINT, self._on_terminate_signal)
         signal.signal(signal.SIGQUIT, self._on_terminate_signal)
         signal.signal(signal.SIGTERM, self._on_terminate_signal)
@@ -65,12 +63,6 @@ class TUI:
         if key in ('esc', 'q'):
             self.stop()
             return
-
-    def _on_suspend_signal(self, signum, frame):
-        # self.main_loop.screen.clear()
-        # self.main_loop.screen.stop()
-        self.main_loop.stop()
-        pass
 
     @staticmethod
     def _on_terminate_signal(signum, frame):
