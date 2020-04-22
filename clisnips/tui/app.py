@@ -1,6 +1,9 @@
 import atexit
 import logging
 
+# import patches before everything else
+from . import patches
+
 from clisnips.config import xdg_data_home
 from clisnips.dic import DependencyInjectionContainer
 from .logging import logger
