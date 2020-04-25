@@ -5,6 +5,7 @@ from clisnips.tui.models.snippets import SnippetsModel
 from clisnips.tui.view import View
 from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
 from clisnips.tui.widgets.dialogs.edit_snippet import EditSnippetDialog
+from clisnips.tui.widgets.dialogs.help import HelpDialog
 from clisnips.tui.widgets.dialogs.insert_snippet import InsertSnippetDialog
 from clisnips.tui.widgets.dialogs.list_options import ListOptionsDialog
 from clisnips.tui.widgets.dialogs.show_snippet import ShowSnippetDialog
@@ -27,6 +28,7 @@ class SnippetListView(View):
         'create-snippet-requested',
         'delete-snippet-requested',
         'edit-snippet-requested',
+        'help-requested',
     ]
 
     def __init__(self, model: SnippetsModel):
@@ -109,12 +111,16 @@ class SnippetListView(View):
             self._table_store.update(index, snippet)
         self.close_dialog()
 
+    def _open_help_dialog(self):
+        dialog = HelpDialog(self)
+        self.open_dialog(dialog, 'Help')
+
     def keypress(self, size, key):
         key = super().keypress(size, key)
         if not key:
             return
-        if key == '?':
-            # TODO: help screen
+        if key == 'f1':
+            self._open_help_dialog()
             return
         if key == 'f2':
             self._open_sort_dialog()
@@ -158,7 +164,7 @@ class SnippetListView(View):
         if key == 'e':
             self._open_edit_dialog()
             return
-        logger.debug(key)
+        # logger.debug(key)
         return key
 
     def _on_search_term_changed(self, entry, text):

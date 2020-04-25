@@ -11,7 +11,7 @@ from clisnips.tui.views.snippets_list import SnippetListView
 class SnippetsListScreen(Screen):
 
     def __init__(self, config: Config, model: SnippetsModel):
-        super().__init__(['snippet-applied'])
+        super().__init__(['snippet-applied', 'help-requested'])
 
         self._config = config
         self._model = model
@@ -26,6 +26,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
         urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
         urwid.connect_signal(self.view, 'create-snippet-requested', self._on_create_snippet_requested)
+        urwid.connect_signal(self.view, 'help-requested', self._on_help_requested)
 
         self._model.list()
 
@@ -84,3 +85,6 @@ class SnippetsListScreen(Screen):
     def _on_create_snippet_requested(self, view, snippet):
         # TODO: validate and proceed or cancel
         self._model.create(snippet)
+
+    def _on_help_requested(self, view):
+        urwid.emit_signal(self, 'help-requested')

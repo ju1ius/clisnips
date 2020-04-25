@@ -6,6 +6,9 @@ palette = [
     ('view:default', 'light gray', 'black'),
     ('search-entry:caption', 'dark cyan', 'black'),
 
+    # Help screen
+    ('help:key', 'dark cyan', 'black'),
+
     # Buttons
     ('button:suggested', 'dark cyan,bold', 'black'),
     ('button:destructive', 'dark red,bold', 'black'),
