@@ -38,7 +38,8 @@ class TUI:
         return screen
 
     def refresh(self):
-        self.main_loop.draw_screen()
+        if self.main_loop.screen.started:
+            self.main_loop.draw_screen()
 
     @staticmethod
     def connect(obj: object, name: str, callback: Callable,

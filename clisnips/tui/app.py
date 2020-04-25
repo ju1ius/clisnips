@@ -18,13 +18,18 @@ class Application:
         self.config = dic.config
         self._configure_logging()
         self.database = dic.database
+        self.screen = None
         self.ui = TUI()
         self.ui.register_screen('snippets-list', self._build_snippets_list)
         atexit.register(self._on_exit)
 
     def run(self):
-        self.ui.build_screen('snippets-list', display=True)
+        self.activate_screen('snippets-list')
         self.ui.main()
+
+    def activate_screen(self, name: str, **kwargs):
+        self.screen = self.ui.build_screen(name, display=True, **kwargs)
+        self.ui.refresh()
 
     def _build_snippets_list(self, *args, **kwargs):
         screen = SnippetsListScreen(self.config, self.container.list_model)

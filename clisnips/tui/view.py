@@ -1,6 +1,7 @@
 import urwid
 
 from .widgets.dialog import DialogFrame, DialogOverlay
+from .widgets.dialogs.error import ErrorDialog
 
 
 class View(urwid.WidgetWrap):
@@ -21,3 +22,7 @@ class View(urwid.WidgetWrap):
     def close_dialog(self):
         self._w.original_widget = self.view
         self._has_dialog = False
+
+    def show_exception_dialog(self, err: Exception):
+        dialog = ErrorDialog(self, err)
+        self.open_dialog(dialog, 'Error')
