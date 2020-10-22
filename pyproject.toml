@@ -28,7 +28,7 @@ classifiers = [
 clisnips = 'clisnips.__main__:main'
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 urwid = "^2.0"
 pygments = "^2.4"
 
