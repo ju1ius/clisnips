@@ -35,19 +35,19 @@ CREATE INDEX IF NOT EXISTS snip_ranking_idx ON snippets(ranking DESC);
 -- and to keep track of command usage and ranking.
 --
 
-CREATE TRIGGER IF NOT EXISTS snippets_bu
+CREATE TRIGGER IF NOT EXISTS snippets_before_update
 BEFORE UPDATE ON snippets
 BEGIN
     DELETE FROM snippets_index WHERE rowid=OLD.rowid;
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_bd
+CREATE TRIGGER IF NOT EXISTS snippets_before_delete
 BEFORE DELETE ON snippets
 BEGIN
     DELETE FROM snippets_index WHERE rowid=OLD.rowid;
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_au
+CREATE TRIGGER IF NOT EXISTS snippets_after_update
 AFTER UPDATE ON snippets
 BEGIN
     -- Update Ranking
@@ -60,7 +60,7 @@ BEGIN
     INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_ai
+CREATE TRIGGER IF NOT EXISTS snippets_after_insert
 AFTER INSERT ON snippets
 BEGIN
     -- Update Ranking
