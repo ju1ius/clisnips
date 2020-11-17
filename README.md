@@ -10,7 +10,7 @@ It provides a graphical command-line user interface in which you can save, searc
 
 ## Installation
 
-clisnips requires python 3.7 or higher.
+clisnips requires python 3.8 or higher.
 
 ### 1. Install clisnips
 
