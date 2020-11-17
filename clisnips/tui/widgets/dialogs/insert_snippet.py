@@ -47,8 +47,8 @@ class InsertSnippetDialog(Dialog):
 
         super().__init__(parent, body)
         self.set_buttons((
-            ('Cancel', ResponseType.REJECT),
             ('Apply', ResponseType.ACCEPT),
+            ('Cancel', ResponseType.REJECT),
         ))
         self._action_area.focus_position = 1
         urwid.connect_signal(self, self.Signals.RESPONSE, self._on_response)
