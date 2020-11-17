@@ -58,6 +58,7 @@ class TUI:
 
     def exit_with_message(self, message: str):
         atexit.register(lambda: print(message, sep=''))
+        self.main_loop.screen.clear()
         self.stop()
 
     def _on_unhandled_input(self, key):
