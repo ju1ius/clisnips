@@ -1,13 +1,9 @@
 import time
 from textwrap import dedent
 from typing import Callable, TextIO
+from xml.etree import ElementTree
 
 from clisnips.database.snippets_db import SnippetsDatabase
-
-try:
-    from xml.etree import cElementTree as ElementTree
-except ImportError:
-    from xml.etree import ElementTree
 
 
 def import_xml(db: SnippetsDatabase, file: TextIO, log: Callable):
