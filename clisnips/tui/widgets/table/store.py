@@ -46,13 +46,13 @@ class TableStore:
     def rows(self):
         return self._rows
 
-    def emit(self, signal, *args):
+    def emit(self, signal: Signals, *args):
         urwid.emit_signal(self, signal, self, *args)
 
-    def connect(self, signal, callback):
+    def connect(self, signal: Signals, callback):
         urwid.connect_signal(self, signal, callback)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Union[int, slice]):
         if isinstance(key, (int, slice)):
             return self._rows[key]
         raise TypeError(f'Table store indices must be int or slice, not {type(key).__name__}')

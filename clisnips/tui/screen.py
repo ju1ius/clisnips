@@ -14,8 +14,5 @@ class Screen:
         if signals:
             urwid.register_signal(self.__class__, signals)
 
-    def show_exception_dialog(self, err):
-        self.view.show_exception_dialog(err)
-
     def quit(self, *args, **kwargs):
         raise urwid.ExitMainLoop()

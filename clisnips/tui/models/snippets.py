@@ -1,6 +1,6 @@
 import enum
 from contextlib import suppress
-from typing import Tuple
+from typing import Any, Callable, Iterable, Tuple
 
 import urwid
 
@@ -22,10 +22,16 @@ class SnippetsModel:
         self._pager = pager
         urwid.register_signal(self.__class__, list(self.Signals))
 
-    def get_database(self):
+    def get_database(self) -> SnippetsDatabase:
         return self._db
 
-    def connect(self, signal, callback, weak_args=None, user_args=None):
+    def connect(
+        self,
+        signal: Signals,
+        callback: Callable[..., Any],
+        weak_args: Iterable = (),
+        user_args: Iterable = (),
+    ):
         urwid.connect_signal(self, signal, callback, weak_args=weak_args, user_args=user_args)
 
     @property

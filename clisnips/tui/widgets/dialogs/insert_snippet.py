@@ -51,7 +51,7 @@ class InsertSnippetDialog(Dialog):
             ('Cancel', ResponseType.REJECT),
         ))
         self._action_area.focus_position = 1
-        urwid.connect_signal(self, self.Signals.RESPONSE, self._on_response)
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, self._on_response)
 
     def get_output(self):
         text, attrs = self._output_text.get_text()
@@ -63,7 +63,7 @@ class InsertSnippetDialog(Dialog):
                 if self._validate():
                     callback(self.get_output(), *args)
                     self._parent.close_dialog()
-        urwid.connect_signal(self, self.Signals.RESPONSE, handler)
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type, *args):
         if response_type == ResponseType.REJECT:
@@ -103,7 +103,7 @@ class InsertSnippetDialog(Dialog):
     def _validate(self):
         try:
             self._update_output(silent=False)
-        except:
+        except Exception:
             # TODO: show error message
             return False
         return True

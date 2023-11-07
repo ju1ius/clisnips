@@ -1,6 +1,6 @@
 """
 parsing code adapted from:
-http://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plugins/LocalCommandList.py
+https://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plugins/LocalCommandList.py
 """
 
 import re

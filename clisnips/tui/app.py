@@ -20,9 +20,10 @@ class Application:
         self.ui.register_screen('snippets-list', self._build_snippets_list)
         atexit.register(self._on_exit)
 
-    def run(self):
+    def run(self) -> int:
         self.activate_screen('snippets-list')
         self.ui.main()
+        return 0
 
     def activate_screen(self, name: str, **kwargs):
         self.screen = self.ui.build_screen(name, display=True, **kwargs)
@@ -30,7 +31,7 @@ class Application:
 
     def _build_snippets_list(self, *args, **kwargs):
         screen = SnippetsListScreen(self.config, self.container.list_model)
-        self.ui.connect(screen, 'snippet-applied', self._on_snippet_applied)
+        self.ui.connect(screen, SnippetsListScreen.Signals.SNIPPET_APPLIED, self._on_snippet_applied)
         return screen
 
     def _configure_logging(self):

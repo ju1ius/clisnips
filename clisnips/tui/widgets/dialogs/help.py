@@ -25,7 +25,7 @@ SHORTCUTS = (
 )
 
 
-def get_key_column_width():
+def _get_key_column_width():
     key, desc = max(SHORTCUTS, key=lambda x: len(x[0]))
     return len(key)
 
@@ -33,9 +33,8 @@ def get_key_column_width():
 class HelpDialog(Dialog):
 
     def __init__(self, parent):
-
         body = []
-        key_width = get_key_column_width()
+        key_width = _get_key_column_width()
         for key, desc in SHORTCUTS:
             cols = urwid.Columns([
                 (key_width, urwid.Text(('help:key', key))),
@@ -50,4 +49,4 @@ class HelpDialog(Dialog):
             ('OK', ResponseType.ACCEPT),
         ))
         self._frame.focus_position = 1
-        urwid.connect_signal(self, self.Signals.RESPONSE, lambda *x: self._parent.close_dialog())
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self._parent.close_dialog())

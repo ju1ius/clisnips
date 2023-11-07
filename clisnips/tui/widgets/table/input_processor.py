@@ -66,13 +66,10 @@ class InputProcessor:
             'l': Direction.RIGHT,
             'ctrl right': Direction.RIGHT,
         }
-        self._single_offset_keys = ['up', 'down', 'left', 'right', 'j', 'k', 'h', 'l']
-        self._max_offset_keys = ['home', 'end', 'ctrl left', 'ctrl right', '0', '$', 'G']
-        self._page_offset_keys = ['page up', 'page down', 'ctrl u', 'ctrl d']
-
-        self._digit_keys = [str(i) for i in range(1, 10)]
-        self._command_keys = ['g']
-        self._command_keys.extend(self._digit_keys)
+        self._single_offset_keys = {'up', 'down', 'left', 'right', 'j', 'k', 'h', 'l'}
+        self._max_offset_keys = {'home', 'end', 'ctrl left', 'ctrl right', '0', '$', 'G'}
+        self._page_offset_keys = {'page up', 'page down', 'ctrl u', 'ctrl d'}
+        self._command_keys = {'g'} | {str(i) for i in range(1, 10)}
 
     def process_key(self, key: str) -> Optional[NavigationCommand]:
         if not self._pending_command:

@@ -2,6 +2,7 @@ import enum
 import multiprocessing
 import multiprocessing.queues
 import threading
+import queue
 
 import urwid
 
@@ -78,7 +79,7 @@ class MessageQueueListener:
             # Listen for results on the queue and process them accordingly
             try:
                 data = self._poll_queue()
-            except:
+            except queue.Empty:
                 continue
             message_type, *args = data
             self.emit(message_type, *args)
@@ -94,5 +95,5 @@ class IndeterminateMessageQueueListener(MessageQueueListener):
     def _poll_queue(self):
         try:
             return self._message_queue.get(True, 0.1)
-        except:
+        except queue.Empty:
             return MessageType.PULSE, None

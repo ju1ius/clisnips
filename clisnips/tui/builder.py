@@ -18,14 +18,14 @@ class Builder:
 
     def __init__(self, root_widget: urwid.WidgetPlaceholder):
         self.root_widget = root_widget
-        self._build_callbacks: Dict[str, BuildCallback] = {}
+        self._on_build_handlers: Dict[str, BuildCallback] = {}
 
-    def register_screen(self, name: str, build_callback: BuildCallback):
-        self._build_callbacks[name] = build_callback
+    def register_screen(self, name: str, on_build: BuildCallback):
+        self._on_build_handlers[name] = on_build
 
     def build_screen(self, name: str, display: bool = False, **kwargs) -> Screen:
-        build_callback = self._build_callbacks[name]
-        screen = build_callback(**kwargs)
+        handler = self._on_build_handlers[name]
+        screen = handler(**kwargs)
         if display:
             self.root_widget.original_widget = screen.view
         return screen

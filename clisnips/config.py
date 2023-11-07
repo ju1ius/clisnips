@@ -7,9 +7,9 @@ from ._types import AnyPath
 
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']
-HELP_URI = 'http://github.com/ju1ius/clisnips/wiki'
+HELP_URI = 'https://github.com/ju1ius/clisnips/wiki'
 LICENSE = """\
-Copyright (C) 2014 {authors}
+Copyright (C) {authors}
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 """.format(authors=', '.join(AUTHORS))
 
 DEFAULTS = '''

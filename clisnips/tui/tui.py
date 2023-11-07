@@ -43,7 +43,7 @@ class TUI:
 
     @staticmethod
     def connect(obj: object, name: str, callback: Callable,
-                weak_args: Optional[Iterable] = None, user_args: Optional[Iterable] = None):
+                weak_args: Iterable = (), user_args: Iterable = ()):
         urwid.connect_signal(obj, name, callback, weak_args=weak_args, user_args=user_args)
 
     def main(self):
@@ -61,10 +61,11 @@ class TUI:
         self.main_loop.screen.clear()
         self.stop()
 
-    def _on_unhandled_input(self, key):
+    def _on_unhandled_input(self, key) -> bool:
         if key in ('esc', 'q'):
             self.stop()
-            return
+            return True
+        return False
 
     @staticmethod
     def _on_terminate_signal(signum, frame):

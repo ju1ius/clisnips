@@ -1,3 +1,5 @@
+import enum
+
 import urwid
 
 from clisnips.tui.logging import logger
@@ -17,19 +19,20 @@ from clisnips.tui.widgets.table import Column, Table, TableStore
 
 class SnippetListView(View):
 
-    signals = [
-        'search-changed',
-        'snippet-selected',
-        'sort-column-selected',
-        'sort-order-selected',
-        'page-size-changed',
-        'page-requested',
-        'apply-snippet-requested',
-        'create-snippet-requested',
-        'delete-snippet-requested',
-        'edit-snippet-requested',
-        'help-requested',
-    ]
+    class Signals(str, enum.Enum):
+        SEARCH_CHANGED = 'search-changed'
+        SNIPPET_SELECTED = 'snippet-selected'
+        SORT_COLUMN_SELECTED = 'sort-column-selected'
+        SORT_ORDER_SELECTED = 'sort-order-selected'
+        PAGE_SIZE_CHANGED = 'page-size-changed'
+        PAGE_REQUESTED = 'page-requested'
+        APPLY_SNIPPET_REQUESTED = 'apply-snippet-requested'
+        CREATE_SNIPPET_REQUESTED = 'create-snippet-requested'
+        DELETE_SNIPPET_REQUESTED = 'delete-snippet-requested'
+        EDIT_SNIPPET_REQUESTED = 'edit-snippet-requested'
+        HELP_REQUESTED = 'help-requested'
+
+    signals = list(Signals)
 
     def __init__(self, model: SnippetsModel):
 
@@ -61,13 +64,13 @@ class SnippetListView(View):
 
     def open_insert_snippet_dialog(self, snippet):
         dialog = InsertSnippetDialog(self, snippet)
-        dialog.on_accept(lambda v: self._emit('apply-snippet-requested', v))
+        dialog.on_accept(lambda v: self._emit(self.Signals.APPLY_SNIPPET_REQUESTED, v))
         self.open_dialog(dialog, title='Insert snippet')
 
     def _open_sort_dialog(self):
         dialog = ListOptionsDialog(self, self._model)
-        urwid.connect_signal(dialog, 'sort-changed', self._on_sort_column_selected)
-        urwid.connect_signal(dialog, 'page-size-changed', self._on_page_size_changed)
+        urwid.connect_signal(dialog, dialog.Signals.SORT_CHANGED, self._on_sort_column_selected)
+        urwid.connect_signal(dialog, dialog.Signals.PAGE_SIZE_CHANGED, self._on_page_size_changed)
         self.open_dialog(dialog, title='List Options', width=35, height=14)
 
     def _open_show_dialog(self):
@@ -141,16 +144,16 @@ class SnippetListView(View):
             self.view.focus_position = 'header'
             return
         if key == 'n':
-            self._emit('page-requested', 'next')
+            self._emit(self.Signals.PAGE_REQUESTED, 'next')
             return
         if key == 'p':
-            self._emit('page-requested', 'previous')
+            self._emit(self.Signals.PAGE_REQUESTED, 'previous')
             return
         if key == 'f':
-            self._emit('page-requested', 'first')
+            self._emit(self.Signals.PAGE_REQUESTED, 'first')
             return
         if key == 'l':
-            self._emit('page-requested', 'last')
+            self._emit(self.Signals.PAGE_REQUESTED, 'last')
             return
         if key == 's':
             self._open_show_dialog()
@@ -168,17 +171,17 @@ class SnippetListView(View):
         return key
 
     def _on_search_term_changed(self, entry, text):
-        self._emit('search-changed', text)
+        self._emit(self.Signals.SEARCH_CHANGED, text)
 
     def _on_snippet_list_row_selected(self, table, row):
         snippet = self._model.get(row['id'])
-        self._emit('snippet-selected', snippet)
+        self._emit(self.Signals.SNIPPET_SELECTED, snippet)
 
     def _on_sort_column_selected(self, dialog, column, order):
-        self._emit('sort-column-selected', column, order)
+        self._emit(self.Signals.SORT_COLUMN_SELECTED, column, order)
 
-    def _on_page_size_changed(self, dialog, page_size):
-        self._emit('page-size-changed', page_size)
+    def _on_page_size_changed(self, dialog, page_size: int):
+        self._emit(self.Signals.PAGE_SIZE_CHANGED, page_size)
 
     def _on_delete_snippet_requested(self):
         row = self.snippet_list.get_selected()
@@ -186,11 +189,11 @@ class SnippetListView(View):
             return
         msg = 'Are you sure you want to delete this snippet ?'
         dialog = ConfirmDialog(self, msg)
-        dialog.on_accept(lambda *x: self._emit('delete-snippet-requested', row['id']))
+        dialog.on_accept(lambda *x: self._emit(self.Signals.DELETE_SNIPPET_REQUESTED, row['id']))
         self.open_dialog(dialog, 'Caution !')
 
     def _on_edit_dialog_accept(self, snippet):
-        self._emit('edit-snippet-requested', snippet)
+        self._emit(self.Signals.EDIT_SNIPPET_REQUESTED, snippet)
 
     def _on_create_dialog_accept(self, snippet):
-        self._emit('create-snippet-requested', snippet)
+        self._emit(self.Signals.CREATE_SNIPPET_REQUESTED, snippet)

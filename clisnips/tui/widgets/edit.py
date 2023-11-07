@@ -4,7 +4,7 @@ import re
 import urwid
 
 
-def _next_word_position(text: str, start_position: int, backward=False):
+def _next_word_position(text: str, start_position: int, backward=False) -> int:
     if backward:
         match_iterator = re.finditer(r'(\w+\b|^)', text, flags=re.UNICODE)
         match_positions = reversed([m.start() for m in match_iterator])
@@ -16,6 +16,7 @@ def _next_word_position(text: str, start_position: int, backward=False):
     for pos in match_positions:
         if op(pos, start_position):
             return pos
+    # TODO: return something here
 
 
 class EmacsEdit(urwid.Edit):
@@ -69,6 +70,7 @@ class SourceEdit(EmacsEdit):
     This works by calling set_edit_markup from the change event
     as well as whenever markup changes while text does not.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._edit_attrs = []

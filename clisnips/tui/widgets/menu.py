@@ -1,3 +1,5 @@
+import enum
+
 import urwid
 
 from .list_box import CyclingFocusListBox
@@ -5,7 +7,10 @@ from .list_box import CyclingFocusListBox
 
 class PopupMenu(urwid.WidgetWrap):
 
-    signals = ['closed']
+    class Signals(str, enum.Enum):
+        CLOSED = 'closed'
+
+    signals = [Signals.CLOSED]
 
     def __init__(self, title=''):
         self._walker = urwid.SimpleFocusListWalker([])
@@ -26,7 +31,7 @@ class PopupMenu(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         if key == 'esc':
-            self._emit('closed')
+            self._emit(PopupMenu.Signals.CLOSED)
             return
         return super().keypress(size, key)
 

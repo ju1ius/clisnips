@@ -1,3 +1,5 @@
+import enum
+
 import urwid
 
 from clisnips.config import Config
@@ -10,23 +12,28 @@ from clisnips.tui.views.snippets_list import SnippetListView
 
 class SnippetsListScreen(Screen):
 
+    class Signals(enum.Enum):
+        SNIPPET_APPLIED = 'snippet-applied'
+        HELP_REQUESTED = 'help-requested'
+
     def __init__(self, config: Config, model: SnippetsModel):
-        super().__init__(['snippet-applied', 'help-requested'])
+        super().__init__(list(self.Signals))
 
         self._config = config
         self._model = model
 
         self.view = SnippetListView(self._model)
-        urwid.connect_signal(self.view, 'search-changed', self. _on_search_term_changed)
-        urwid.connect_signal(self.view, 'snippet-selected', self._on_snippet_selected)
-        urwid.connect_signal(self.view, 'sort-column-selected', self._on_sort_column_selected)
-        urwid.connect_signal(self.view, 'page-size-changed', self._on_page_size_changed)
-        urwid.connect_signal(self.view, 'page-requested', self._on_page_requested)
-        urwid.connect_signal(self.view, 'apply-snippet-requested', self._on_apply_snippet_requested)
-        urwid.connect_signal(self.view, 'delete-snippet-requested', self._on_delete_snippet_requested)
-        urwid.connect_signal(self.view, 'edit-snippet-requested', self._on_edit_snippet_requested)
-        urwid.connect_signal(self.view, 'create-snippet-requested', self._on_create_snippet_requested)
-        urwid.connect_signal(self.view, 'help-requested', self._on_help_requested)
+        signals = SnippetListView.Signals
+        urwid.connect_signal(self.view, signals.SEARCH_CHANGED, self. _on_search_term_changed)
+        urwid.connect_signal(self.view, signals.SNIPPET_SELECTED, self._on_snippet_selected)
+        urwid.connect_signal(self.view, signals.SORT_COLUMN_SELECTED, self._on_sort_column_selected)
+        urwid.connect_signal(self.view, signals.PAGE_SIZE_CHANGED, self._on_page_size_changed)
+        urwid.connect_signal(self.view, signals.PAGE_REQUESTED, self._on_page_requested)
+        urwid.connect_signal(self.view, signals.APPLY_SNIPPET_REQUESTED, self._on_apply_snippet_requested)
+        urwid.connect_signal(self.view, signals.DELETE_SNIPPET_REQUESTED, self._on_delete_snippet_requested)
+        urwid.connect_signal(self.view, signals.EDIT_SNIPPET_REQUESTED, self._on_edit_snippet_requested)
+        urwid.connect_signal(self.view, signals.CREATE_SNIPPET_REQUESTED, self._on_create_snippet_requested)
+        urwid.connect_signal(self.view, signals.HELP_REQUESTED, self._on_help_requested)
 
         self._model.list()
 
@@ -43,7 +50,7 @@ class SnippetsListScreen(Screen):
             # TODO: show error
             return
         if not cmd.field_names:
-            urwid.emit_signal(self, 'snippet-applied', snippet['cmd'])
+            urwid.emit_signal(self, self.Signals.SNIPPET_APPLIED, snippet['cmd'])
             return
         self.view.open_insert_snippet_dialog(snippet)
 
@@ -56,7 +63,9 @@ class SnippetsListScreen(Screen):
         else:
             self._model.list()
 
-    def _on_page_size_changed(self, view, page_size):
+    def _on_page_size_changed(self, view, page_size: int):
+        if not isinstance(page_size, int):
+            raise Exception('Page size must be an integer')
         self._model.set_page_size(page_size)
         self._config.pager_page_size = page_size
 
@@ -73,7 +82,7 @@ class SnippetsListScreen(Screen):
             self._model.previous_page()
 
     def _on_apply_snippet_requested(self, view, command):
-        urwid.emit_signal(self, 'snippet-applied', command)
+        urwid.emit_signal(self, self.Signals.SNIPPET_APPLIED, command)
 
     def _on_delete_snippet_requested(self, view, rowid):
         self._model.delete(rowid)
@@ -87,4 +96,4 @@ class SnippetsListScreen(Screen):
         self._model.create(snippet)
 
     def _on_help_requested(self, view):
-        urwid.emit_signal(self, 'help-requested')
+        urwid.emit_signal(self, self.Signals.HELP_REQUESTED)

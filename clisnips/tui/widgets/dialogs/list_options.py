@@ -1,3 +1,5 @@
+import enum
+
 import urwid
 
 from clisnips.tui.logging import logger
@@ -7,8 +9,11 @@ from clisnips.tui.widgets.divider import HorizontalDivider
 
 
 class ListOptionsDialog(Dialog):
+    class Signals(str, enum.Enum):
+        SORT_CHANGED = 'sort-changed'
+        PAGE_SIZE_CHANGED = 'page-size-changed'
 
-    signals = ['sort-changed', 'page-size-changed']
+    signals = list(Signals)
 
     column_choices = {
         'ranking': 'Sort by popularity',
@@ -56,15 +61,15 @@ class ListOptionsDialog(Dialog):
 
         super().__init__(parent, body)
 
-    def _on_column_choice_changed(self, button, selected, value):
+    def _on_column_choice_changed(self, button: urwid.RadioButton, selected: bool, value: str):
         if selected:
             sort_column, sort_order = self._model.sort_column
-            self._emit('sort-changed', value, sort_order)
+            self._emit(self.Signals.SORT_CHANGED, value, sort_order)
 
-    def _on_order_choice_changed(self, button, selected, value):
+    def _on_order_choice_changed(self, button: urwid.RadioButton, selected: bool, value: str):
         if selected:
             sort_column, sort_order = self._model.sort_column
-            self._emit('sort-changed', sort_column, value)
+            self._emit(self.Signals.SORT_CHANGED, sort_column, value)
 
-    def _on_page_size_changed(self, edit, value):
-        self._emit('page-size-changed', value)
+    def _on_page_size_changed(self, edit: urwid.IntEdit, _):
+        self._emit(self.Signals.PAGE_SIZE_CHANGED, edit.value())

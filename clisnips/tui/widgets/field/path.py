@@ -1,3 +1,5 @@
+import enum
+
 import urwid
 
 from clisnips._types import AnyPath
@@ -25,7 +27,7 @@ class PathEntry(Entry, urwid.PopUpLauncher):
 
         self._menu = PathCompletionMenu()
         urwid.connect_signal(self._menu, 'closed', lambda *x: self.close_pop_up())
-        urwid.connect_signal(self._menu, 'completion-selected', self._on_completion_selected)
+        urwid.connect_signal(self._menu, self._menu.Signals.COMPLETION_SELECTED, self._on_completion_selected)
 
         self._entry = EmacsEdit('', default)
         self._entry.keypress = self._on_entry_key_pressed
@@ -74,7 +76,10 @@ class PathEntry(Entry, urwid.PopUpLauncher):
 
 class PathCompletionMenu(PopupMenu):
 
-    signals = PopupMenu.signals + ['completion-selected']
+    class Signals(str, enum.Enum):
+        COMPLETION_SELECTED = 'completion_selected'
+
+    signals = PopupMenu.signals + list(Signals)
 
     def set_completions(self, completions):
         items = []
@@ -85,8 +90,8 @@ class PathCompletionMenu(PopupMenu):
         self._walker[:] = items
         self._walker.set_focus(0)
 
-    def _on_item_clicked(self, entry, button):
-        self._emit('completion-selected', entry)
+    def _on_item_clicked(self, entry: PathCompletionEntry, button):
+        self._emit(self.Signals.COMPLETION_SELECTED, entry)
 
 
 class PathCompletionMenuItem(urwid.Button):

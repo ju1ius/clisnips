@@ -32,14 +32,14 @@ class EditSnippetDialog(Dialog):
             ('Cancel', ResponseType.REJECT),
             ('Apply', ResponseType.ACCEPT),
         ])
-        urwid.connect_signal(self, self.Signals.RESPONSE, self._on_response)
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, self._on_response)
 
     def on_accept(self, callback: Callable, *args):
         def handler(dialog, response_type):
             if response_type == ResponseType.ACCEPT:
                 snippet = self._collect_values()
                 callback(snippet)
-        urwid.connect_signal(self, self.Signals.RESPONSE, handler)
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type):
         if response_type == ResponseType.REJECT:
@@ -51,7 +51,7 @@ class EditSnippetDialog(Dialog):
         snippet.update(values)
         return snippet
 
-    def _create_field(self, name, label, multiline=False, entry_factory=None):
+    def _create_field(self, name: str, label: str, multiline=False, entry_factory=None):
         value = self._snippet[name]
         if callable(entry_factory):
             entry = entry_factory(edit_text=value)

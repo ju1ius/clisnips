@@ -1,3 +1,4 @@
+import enum
 from typing import Any, Optional
 
 import urwid
@@ -19,7 +20,10 @@ class RadioItem(urwid.RadioButton):
 
 class Select(PopupMenu):
 
-    signals = PopupMenu.signals + ['changed']
+    class Signals(str, enum.Enum):
+        CHANGED = 'changed'
+
+    signals = PopupMenu.signals + list(Signals)
 
     def __init__(self):
         self._group = []
@@ -52,7 +56,7 @@ class Select(PopupMenu):
     def _on_item_changed(self, item, state):
         if state is True:
             self._selected_item = item
-            self._emit('changed', item)
+            self._emit(self.Signals.CHANGED, item)
 
 
 class ComboBoxButton(urwid.Button):
@@ -62,7 +66,10 @@ class ComboBoxButton(urwid.Button):
 
 class ComboBox(urwid.PopUpLauncher):
 
-    signals = ['changed']
+    class Signals(str, enum.Enum):
+        CHANGED = 'changed'
+
+    signals = list(Signals)
 
     def __init__(self):
         self._select = Select()
@@ -103,4 +110,4 @@ class ComboBox(urwid.PopUpLauncher):
     def _on_selection_changed(self, menu, item):
         self._button.set_label(item.get_label())
         self.close_pop_up()
-        self._emit('changed', item.get_value())
+        self._emit(self.Signals.CHANGED, item.get_value())

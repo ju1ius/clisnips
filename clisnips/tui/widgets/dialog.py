@@ -2,6 +2,7 @@ import enum
 from typing import Optional
 
 import urwid
+from urwid.widget.constants import Align, VAlign, RELATIVE_100
 
 from .divider import HorizontalDivider
 
@@ -37,7 +38,7 @@ class DialogOverlay(urwid.Overlay):
 
 class Dialog(urwid.WidgetWrap):
 
-    class Signals(enum.Enum):
+    class Signals(str, enum.Enum):
         RESPONSE = 'response'
 
     signals = list(Signals)
@@ -49,16 +50,9 @@ class Dialog(urwid.WidgetWrap):
         self._frame = urwid.Pile([self._body])
         w = self._frame
         # pad area around listbox
-        w = urwid.Padding(w, ('fixed left', 2), ('fixed right', 2))
-        w = urwid.Filler(w, ('fixed top', 1), ('fixed bottom', 1))
+        w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=RELATIVE_100)
+        w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=RELATIVE_100)
         w = urwid.AttrWrap(w, 'body')
-        # "shadow" effect
-        # w = urwid.Columns([w, ('fixed', 2, urwid.AttrWrap(urwid.Filler(urwid.Text(('border', '  ')), "top"), 'shadow'))])
-        # w = urwid.Frame(w, footer=urwid.AttrWrap(urwid.Text(('border', '  ')), 'shadow'))
-        # outermost border area
-        # w = urwid.Padding(w, 'center', width)
-        # w = urwid.Filler(w, 'middle', height)
-        # w = urwid.AttrWrap(w, 'border')
 
         self.view = w
 

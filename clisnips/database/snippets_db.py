@@ -1,9 +1,8 @@
 import os
 import sqlite3
 import stat
-import time
 from pathlib import Path
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, TypedDict
 
 from clisnips._types import AnyPath
 
@@ -28,6 +27,17 @@ def ranking_function(created: int, last_used: int, num_used: int) -> float:
     age = (now - created) / SECONDS_TO_DAYS
     last_used_days = (now - last_used) / SECONDS_TO_DAYS
     return num_used / pow(last_used_days / age, GRAVITY)
+
+
+class Snippet(TypedDict):
+    title: str
+    cmd: str
+    tag: str
+    doc: str
+    created_at: int
+    last_used_at: int
+    usage_count: int
+    ranking: float
 
 
 class SnippetsDatabase:
@@ -93,18 +103,14 @@ class SnippetsDatabase:
     def __iter__(self):
         return self.iter('*')
 
-    def iter(self, *columns):
+    def iter(self, *columns) -> Iterable[Snippet]:
         query = 'SELECT rowid AS id, %s from snippets' % ','.join(columns)
         with self.connection:
             self.cursor.execute(query)
-            while True:
-                rows = self.cursor.fetchmany(self.block_size)
-                if not rows:
-                    return
-                for row in rows:
-                    yield row
+            while rows := self.cursor.fetchmany(self.block_size):
+                yield from rows
 
-    def get(self, rowid) -> Optional[sqlite3.Row]:
+    def get(self, rowid) -> Optional[Snippet]:
         query = 'SELECT rowid AS id, * FROM snippets WHERE rowid = :id'
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
@@ -169,14 +175,15 @@ class SnippetsDatabase:
             self.cursor.execute(query, data)
             return self.cursor.rowcount
 
-    def delete(self, rowid):
+    def delete(self, rowid: int):
         query = 'DELETE FROM snippets WHERE rowid = :id'
         with self.connection:
             self.cursor.execute(query, {'id': rowid})
             if self.cursor.rowcount > 0:
                 self._num_rows -= self.cursor.rowcount
 
-    def use_snippet(self, rowid):
+    # TODO: use this or remove it
+    def use_snippet(self, rowid: int):
         query = ('UPDATE snippets '
                  'SET last_used_at = strftime("%s", "now"), usage_count = usage_count + 1 '
                  'WHERE rowid = :id')

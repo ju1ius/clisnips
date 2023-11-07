@@ -7,9 +7,9 @@ class OffsetPager(Pager):
 
     def __init__(self, connection, page_size: int = 100):
         self._con = connection
-        self._current_page = 1
-        self._page_count = 1
-        self._page_size = page_size
+        self._current_page: int = 1
+        self._page_count: int = 1
+        self._page_size: int = page_size
         self._total_size = 0
         self._query = None
         self._query_params = ()
@@ -58,12 +58,12 @@ class OffsetPager(Pager):
     def get_query(self) -> str:
         return self._query
 
-    def set_count_query(self, query, params=()):
+    def set_count_query(self, query: str, params=()):
         self._executed = False
         self._count_query = f'SELECT COUNT(*) FROM ({query})'
         self._count_query_params = params
 
-    def set_page_size(self, size):
+    def set_page_size(self, size: int):
         self._executed = False
         self._page_size = size
 
@@ -78,7 +78,7 @@ class OffsetPager(Pager):
         self._executed = True
         return self
 
-    def get_page(self, page):
+    def get_page(self, page: int):
         self._check_executed()
         if page <= 1:
             page = 1
