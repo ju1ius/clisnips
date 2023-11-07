@@ -50,29 +50,31 @@ END;
 CREATE TRIGGER IF NOT EXISTS snippets_after_update
 AFTER UPDATE ON snippets
 BEGIN
-    -- Update Ranking
-    UPDATE snippets SET ranking = rank(
-        NEW.created_at,
-        NEW.last_used_at,
-        NEW.usage_count
-    ) WHERE rowid = NEW.rowid;
     -- Update search index
     INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
+    -- Update Ranking
+    UPDATE snippets SET ranking = rank_snippet(
+        NEW.created_at,
+        NEW.last_used_at,
+        NEW.usage_count,
+        strftime('%s', 'now')
+    ) WHERE rowid = NEW.rowid;
 END;
 
 CREATE TRIGGER IF NOT EXISTS snippets_after_insert
 AFTER INSERT ON snippets
 BEGIN
-    -- Update Ranking
-    UPDATE snippets SET ranking = rank(
-        NEW.created_at,
-        NEW.last_used_at,
-        NEW.usage_count
-    ) WHERE rowid = NEW.rowid;
     -- Update search index
     INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
+    -- Update Ranking
+--     UPDATE snippets SET ranking = 0.0 WHERE rowid = NEW.rowid;
+    UPDATE snippets SET ranking = rank_snippet(
+        NEW.created_at,
+        NEW.last_used_at,
+        NEW.usage_count,
+        strftime('%s', 'now')
+    ) WHERE rowid = NEW.rowid;
 END;
-
 
 -- Analyze the whole stuff
 ANALYZE;

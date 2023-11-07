@@ -22,8 +22,10 @@ ResultSet = Iterable[sqlite3.Row]
 QueryParameters = Union[tuple, dict]
 
 
-def ranking_function(created: int, last_used: int, num_used: int) -> float:
-    now = time.time()
+def ranking_function(created: int, last_used: int, num_used: int, timestamp: str) -> float:
+    now = int(timestamp)
+    if created == now or num_used <= 0:
+        return 0.0
     age = (now - created) / SECONDS_TO_DAYS
     last_used_days = (now - last_used) / SECONDS_TO_DAYS
     return num_used / pow(last_used_days / age, GRAVITY)
@@ -63,7 +65,7 @@ class SnippetsDatabase:
             os.mknod(db_file, 0o644 | stat.S_IFREG)
         cx = sqlite3.connect(db_file)
         cx.row_factory = sqlite3.Row
-        cx.create_function('rank', 3, ranking_function)
+        cx.create_function('rank_snippet', 4, ranking_function, deterministic=True)
         cx.executescript(SCHEMA_QUERY)
 
         return cls(cx)
