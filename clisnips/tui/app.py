@@ -1,7 +1,7 @@
 import atexit
 import logging
 
-from clisnips.config import xdg_data_home
+from clisnips.config import xdg_state_home
 from clisnips.dic import DependencyInjectionContainer
 from .logging import logger
 from .screens.snippets_list import SnippetsListScreen
@@ -35,7 +35,7 @@ class Application:
         return screen
 
     def _configure_logging(self):
-        log_file = xdg_data_home() / 'clisnips' / 'tui.log'
+        log_file = xdg_state_home() / 'clisnips' / 'tui.log'
         log_file.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         logger.addHandler(logging.FileHandler(log_file, 'w'))
         logger.setLevel(logging.DEBUG)

@@ -28,7 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 DEFAULTS = '''
 [default]
 
-database: ~/.config/clisnips/snippets.sqlite
+database: ~/.local/share/clisnips/snippets.sqlite
 sort_column: ranking
 sort_order: DESC
 page_size: 25
@@ -38,10 +38,10 @@ page_size: 25
 HOME = Path('~').expanduser()
 
 
-def xdg_config_home():
-    home = os.environ.get('XDG_CONFIG_HOME')
-    if not home:
-        return HOME / '.config'
+def xdg_config_home() -> Path:
+    match os.environ.get('XDG_CONFIG_HOME'):
+        case None | '': return HOME / '.config'
+        case v: return Path(v)
 
 
 def xdg_config_dirs():
@@ -49,15 +49,21 @@ def xdg_config_dirs():
     return [xdg_config_home()] + [Path(d) for d in dirs]
 
 
-def xdg_data_home():
-    home = os.environ.get('XDG_DATA_HOME')
-    if not home:
-        return HOME / '.local' / 'share'
+def xdg_data_home() -> Path:
+    match os.environ.get('XDG_DATA_HOME'):
+        case None | '': return HOME / '.local' / 'share'
+        case v: return Path(v)
 
 
-def xdg_data_dirs():
+def xdg_data_dirs() -> list[Path]:
     dirs = (os.environ.get('XDG_DATA_DIRS') or '/usr/local/share:/usr/share').split(':')
     return [xdg_data_home()] + [Path(d) for d in dirs]
+
+
+def xdg_state_home() -> Path:
+    match os.environ.get('XDG_STATE_HOME'):
+        case None | '': return HOME / '.local' / 'state'
+        case v: return Path(v)
 
 
 class Config(configparser.RawConfigParser):
