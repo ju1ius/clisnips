@@ -2,7 +2,6 @@ import enum
 
 import urwid
 
-from clisnips.tui.logging import logger
 from clisnips.tui.models.snippets import SnippetsModel
 from clisnips.tui.view import View
 from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
@@ -42,7 +41,7 @@ class SnippetListView(View):
         self._model.connect(model.Signals.ROW_DELETED, self._on_model_row_deleted)
         self._model.connect(model.Signals.ROW_UPDATED, self._on_model_row_updated)
 
-        self.search_entry = SearchEntry('Search term: ')
+        self.search_entry = SearchEntry(' ')
         urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
         pager_infos = PagerInfos(model)
         header = urwid.Columns([('weight', 1, self.search_entry), ('pack', pager_infos)], dividechars=1)

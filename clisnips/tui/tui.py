@@ -1,7 +1,7 @@
 import atexit
 import signal
 import sys
-from typing import Callable, Iterable, Optional
+from typing import Callable, Hashable, Iterable, Optional
 
 import urwid
 
@@ -42,7 +42,7 @@ class TUI:
             self.main_loop.draw_screen()
 
     @staticmethod
-    def connect(obj: object, name: str, callback: Callable,
+    def connect(obj: object, name: Hashable, callback: Callable,
                 weak_args: Iterable = (), user_args: Iterable = ()):
         urwid.connect_signal(obj, name, callback, weak_args=weak_args, user_args=user_args)
 

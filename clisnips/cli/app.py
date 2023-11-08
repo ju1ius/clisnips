@@ -23,11 +23,9 @@ class Application:
 
     def run(self) -> int:
         argv = self._parse_arguments()
-        try:
-            cls = self.commands[argv.command]
-        except KeyError:
-            return self._run_tui(argv)
-        return self._run_command(cls, argv)
+        if cls := self.commands.get(argv.command):
+            return self._run_command(cls, argv)
+        return self._run_tui(argv)
 
     @staticmethod
     def _parse_arguments():

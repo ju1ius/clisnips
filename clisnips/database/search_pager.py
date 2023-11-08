@@ -90,8 +90,17 @@ class SearchPager:
         try:
             yield
         except sqlite3.OperationalError as err:
-            if self._is_searching and len(err.args):
-                msg = str(err.args[0])
-                if msg.startswith('fts5: syntax error') or msg.startswith('no such column'):
-                    raise SearchSyntaxError(msg)
+            if self._is_searching and is_search_syntax_error(err):
+                raise SearchSyntaxError(*err.args) from err
             raise err
+
+
+def is_search_syntax_error(err: sqlite3.OperationalError) -> bool:
+    if not err.args:
+        return False
+    msg = str(err.args[0])
+    return (
+        msg.startswith('fts5: syntax error')
+        or msg.startswith('no such column')
+        or msg.startswith('unknown special query:')
+    )

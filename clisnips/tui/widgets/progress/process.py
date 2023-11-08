@@ -1,9 +1,11 @@
+import logging
 import multiprocessing
 import os
 import signal
 
-from clisnips.tui.logging import logger
 from .message_queue import MessageQueue
+
+logger = logging.getLogger(__name__)
 
 
 class Process(multiprocessing.Process):

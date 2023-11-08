@@ -1,11 +1,13 @@
 import enum
+import logging
 
 import urwid
 
-from clisnips.tui.logging import logger
 from clisnips.tui.models.snippets import SnippetsModel
 from clisnips.tui.widgets.dialog import Dialog
 from clisnips.tui.widgets.divider import HorizontalDivider
+
+logger = logging.getLogger(__name__)
 
 
 class ListOptionsDialog(Dialog):
