@@ -35,14 +35,23 @@ CREATE INDEX IF NOT EXISTS snip_ranking_idx ON snippets(ranking DESC);
 -- and to keep track of command usage and ranking.
 --
 
-CREATE TRIGGER IF NOT EXISTS snippets_before_update
-BEFORE UPDATE ON snippets
+CREATE TRIGGER IF NOT EXISTS snippets_after_insert
+AFTER INSERT ON snippets
+BEGIN
+    -- Update search index
+    INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
+END;
+
+
+CREATE TRIGGER IF NOT EXISTS snippets_before_delete
+BEFORE DELETE ON snippets
 BEGIN
     DELETE FROM snippets_index WHERE rowid=OLD.rowid;
 END;
 
-CREATE TRIGGER IF NOT EXISTS snippets_before_delete
-BEFORE DELETE ON snippets
+
+CREATE TRIGGER IF NOT EXISTS snippets_before_update
+BEFORE UPDATE ON snippets
 BEGIN
     DELETE FROM snippets_index WHERE rowid=OLD.rowid;
 END;
@@ -53,21 +62,6 @@ BEGIN
     -- Update search index
     INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
     -- Update Ranking
-    UPDATE snippets SET ranking = rank_snippet(
-        NEW.created_at,
-        NEW.last_used_at,
-        NEW.usage_count,
-        strftime('%s', 'now')
-    ) WHERE rowid = NEW.rowid;
-END;
-
-CREATE TRIGGER IF NOT EXISTS snippets_after_insert
-AFTER INSERT ON snippets
-BEGIN
-    -- Update search index
-    INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
-    -- Update Ranking
---     UPDATE snippets SET ranking = 0.0 WHERE rowid = NEW.rowid;
     UPDATE snippets SET ranking = rank_snippet(
         NEW.created_at,
         NEW.last_used_at,
