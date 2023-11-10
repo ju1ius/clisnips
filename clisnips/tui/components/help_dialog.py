@@ -1,4 +1,3 @@
-
 import urwid
 
 from clisnips.tui.widgets.dialog import Dialog, ResponseType

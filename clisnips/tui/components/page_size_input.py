@@ -6,7 +6,7 @@ from clisnips.stores import SnippetsStore
 from clisnips.tui.widgets.utils import suspend_emitter
 
 
-class PageSizeEdit(IntegerEdit):
+class PageSizeInput(IntegerEdit):
     def __init__(self, store: SnippetsStore, caption: str):
         super().__init__(caption)
 

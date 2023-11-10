@@ -5,7 +5,7 @@ from clisnips.tui.widgets.edit import EmacsEdit
 from clisnips.tui.widgets.utils import suspend_emitter
 
 
-class SearchEntry(EmacsEdit):
+class SearchInput(EmacsEdit):
 
     def __init__(self, store: SnippetsStore, caption: str):
         super().__init__(('search-entry:caption', caption), multiline=False)

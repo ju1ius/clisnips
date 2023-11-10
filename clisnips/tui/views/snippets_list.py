@@ -6,15 +6,15 @@ import urwid
 from clisnips.exceptions import ParsingError
 from clisnips.stores import SnippetsStore
 from clisnips.syntax import parse_command
+from clisnips.tui.components.edit_snippet_dialog import EditSnippetDialog
+from clisnips.tui.components.help_dialog import HelpDialog
+from clisnips.tui.components.insert_snippet_dialog import InsertSnippetDialog
 from clisnips.tui.components.list_options_dialog import ListOptionsDialog
 from clisnips.tui.components.pager_infos import PagerInfos
-from clisnips.tui.components.search_entry import SearchEntry
+from clisnips.tui.components.search_input import SearchInput
+from clisnips.tui.components.show_snippet_dialog import ShowSnippetDialog
 from clisnips.tui.view import View
 from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
-from clisnips.tui.widgets.dialogs.edit_snippet import EditSnippetDialog
-from clisnips.tui.widgets.dialogs.help import HelpDialog
-from clisnips.tui.widgets.dialogs.insert_snippet import InsertSnippetDialog
-from clisnips.tui.widgets.dialogs.show_snippet import ShowSnippetDialog
 from clisnips.tui.widgets.table import Column, Table, TableStore
 
 
@@ -28,7 +28,7 @@ class SnippetListView(View):
     def __init__(self, store: SnippetsStore):
         self._store = store
 
-        search_entry = SearchEntry(store, ' ')
+        search_entry = SearchInput(store, ' ')
         pager_infos = PagerInfos(store)
         header = urwid.Columns((('weight', 1, search_entry), ('pack', pager_infos)), dividechars=1)
 

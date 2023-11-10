@@ -2,14 +2,13 @@ from typing import Callable, Dict
 
 import urwid
 
-from clisnips.syntax import parse_command, parse_documentation
+from clisnips.syntax.command import parse as parse_command
 from clisnips.syntax.command.nodes import CommandTemplate
-from clisnips.syntax.documentation.nodes import Documentation
+from clisnips.syntax.documentation import Documentation, parse as parse_documentation
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.dialog import Dialog, ResponseType
 from clisnips.tui.widgets.divider import HorizontalDivider
-from clisnips.tui.widgets.field import field_from_documentation
-from clisnips.tui.widgets.field.field import Field
+from clisnips.tui.widgets.field import Field, field_from_documentation
 from clisnips.utils.iterable import intersperse
 
 
