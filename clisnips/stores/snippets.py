@@ -1,19 +1,18 @@
 from contextlib import suppress
 from typing import Any, Callable, TypeVar, TypedDict
 
-from observ import reactive, watch, watch_effect, computed
+from observ import reactive, watch, watch_effect
 
 from clisnips.database import SortColumn, SortOrder
 from clisnips.database.search_pager import SearchPager, SearchSyntaxError
 from clisnips.database.snippets_db import Snippet, SnippetsDatabase
-from clisnips.tui.models.snippets import SnippetsModel
 
 Watched = TypeVar("Watched")
 
 
 class State(TypedDict):
     search_query: str
-    snippets_by_id: dict[str, Snippet]
+    snippets_by_id: dict[int, Snippet]
     total_rows: int
     current_page: int
     page_count: int
@@ -43,7 +42,7 @@ class SnippetsStore:
         pager: SearchPager,
     ):
         self._state: State = reactive(initial_state)
-        self._db = db,
+        self._db = db
         self._pager = pager
         self._fetch_list('')
 
@@ -75,9 +74,50 @@ class SnippetsStore:
             immediate=immediate,
         )
 
+    def fetch_snippet(self, rowid: int) -> Snippet:
+        return self._db.get(rowid)
+
+    def create_snippet(self, snippet: Snippet):
+        rowid = self._db.insert(snippet)
+        with suppress(SearchSyntaxError):
+            self._pager.count()
+        snippet = self._db.get(rowid)
+        # TODO: insert snippet on top of the list
+
+    def update_snippet(self, snippet: Snippet):
+        self._db.update(snippet)
+        self._state['snippets_by_id'][snippet['id']] = snippet
+
+    def delete_snippet(self, rowid: int):
+        self._db.delete(rowid)
+        del self._state['snippets_by_id'][rowid]
+        with suppress(SearchSyntaxError):
+            self._pager.count()
+
     def change_search_query(self, search_query: str):
         self._state['search_query'] = search_query
         self._fetch_list(search_query)
+
+    def request_first_page(self):
+        # TODO: skip loading if we don't need to paginate
+        with suppress(SearchSyntaxError):
+            rows = self._pager.first()
+        self._load_result_set(rows)
+
+    def request_next_page(self):
+        with suppress(SearchSyntaxError):
+            rows = self._pager.next()
+        self._load_result_set(rows)
+
+    def request_previous_page(self):
+        with suppress(SearchSyntaxError):
+            rows = self._pager.previous()
+        self._load_result_set(rows)
+
+    def request_last_page(self):
+        with suppress(SearchSyntaxError):
+            rows = self._pager.last()
+        self._load_result_set(rows)
 
     def change_sort_column(self, column: SortColumn):
         self._state['sort_by'] = column
@@ -103,8 +143,7 @@ class SnippetsStore:
         self._load_result_set(rows)
 
     def _load_result_set(self, rows: list):
-        by_id = {row['id']: row for row in rows}
-        self._state['snippets_by_id'] = by_id
+        self._state['snippets_by_id'] = {row['id']: row for row in rows}
         self._update_pager_infos()
 
     def _update_pager_infos(self):

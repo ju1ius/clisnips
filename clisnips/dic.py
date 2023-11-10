@@ -4,7 +4,6 @@ from ._types import AnyPath
 from .config import Config
 from .database.search_pager import SearchPager
 from .database.snippets_db import SnippetsDatabase
-from .tui.models.snippets import SnippetsModel
 from .stores.snippets import SnippetsStore
 
 
@@ -18,7 +17,6 @@ class DependencyInjectionContainer:
         self._config: Optional[Config] = None
         self._database: Optional[SnippetsDatabase] = None
         self._pager: Optional[SearchPager] = None
-        self._list_model: Optional[SnippetsModel] = None
         self._snippets_store: Optional[SnippetsStore] = None
 
     @property
@@ -60,9 +58,3 @@ class DependencyInjectionContainer:
             self._pager.set_sort_column(self.config.pager_sort_column, self.config.pager_sort_order)
             self._pager.page_size = self.config.pager_page_size
         return self._pager
-
-    @property
-    def list_model(self):
-        if not self._list_model:
-            self._list_model = SnippetsModel(self.database, self.pager)
-        return self._list_model

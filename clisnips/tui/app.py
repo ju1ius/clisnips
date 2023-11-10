@@ -24,7 +24,7 @@ class Application:
         self.ui.refresh()
 
     def _build_snippets_list(self, *args, **kwargs):
-        screen = SnippetsListScreen(self.container.config, self.container.list_model, self.container.snippets_store)
+        screen = SnippetsListScreen(self.container.snippets_store)
         self.ui.connect(screen, SnippetsListScreen.Signals.SNIPPET_APPLIED, self._on_snippet_applied)
         return screen
 

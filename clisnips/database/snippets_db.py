@@ -35,6 +35,7 @@ def ranking_function(created: int, last_used: int, num_used: int, timestamp: str
 
 
 class Snippet(TypedDict):
+    id: int
     title: str
     cmd: str
     tag: str
