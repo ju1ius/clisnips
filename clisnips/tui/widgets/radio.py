@@ -1,15 +1,16 @@
 import enum
 from collections.abc import Iterator
-from typing import Generic, Hashable, Optional, TypeVar
+from typing import Generic, Hashable, Literal, Optional, Self, TypeVar, Union
 
 import urwid
 
 V = TypeVar('V', bound=Hashable)
+RadioState = Union[bool, Literal['mixed']]
 
 
 class RadioItem(urwid.RadioButton, Generic[V]):
 
-    def __init__(self, group: list, label: str, value: V, selected: bool = False):
+    def __init__(self, group: list[Self], label: str, value: V, selected: bool = False):
         super().__init__(group, label, state=selected)
         self._value = value
 
@@ -30,7 +31,7 @@ class RadioGroup(Generic[V]):
 
     def get_value(self) -> Optional[V]:
         for item in self._group:
-            if item.get_state():
+            if item.get_state() is True:
                 return item.get_value()
         return None
 
@@ -38,8 +39,8 @@ class RadioGroup(Generic[V]):
         for item in self._group:
             item.set_state(value == item.get_value(), do_callback=False)
 
-    def _on_item_clicked(self, item, selected):
-        if selected:
+    def _on_item_clicked(self, item: RadioItem[V], state: RadioState):
+        if state is True:
             urwid.emit_signal(self, self.Signals.CHANGED, item.get_value())
 
     def __iter__(self) -> Iterator[RadioItem[V]]:

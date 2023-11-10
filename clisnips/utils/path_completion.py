@@ -13,6 +13,8 @@ __all__ = [
     'FileSystemPathCompletionProvider',
 ]
 
+from clisnips._types import AnyPath
+
 
 class FileAttributes(enum.IntFlag):
     NONE = 0
@@ -50,7 +52,7 @@ class PathCompletionEntry:
 
 class PathCompletionProvider:
 
-    def get_completions(self, path) -> Iterable[PathCompletionEntry]:
+    def get_completions(self, path: AnyPath) -> Iterable[PathCompletionEntry]:
         raise NotImplementedError()
 
 
@@ -61,7 +63,7 @@ class PathCompletion:
         self._show_files = show_files
         self._show_hidden = show_hidden
 
-    def get_completions(self, path):
+    def get_completions(self, path: AnyPath):
         results = []
         match_part = self._get_match_part(path)
         for entry in self._provider.get_completions(path):
@@ -92,26 +94,26 @@ class PathCompletion:
 
 class FileSystemPathCompletionProvider(PathCompletionProvider):
 
-    def __init__(self, base_directory='.'):
+    def __init__(self, base_directory: AnyPath = '.'):
         self._base_dir = Path(base_directory).expanduser().resolve(strict=True)
         if not self._base_dir.is_dir():
             raise OSError(f'Not a directory: {self._base_dir}')
 
-    def set_base_directory(self, path):
+    def set_base_directory(self, path: AnyPath):
         self._base_dir = Path(path).expanduser().resolve(strict=True)
 
-    def get_completions(self, path) -> Iterable[PathCompletionEntry]:
+    def get_completions(self, path: AnyPath) -> Iterable[PathCompletionEntry]:
         directory = self._resolve_directory(path)
         yield from self._scan_directory(directory)
 
-    def _resolve_directory(self, path) -> Path:
+    def _resolve_directory(self, path: AnyPath) -> Path:
         dir_part, file_part = os.path.split(path)
         dir_part = os.path.expanduser(dir_part)
         if not os.path.isabs(dir_part):
             dir_part = self._base_dir / dir_part
         return Path(dir_part).expanduser().resolve(strict=True)
 
-    def _scan_directory(self, path):
+    def _scan_directory(self, path: Path):
         with os.scandir(path) as directory:
             # type entry os.DirEntry
             for entry in directory:
