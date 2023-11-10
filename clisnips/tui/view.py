@@ -1,3 +1,6 @@
+from collections.abc import Hashable
+from typing import Any, Callable, Dict
+
 import urwid
 
 from .widgets.dialog import DialogFrame, DialogOverlay
@@ -5,24 +8,49 @@ from .widgets.dialogs.error import ErrorDialog
 
 
 class View(urwid.WidgetWrap):
+    """
+    View instances act like controllers for their child widgets,
+    and can interact directly with the main application instance.
+    """
 
-    def __init__(self, view):
-        self.view = view
+    def __init__(self, view: urwid.Widget):
+        self._view = view
         self._has_dialog = False
-        self.placeholder = urwid.WidgetPlaceholder(urwid.Filler(urwid.Text('')))
-        super().__init__(self.placeholder)
-        self.placeholder.original_widget = urwid.AttrMap(self.view, 'view:default')
+        super().__init__(urwid.AttrMap(self._view, 'view:default'))
 
     def open_dialog(self, dialog, title: str = '', width=('relative', 80), height=('relative', 80)):
         frame = DialogFrame(self, dialog, title=title)
-        overlay = DialogOverlay(self, frame, self.view, align='center', width=width, valign='middle', height=height)
-        self._w.original_widget = overlay
+        overlay = DialogOverlay(self, frame, self._view, align='center', width=width, valign='middle', height=height)
+        self._wrapped_widget.original_widget = overlay
         self._has_dialog = True
 
     def close_dialog(self):
-        self._w.original_widget = self.view
+        self._wrapped_widget.original_widget = self._view
         self._has_dialog = False
 
     def show_exception_dialog(self, err: Exception):
         dialog = ErrorDialog(self, err)
         self.open_dialog(dialog, 'Error')
+
+
+BuildCallback = Callable[..., View]
+
+
+class ViewBuilder:
+    """
+    Builds UI Views and attaches them to the root application widget.
+    """
+
+    def __init__(self, root_widget: urwid.WidgetPlaceholder):
+        self.root_widget = root_widget
+        self._on_build_handlers: Dict[Hashable, BuildCallback] = {}
+
+    def register(self, view_id: Hashable, on_build: BuildCallback):
+        self._on_build_handlers[view_id] = on_build
+
+    def build(self, view_id: Hashable, display: bool = False, **kwargs) -> View:
+        handler = self._on_build_handlers[view_id]
+        view = handler(**kwargs)
+        if display:
+            self.root_widget.original_widget = view
+        return view

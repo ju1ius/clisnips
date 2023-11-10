@@ -133,19 +133,19 @@ class SnippetListView(View):
             self._open_sort_dialog()
             return
         if key == '/':
-            self.view.focus_position = 'header'
+            self._view.focus_position = 'header'
             return
         if key in ('tab', 'shift tab'):
-            if self.view.focus_position == 'header':
-                self.view.focus_position = 'body'
+            if self._view.focus_position == 'header':
+                self._view.focus_position = 'body'
             else:
-                self.view.focus_position = 'header'
+                self._view.focus_position = 'header'
             return
-        if key == 'down' and self.view.focus_position == 'header':
-            self.view.focus_position = 'body'
+        if key == 'down' and self._view.focus_position == 'header':
+            self._view.focus_position = 'body'
             return
-        if key == 'up' and self.view.focus_position == 'body':
-            self.view.focus_position = 'header'
+        if key == 'up' and self._view.focus_position == 'body':
+            self._view.focus_position = 'header'
             return
         if key == 'n':
             self._store.request_next_page()

@@ -1,22 +1,21 @@
 import atexit
 import signal
 import sys
-from typing import Callable, Hashable, Iterable, Optional
+from typing import Callable, Hashable, Iterable
 
-import urwid
 import observ
+import urwid
 
-from . import theme
-from .builder import Builder
 from .loop import get_event_loop
-from .screen import Screen
+from .theme import palette
+from .view import View, ViewBuilder
 
 
 class TUI:
 
     def __init__(self):
         self.root_widget = urwid.WidgetPlaceholder(urwid.SolidFill(''))
-        self.builder: Builder = Builder(self.root_widget)
+        self.builder = ViewBuilder(self.root_widget)
         # Since our main purpose is to insert stuff in the tty command line, we send the screen to STDERR
         # so we can capture stdout easily without swapping file descriptors
         screen = urwid.raw_display.Screen(output=sys.stderr)
@@ -25,19 +24,19 @@ class TUI:
             self.root_widget,
             handle_mouse=False,
             pop_ups=True,
-            palette=theme.palette,
+            palette=palette,
             screen=screen,
             event_loop=urwid.AsyncioEventLoop(loop=get_event_loop()),
             unhandled_input=self._on_unhandled_input,
         )
         self.main_loop.screen.set_terminal_properties(colors=256)
 
-    def register_screen(self, name: str, build_callback: Callable):
-        self.builder.register_screen(name, build_callback)
+    def register_view(self, name: Hashable, build_callback: Callable):
+        self.builder.register(name, build_callback)
 
-    def build_screen(self, name: str, display: bool, **kwargs) -> Screen:
-        screen = self.builder.build_screen(name, display, **kwargs)
-        return screen
+    def build_view(self, name: Hashable, display: bool, **kwargs) -> View:
+        view = self.builder.build(name, display, **kwargs)
+        return view
 
     def refresh(self):
         if self.main_loop.screen.started:
