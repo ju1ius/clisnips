@@ -42,10 +42,13 @@ class DependencyInjectionContainer:
         if not self._snippets_store:
             state = {
                 'search_query': '',
+                'snippets_by_id': {},
+                'total_rows': 0,
+                'current_page': 1,
+                'page_count': 1,
                 'page_size': self.config.pager_page_size,
                 'sort_by': self.config.pager_sort_column,
                 'sort_order': self.config.pager_sort_order,
-                'snippets_by_id': {},
             }
             self._snippets_store = SnippetsStore(state, self.database, self.pager)
         return self._snippets_store

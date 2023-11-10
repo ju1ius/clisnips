@@ -13,10 +13,25 @@ Watched = TypeVar("Watched")
 
 class State(TypedDict):
     search_query: str
+    snippets_by_id: dict[str, Snippet]
+    total_rows: int
+    current_page: int
+    page_count: int
     page_size: int
     sort_by: SortColumn
     sort_order: SortOrder
-    snippets_by_id: dict[str, Snippet]
+
+
+DEFAULT_STATE: State = {
+    'search_query': '',
+    'snippets_by_id': {},
+    'total_rows': 0,
+    'current_page': 1,
+    'page_count': 1,
+    'page_size': 25,
+    'sort_by': SortColumn.RANKING,
+    'sort_order': SortOrder.ASC,
+}
 
 
 class SnippetsStore:
@@ -90,3 +105,9 @@ class SnippetsStore:
     def _load_result_set(self, rows: list):
         by_id = {row['id']: row for row in rows}
         self._state['snippets_by_id'] = by_id
+        self._update_pager_infos()
+
+    def _update_pager_infos(self):
+        self._state['total_rows'] = self._pager.total_rows
+        self._state['page_count'] = self._pager.page_count
+        self._state['current_page'] = self._pager.current_page

@@ -12,7 +12,7 @@ from clisnips.tui.widgets.dialogs.help import HelpDialog
 from clisnips.tui.widgets.dialogs.insert_snippet import InsertSnippetDialog
 from clisnips.tui.components.list_options_dialog import ListOptionsDialog
 from clisnips.tui.widgets.dialogs.show_snippet import ShowSnippetDialog
-from clisnips.tui.widgets.pager_infos import PagerInfos
+from clisnips.tui.components.pager_infos import PagerInfos
 from clisnips.tui.components.search_entry import SearchEntry
 from clisnips.tui.widgets.snippets_list_footer import SnippetListFooter
 from clisnips.tui.widgets.table import Column, Table, TableStore
@@ -44,7 +44,7 @@ class SnippetListView(View):
         self._model.connect(model.Signals.ROW_UPDATED, self._on_model_row_updated)
 
         self.search_entry = SearchEntry(store, ' ')
-        pager_infos = PagerInfos(model)
+        pager_infos = PagerInfos(store)
         header = urwid.Columns([('weight', 1, self.search_entry), ('pack', pager_infos)], dividechars=1)
 
         self._table_store = TableStore()
