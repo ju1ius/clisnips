@@ -10,7 +10,7 @@ from clisnips.tui.widgets.dialog import Dialog, ResponseType
 from clisnips.tui.widgets.divider import HorizontalDivider
 from clisnips.tui.widgets.field import field_from_documentation
 from clisnips.tui.widgets.field.field import Field
-from clisnips.utils import iterable
+from clisnips.utils.iterable import intersperse
 
 
 class InsertSnippetDialog(Dialog):
@@ -27,7 +27,7 @@ class InsertSnippetDialog(Dialog):
         self._output_text = urwid.Text('')
         self._update_output(silent=True)
 
-        fields = list(iterable.join(HorizontalDivider(), self._fields.values()))
+        fields = intersperse(HorizontalDivider(), self._fields.values())
 
         output_field = urwid.Pile([
             HorizontalDivider(),
