@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Optional
+from typing import Optional
 
 import urwid
 
@@ -7,15 +7,7 @@ from .menu import PopupMenu
 
 __all__ = ['ComboBox']
 
-
-class RadioItem(urwid.RadioButton):
-
-    def __init__(self, group: list, label: str, value: Any, selected: bool = False):
-        super().__init__(group, label, state=selected)
-        self._value = value
-
-    def get_value(self):
-        return self._value
+from .radio import RadioItem
 
 
 class Select(PopupMenu):
