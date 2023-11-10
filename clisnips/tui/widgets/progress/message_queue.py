@@ -1,8 +1,8 @@
 import enum
 import multiprocessing
 import multiprocessing.queues
-import threading
 import queue
+import threading
 
 import urwid
 

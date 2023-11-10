@@ -2,8 +2,6 @@
 import urwid
 
 from clisnips.tui.widgets.dialog import Dialog, ResponseType
-from clisnips.tui.widgets.divider import HorizontalDivider
-
 
 SHORTCUTS = (
     ('F1', 'Help'),

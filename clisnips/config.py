@@ -4,7 +4,6 @@ import os.path
 from pathlib import Path
 
 from ._types import AnyPath
-
 from .database import SortColumn, SortOrder
 
 VERSION = "0.1"

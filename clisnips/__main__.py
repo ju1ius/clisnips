@@ -1,5 +1,5 @@
-import sys
 import logging
+import sys
 
 from clisnips.cli import Application
 from clisnips.config import xdg_state_home

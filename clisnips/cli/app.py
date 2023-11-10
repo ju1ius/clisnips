@@ -6,8 +6,8 @@ from .config_command import ShowConfigCommand
 from .dump_command import DumpCommand
 from .export_command import ExportCommand
 from .import_command import ImportCommand
-from .optimize_command import OptimizeCommand
 from .install_key_bindings_command import InstallShellKeyBindingsCommand
+from .optimize_command import OptimizeCommand
 
 
 class Application:

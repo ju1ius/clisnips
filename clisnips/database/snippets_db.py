@@ -3,7 +3,7 @@ import os
 import sqlite3
 import stat
 from pathlib import Path
-from typing import Iterable, Optional, Union, TypedDict
+from typing import Iterable, Optional, TypedDict, Union
 
 from clisnips._types import AnyPath
 

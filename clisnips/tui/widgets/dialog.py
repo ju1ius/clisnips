@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 
 import urwid
-from urwid.widget.constants import Align, VAlign, RELATIVE_100
+from urwid.widget.constants import Align, RELATIVE_100, VAlign
 
 from .divider import HorizontalDivider
 

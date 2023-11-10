@@ -2,8 +2,7 @@ import re
 from string import Formatter
 
 from clisnips.exceptions import ParsingError
-from .nodes import CommandTemplate, Text, Field
-
+from .nodes import CommandTemplate, Field, Text
 
 _FIELD_NAME_RX = re.compile(r'''
 ^
