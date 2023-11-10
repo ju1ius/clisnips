@@ -5,18 +5,21 @@ from .config import Config
 from .database.search_pager import SearchPager
 from .database.snippets_db import SnippetsDatabase
 from .tui.models.snippets import SnippetsModel
+from .stores.snippets import SnippetsStore
 
 
 class DependencyInjectionContainer:
 
     def __init__(self, database=None):
+        super().__init__()
         self._parameters = {
             'database': database,
         }
-        self._config = None
-        self._database = None
-        self._pager = None
-        self._list_model = None
+        self._config: Optional[Config] = None
+        self._database: Optional[SnippetsDatabase] = None
+        self._pager: Optional[SearchPager] = None
+        self._list_model: Optional[SnippetsModel] = None
+        self._snippets_store: Optional[SnippetsStore] = None
 
     @property
     def config(self) -> Config:
@@ -33,6 +36,19 @@ class DependencyInjectionContainer:
     def open_database(self, path: Optional[AnyPath] = None) -> SnippetsDatabase:
         path = path or self.config.database_path
         return SnippetsDatabase.open(path)
+
+    @property
+    def snippets_store(self) -> SnippetsStore:
+        if not self._snippets_store:
+            state = {
+                'search_query': '',
+                'page_size': self.config.pager_page_size,
+                'sort_by': self.config.pager_sort_column,
+                'sort_order': self.config.pager_sort_order,
+                'snippets_by_id': {},
+            }
+            self._snippets_store = SnippetsStore(state, self.database, self.pager)
+        return self._snippets_store
 
     @property
     def pager(self):

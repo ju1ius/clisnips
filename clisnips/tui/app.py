@@ -9,8 +9,6 @@ class Application:
 
     def __init__(self, dic: DependencyInjectionContainer):
         self.container = dic
-        self.config = dic.config
-        self.database = dic.database
         self.screen = None
         self.ui = TUI()
         self.ui.register_screen('snippets-list', self._build_snippets_list)
@@ -26,7 +24,7 @@ class Application:
         self.ui.refresh()
 
     def _build_snippets_list(self, *args, **kwargs):
-        screen = SnippetsListScreen(self.config, self.container.list_model)
+        screen = SnippetsListScreen(self.container.config, self.container.list_model, self.container.snippets_store)
         self.ui.connect(screen, SnippetsListScreen.Signals.SNIPPET_APPLIED, self._on_snippet_applied)
         return screen
 
@@ -34,5 +32,5 @@ class Application:
         self.ui.exit_with_message(command)
 
     def _on_exit(self):
-        self.config.save()
-        self.database.close()
+        self.container.config.save()
+        self.container.database.close()

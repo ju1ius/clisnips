@@ -1,17 +1,19 @@
 import enum
+import logging
 
 import urwid
 
+from clisnips.stores import SnippetsStore
 from clisnips.tui.models.snippets import SnippetsModel
 from clisnips.tui.view import View
 from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
 from clisnips.tui.widgets.dialogs.edit_snippet import EditSnippetDialog
 from clisnips.tui.widgets.dialogs.help import HelpDialog
 from clisnips.tui.widgets.dialogs.insert_snippet import InsertSnippetDialog
-from clisnips.tui.widgets.dialogs.list_options import ListOptionsDialog
+from clisnips.tui.components.list_options_dialog import ListOptionsDialog
 from clisnips.tui.widgets.dialogs.show_snippet import ShowSnippetDialog
 from clisnips.tui.widgets.pager_infos import PagerInfos
-from clisnips.tui.widgets.search_entry import SearchEntry
+from clisnips.tui.components.search_entry import SearchEntry
 from clisnips.tui.widgets.snippets_list_footer import SnippetListFooter
 from clisnips.tui.widgets.table import Column, Table, TableStore
 
@@ -33,16 +35,15 @@ class SnippetListView(View):
 
     signals = list(Signals)
 
-    def __init__(self, model: SnippetsModel):
-
+    def __init__(self, model: SnippetsModel, store: SnippetsStore):
+        self._store = store
         self._model = model
         self._model.connect(model.Signals.ROWS_LOADED, self._on_model_rows_loaded)
         self._model.connect(model.Signals.ROW_CREATED, self._on_model_row_created)
         self._model.connect(model.Signals.ROW_DELETED, self._on_model_row_deleted)
         self._model.connect(model.Signals.ROW_UPDATED, self._on_model_row_updated)
 
-        self.search_entry = SearchEntry(' ')
-        urwid.connect_signal(self.search_entry, 'change', self._on_search_term_changed)
+        self.search_entry = SearchEntry(store, ' ')
         pager_infos = PagerInfos(model)
         header = urwid.Columns([('weight', 1, self.search_entry), ('pack', pager_infos)], dividechars=1)
 
@@ -58,6 +59,13 @@ class SnippetListView(View):
         frame = urwid.Frame(self.snippet_list, header=header, footer=self._footer, focus_part='header')
         super().__init__(frame)
 
+        def on_snippets_changed(snippets: dict[str, dict]):
+            self._table_store.load(list(snippets.values()))
+
+        self._watchers = {
+            'snippets': store.watch(lambda s: s['snippets_by_id'], on_snippets_changed, immediate=True),
+        }
+
     def get_search_text(self):
         return self.search_entry.get_search_text()
 
@@ -67,9 +75,7 @@ class SnippetListView(View):
         self.open_dialog(dialog, title='Insert snippet')
 
     def _open_sort_dialog(self):
-        dialog = ListOptionsDialog(self, self._model)
-        urwid.connect_signal(dialog, dialog.Signals.SORT_CHANGED, self._on_sort_column_selected)
-        urwid.connect_signal(dialog, dialog.Signals.PAGE_SIZE_CHANGED, self._on_page_size_changed)
+        dialog = ListOptionsDialog(self, self._store)
         self.open_dialog(dialog, title='List Options', width=35, height=14)
 
     def _open_show_dialog(self):
@@ -169,18 +175,9 @@ class SnippetListView(View):
         # logger.debug(key)
         return key
 
-    def _on_search_term_changed(self, entry, text):
-        self._emit(self.Signals.SEARCH_CHANGED, text)
-
     def _on_snippet_list_row_selected(self, table, row):
         snippet = self._model.get(row['id'])
         self._emit(self.Signals.SNIPPET_SELECTED, snippet)
-
-    def _on_sort_column_selected(self, dialog, column, order):
-        self._emit(self.Signals.SORT_COLUMN_SELECTED, column, order)
-
-    def _on_page_size_changed(self, dialog, page_size: int):
-        self._emit(self.Signals.PAGE_SIZE_CHANGED, page_size)
 
     def _on_delete_snippet_requested(self):
         row = self.snippet_list.get_selected()

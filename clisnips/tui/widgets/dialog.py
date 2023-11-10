@@ -1,4 +1,5 @@
 import enum
+import logging
 from typing import Optional
 
 import urwid
@@ -27,13 +28,13 @@ class DialogOverlay(urwid.Overlay):
         self.parent = parent
         super().__init__(*args, **kwargs)
 
-    def keypress(self, size, key):
-        if key == 'esc':
-            self.parent.close_dialog()
-            return
-        else:
-            super().keypress(size, key)
-            return
+    # def keypress(self, size, key):
+    #     if key == 'esc':
+    #         self.parent.close_dialog()
+    #         return
+    #     else:
+    #         super().keypress(size, key)
+    #         return
 
 
 class Dialog(urwid.WidgetWrap):
@@ -57,6 +58,15 @@ class Dialog(urwid.WidgetWrap):
         self.view = w
 
         super().__init__(w)
+
+    def keypress(self, size, key):
+        if key == 'esc':
+            logging.getLogger(__name__).debug('ESC pressed')
+            self._parent.close_dialog()
+            return
+        else:
+            super().keypress(size, key)
+            return
 
     def set_buttons(self, settings):
         buttons = []

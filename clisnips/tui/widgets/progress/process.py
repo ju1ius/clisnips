@@ -21,7 +21,8 @@ class Process(multiprocessing.Process):
         # allow garbage collection
         if self._message_queue:
             self._message_queue = None
-            self._target.message_queue = None
+            if hasattr(self, '_target'):
+                self._target.message_queue = None
 
     def kill(self):
         self.stop()

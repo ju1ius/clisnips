@@ -79,6 +79,20 @@ files = [
 ]
 
 [[package]]
+name = "observ"
+version = "0.12.0"
+description = "Reactive state management for Python"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "observ-0.12.0-py3-none-any.whl", hash = "sha256:54b2cf2fa5a755b76ae1d09e0ef7c90db401c81dd36c39302b079edf71350725"},
+    {file = "observ-0.12.0.tar.gz", hash = "sha256:677c476a01c68081a96f340efd8ba369960661a4b3348a19968ea878bd3db88d"},
+]
+
+[package.dependencies]
+patchdiff = ">=0.3.4,<0.4.0"
+
+[[package]]
 name = "packaging"
 version = "23.2"
 description = "Core utilities for Python packages"
@@ -87,6 +101,17 @@ python-versions = ">=3.7"
 files = [
     {file = "packaging-23.2-py3-none-any.whl", hash = "sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7"},
     {file = "packaging-23.2.tar.gz", hash = "sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5"},
+]
+
+[[package]]
+name = "patchdiff"
+version = "0.3.4"
+description = "MIT"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "patchdiff-0.3.4-py3-none-any.whl", hash = "sha256:109710036e028aa0bac10139997a42b7d69d73d0275eff12455a59f2d6f8f995"},
+    {file = "patchdiff-0.3.4.tar.gz", hash = "sha256:034959a4a6e4143b2f63ae645b221e0617909410ffb3e186b77c643225e233e6"},
 ]
 
 [[package]]
@@ -216,4 +241,4 @@ zmq = ["zmq"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "b200ada346c941b90fa73af9bc478d22f42e64fde900dae0f21da3d1cb788d34"
+content-hash = "0ec9d2a5162f92b0aa9744929f04698bb88b8e918ef5d428b65c55b6b284f771"

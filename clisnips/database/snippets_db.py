@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 import stat
@@ -28,7 +29,9 @@ def ranking_function(created: int, last_used: int, num_used: int, timestamp: str
         return 0.0
     age = (now - created) / SECONDS_TO_DAYS
     last_used_days = (now - last_used) / SECONDS_TO_DAYS
-    return num_used / pow(last_used_days / age, GRAVITY)
+    ranking = num_used / pow(last_used_days / age, GRAVITY)
+    logging.getLogger(__name__).debug('ranking: %r', ranking)
+    return ranking
 
 
 class Snippet(TypedDict):
@@ -43,12 +46,6 @@ class Snippet(TypedDict):
 
 
 class SnippetsDatabase:
-
-    COLUMN_ID = 'rowid'
-    COLUMN_TITLE = 'title'
-    COLUMN_CMD = 'cmd'
-    COLUMN_TAGS = 'tag'
-    COLUMN_DOC = 'doc'
 
     def __init__(self, connection: sqlite3.Connection):
         self.connection = connection

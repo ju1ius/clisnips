@@ -4,6 +4,7 @@ import sys
 from typing import Callable, Hashable, Iterable, Optional
 
 import urwid
+import observ
 
 from . import theme
 from .builder import Builder
@@ -19,6 +20,7 @@ class TUI:
         # Since our main purpose is to insert stuff in the tty command line, we send the screen to STDERR
         # so we can capture stdout easily without swapping file descriptors
         screen = urwid.raw_display.Screen(output=sys.stderr)
+        observ.scheduler.register_asyncio()
         self.main_loop = urwid.MainLoop(
             self.root_widget,
             handle_mouse=False,

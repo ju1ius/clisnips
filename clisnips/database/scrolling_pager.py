@@ -1,19 +1,31 @@
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Union
 
+from . import ScrollDirection, SortOrder
 from .offset_pager import OffsetPager
 
-SortColumnDefinition = Union[Tuple[str, str], Tuple[str, str, bool]]
+SortColumnDefinition = Union[tuple[str, SortOrder], tuple[str, SortOrder, bool]]
+
+_WHERE_OP = {
+    (ScrollDirection.FWD, SortOrder.ASC): '>',
+    (ScrollDirection.FWD, SortOrder.DESC): '<',
+    (ScrollDirection.BWD, SortOrder.ASC): '<',
+    (ScrollDirection.BWD, SortOrder.DESC): '>',
+}
+
+
+def _get_operator(direction: ScrollDirection, order: SortOrder, unique=False):
+    operator = _WHERE_OP[(direction, order)]
+    if not unique:
+        operator += '='
+    return operator
 
 
 class ScrollingPager(OffsetPager):
-    FORWARD = 1
-    BACKWARD = 2
-
     def __init__(self, connection, page_size: int = 100, sort_columns: Optional[Iterable[SortColumnDefinition]] = None):
         super().__init__(connection, page_size)
 
-        self._sort_columns = []
-        self._id_column = ('rowid', 'ASC')
+        self._sort_columns: list[tuple[str, SortOrder]] = []
+        self._id_column = ('rowid', SortOrder.ASC)
         if sort_columns:
             self.set_sort_columns(sort_columns)
         # Keeps track of the resultset bounds after each query
@@ -28,16 +40,14 @@ class ScrollingPager(OffsetPager):
     def set_sort_columns(self, columns: Iterable[SortColumnDefinition]):
         """
         columns: [
-            (name[, order [, unique]]),
+            (name, order [, unique]),
             ...
         ]
         """
         self._sort_columns = []
         self._id_column = None
-        for col in columns:
-            l, name = len(col), col[0]
-            order = self._parse_order(col[1]) if l > 1 else self.SORT_ASC
-            unique = l > 2 and col[2]
+        for name, order, *rest in columns:
+            unique = rest and rest[0]
             if unique:
                 if self._id_column:
                     raise RuntimeError('You can add only one unique sort column.')
@@ -127,29 +137,6 @@ class ScrollingPager(OffsetPager):
                 cursor[name] = row[name]
             self._cursor[k] = cursor
 
-    def _parse_order(self, order):
-        if order is None:
-            return self.SORT_ASC
-        if order in (self.SORT_DESC, self.SORT_ASC):
-            return order
-        order = order.lower()
-        if order == 'asc':
-            return self.SORT_ASC
-        if order == 'desc':
-            return self.SORT_DESC
-        raise ValueError(f'Invalid sort order {order!r}')
-
-    def _get_operator(self, direction, order, unique=False):
-        if direction == self.BACKWARD:
-            operator = '>' if order == self.SORT_DESC else '<'
-        else:
-            operator = '<' if order == self.SORT_DESC else '>'
-
-        if not unique:
-            operator += '='
-
-        return operator
-
     def _compile_queries(self):
         fwd_orderby = self._compile_orderby_clause()
         bwd_orderby = self._compile_orderby_clause(invert=True)
@@ -174,14 +161,14 @@ class ScrollingPager(OffsetPager):
         # query for self.next()
         self._next_fmt = f'''
             SELECT * FROM ({self._query})
-            {self._precompile_where_clause(self.FORWARD)}
+            {self._precompile_where_clause(ScrollDirection.FWD)}
             ORDER BY {fwd_orderby}
             LIMIT {self._page_size}
         '''
         # query for self.previous()
         self._prev_fmt = f'''
             SELECT * FROM ({self._query})
-            {self._precompile_where_clause(self.BACKWARD)}
+            {self._precompile_where_clause(ScrollDirection.BWD)}
             ORDER BY {bwd_orderby}
             LIMIT {self._page_size}
         '''
@@ -196,27 +183,26 @@ class ScrollingPager(OffsetPager):
         exprs = []
         for name, order in sort_columns:
             if invert:
-                order = not order
-            direction = 'ASC' if order == self.SORT_ASC else 'DESC'
-            exprs.append(f'{name} {direction}')
+                order = order.reverse()
+            exprs.append(f'{name} {order}')
         return ', '.join(exprs)
 
-    def _precompile_where_clause(self, direction):
-        cursor = 'last' if direction == self.FORWARD else 'first'
+    def _precompile_where_clause(self, direction: ScrollDirection):
+        cursor = 'last' if direction is ScrollDirection.FWD else 'first'
         comp_fmt = '{col} {op} {value}'
         value_fmt = '{cursor[%s][%s]!r}'
         # add non-unique columns
         exprs_1, exprs_2 = [], []
         for name, order in self._sort_columns:
-            op1 = self._get_operator(direction, order, False)
-            op2 = self._get_operator(direction, order, True)
+            op1 = _get_operator(direction, order, False)
+            op2 = _get_operator(direction, order, True)
             key = value_fmt % (cursor, name)
             # last_index = self._cursor[cursor][name]
             exprs_1.append(comp_fmt.format(col=name, op=op1, value=key))
             exprs_2.append(comp_fmt.format(col=name, op=op2, value=key))
         # add unique column
         name, order = self._id_column
-        operator = self._get_operator(direction, order, True)
+        operator = _get_operator(direction, order, True)
         key = value_fmt % (cursor, name)
         # last_index = self._cursor[cursor][name]
         expr = comp_fmt.format(col=name, op=operator, value=key)
@@ -228,7 +214,7 @@ class ScrollingPager(OffsetPager):
             expr_2=' OR '.join(exprs_2)
         )
 
-    def _is_unique_column(self, column_name, table_name):
+    def _is_unique_column(self, column_name: str, table_name: str):
         # PRAGMA INDEX_LIST(table_name)
         # => [{'seq': unique id of the index,
         #      'name': name of the index,

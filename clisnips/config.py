@@ -5,6 +5,8 @@ from pathlib import Path
 
 from ._types import AnyPath
 
+from .database import SortColumn, SortOrder
+
 VERSION = "0.1"
 AUTHORS = ['Jules Bernable (ju1ius)']
 HELP_URI = 'https://github.com/ju1ius/clisnips/wiki'
@@ -91,16 +93,18 @@ class Config(configparser.RawConfigParser):
         self.set('default', 'database', str(value))
 
     @property
-    def pager_sort_column(self) -> str:
-        return self.get('default', 'sort_column')
+    def pager_sort_column(self) -> SortColumn:
+        col = self.get('default', 'sort_column')
+        return SortColumn(col)
 
     @pager_sort_column.setter
     def pager_sort_column(self, value):
         self.set('default', 'sort_column', str(value))
 
     @property
-    def pager_sort_order(self) -> str:
-        return self.get('default', 'sort_order')
+    def pager_sort_order(self) -> SortOrder:
+        order = self.get('default', 'sort_order')
+        return SortOrder(order)
 
     @pager_sort_order.setter
     def pager_sort_order(self, value: str):

@@ -1,13 +1,17 @@
 import enum
+import logging
 
 import urwid
 
 from clisnips.config import Config
 from clisnips.exceptions import ParsingError
+from clisnips.stores.snippets import SnippetsStore
 from clisnips.syntax import parse_command
 from clisnips.tui.models.snippets import SnippetsModel
 from clisnips.tui.screen import Screen
 from clisnips.tui.views.snippets_list import SnippetListView
+
+logger = logging.getLogger(__name__)
 
 
 class SnippetsListScreen(Screen):
@@ -16,18 +20,17 @@ class SnippetsListScreen(Screen):
         SNIPPET_APPLIED = 'snippet-applied'
         HELP_REQUESTED = 'help-requested'
 
-    def __init__(self, config: Config, model: SnippetsModel):
+    def __init__(self, config: Config, model: SnippetsModel, store: SnippetsStore):
         super().__init__(list(self.Signals))
 
         self._config = config
         self._model = model
+        self._store = store
 
-        self.view = SnippetListView(self._model)
+        self.view = SnippetListView(model, store)
         signals = SnippetListView.Signals
         urwid.connect_signal(self.view, signals.SEARCH_CHANGED, self. _on_search_term_changed)
         urwid.connect_signal(self.view, signals.SNIPPET_SELECTED, self._on_snippet_selected)
-        urwid.connect_signal(self.view, signals.SORT_COLUMN_SELECTED, self._on_sort_column_selected)
-        urwid.connect_signal(self.view, signals.PAGE_SIZE_CHANGED, self._on_page_size_changed)
         urwid.connect_signal(self.view, signals.PAGE_REQUESTED, self._on_page_requested)
         urwid.connect_signal(self.view, signals.APPLY_SNIPPET_REQUESTED, self._on_apply_snippet_requested)
         urwid.connect_signal(self.view, signals.DELETE_SNIPPET_REQUESTED, self._on_delete_snippet_requested)
@@ -35,7 +38,7 @@ class SnippetsListScreen(Screen):
         urwid.connect_signal(self.view, signals.CREATE_SNIPPET_REQUESTED, self._on_create_snippet_requested)
         urwid.connect_signal(self.view, signals.HELP_REQUESTED, self._on_help_requested)
 
-        self._model.list()
+        # self._model.list()
 
     def _on_search_term_changed(self, view, text):
         if not text:
@@ -47,7 +50,6 @@ class SnippetsListScreen(Screen):
         try:
             cmd = parse_command(snippet['cmd'])
         except ParsingError as err:
-            # TODO: show error
             return
         if not cmd.field_names:
             urwid.emit_signal(self, self.Signals.SNIPPET_APPLIED, snippet['cmd'])
@@ -58,16 +60,13 @@ class SnippetsListScreen(Screen):
         self._model.set_sort_column(column, order)
         self._config.pager_sort_column = column
         self._config.pager_sort_order = order
+        self._refetch_list()
+
+    def _refetch_list(self):
         if self._model.is_searching:
             self._model.search(self.view.get_search_text())
         else:
             self._model.list()
-
-    def _on_page_size_changed(self, view, page_size: int):
-        if not isinstance(page_size, int):
-            raise Exception('Page size must be an integer')
-        self._model.set_page_size(page_size)
-        self._config.pager_page_size = page_size
 
     def _on_page_requested(self, view, page):
         if not self._model.must_paginate:

@@ -4,6 +4,7 @@ from typing import Any, Callable, Iterable, Tuple
 
 import urwid
 
+from clisnips.database import SortColumn, SortOrder
 from clisnips.database.pager import Pager
 from clisnips.database.search_pager import SearchPagerType, SearchSyntaxError
 from clisnips.database.snippets_db import SnippetsDatabase
@@ -70,11 +71,11 @@ class SnippetsModel:
         return self._pager.is_searching
 
     @property
-    def sort_column(self) -> Tuple[str, str]:
-        column, order = self._pager.get_sort_columns()[0]
-        return column, 'ASC' if order is Pager.SORT_ASC else 'DESC'
+    def sort_column(self) -> Tuple[str, SortOrder]:
+        column, order, *_ = self._pager.get_sort_columns()[0]
+        return column, order
 
-    def set_sort_column(self, column, order='DESC'):
+    def set_sort_column(self, column: SortColumn, order=SortOrder.DESC):
         self._pager.set_sort_column(column, order)
 
     def get(self, snippet_id):

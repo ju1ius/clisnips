@@ -5,9 +5,6 @@ from .snippets_db import QueryParameters, ResultSet
 
 class Pager(ABC):
 
-    SORT_ASC = True
-    SORT_DESC = False
-
     @property
     @abstractmethod
     def page_size(self) -> int: ...

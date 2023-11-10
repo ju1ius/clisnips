@@ -2,6 +2,7 @@ import sqlite3
 
 import pytest
 
+from clisnips.database import SortOrder
 from clisnips.database.scrolling_pager import ScrollingPager
 
 TEST_SCHEMA = '''
@@ -64,8 +65,7 @@ def connection():
             rowid += 1
             value = '%s #%s' % (value, rowid)
             con.execute(
-                '''insert into paging_test(rowid, value, ranking)
-                values(?, ?, ?)''',
+                '''insert into paging_test(rowid, value, ranking) values(?, ?, ?)''',
                 (rowid, value, ranking)
             )
     yield con
@@ -75,7 +75,7 @@ def connection():
 def test_simple_query(connection):
     pager = ScrollingPager(connection, 5)
     pager.set_query('select rowid, * from paging_test')
-    pager.set_sort_columns([('rowid', 'ASC', True)])
+    pager.set_sort_columns([('rowid', SortOrder.ASC, True)])
     #
     pager.execute()
     assert len(pager) == 4, 'Wrong number of pages.'
@@ -118,7 +118,7 @@ def test_complex_query(connection):
         SELECT docid FROM paging_test_idx
         WHERE paging_test_idx MATCH :term
     ''', params)
-    pager.set_sort_columns([('ranking', 'DESC'), ('rowid', 'ASC', True)])
+    pager.set_sort_columns([('ranking', SortOrder.DESC), ('rowid', SortOrder.ASC, True)])
     #
     pager.execute()
     assert pager._total_size == 12, 'Wrong number of rows.'
