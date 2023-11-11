@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 
 function __clisnips__() {
   local snip

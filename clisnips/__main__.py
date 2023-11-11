@@ -2,12 +2,12 @@ import logging
 import sys
 
 from clisnips.cli import Application
-from clisnips.config import xdg_state_home
+from clisnips.config.paths import ensure_app_dirs, get_state_path, xdg_state_home
 
 
 def main():
-    log_file = xdg_state_home() / 'clisnips' / 'clisnips.log'
-    log_file.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    ensure_app_dirs()
+    log_file = get_state_path('clisnips.log')
     # TODO: allow config to set the logging level
     logging.basicConfig(level=logging.DEBUG, filename=log_file, filemode='w')
 
