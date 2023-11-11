@@ -29,3 +29,8 @@ clisnips key-bindings zsh
 ```
 
 Open a *new* shell and type the `Alt+s` keyboard shortcut to open the snippets library.
+
+## Usage
+
+Please run `clisnips --help` to read the CLI documentation,
+and have a look at the [docs](./docs) directory for help on writing your own snippets.
