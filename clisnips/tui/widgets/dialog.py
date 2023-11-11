@@ -53,7 +53,7 @@ class Dialog(urwid.WidgetWrap):
         # pad area around listbox
         w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=RELATIVE_100)
         w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=RELATIVE_100)
-        w = urwid.AttrWrap(w, 'body')
+        w = urwid.AttrMap(w, 'body')
 
         self.view = w
 
@@ -75,7 +75,7 @@ class Dialog(urwid.WidgetWrap):
             cell_width = max(cell_width, len(label))
             button = urwid.Button(label)
             urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=[response_type, *args])
-            button = urwid.AttrWrap(button, 'selectable', 'focus')
+            button = urwid.AttrMap(button, 'selectable', 'focus')
             buttons.append(button)
         cell_width += 4  # account for urwid internal button decorations
         self._action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align='center')
