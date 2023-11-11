@@ -2,6 +2,7 @@ import logging
 import os
 import sqlite3
 import stat
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Iterable, Optional, TypedDict, Union
 
@@ -100,17 +101,17 @@ class SnippetsDatabase:
         with self.connection:
             self.cursor.execute(query)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Snippet]:
         return self.iter('*')
 
-    def iter(self, *columns) -> Iterable[Snippet]:
+    def iter(self, *columns) -> Iterator[Snippet]:
         query = 'SELECT rowid AS id, %s from snippets' % ','.join(columns)
         with self.connection:
             self.cursor.execute(query)
             while rows := self.cursor.fetchmany(self.block_size):
                 yield from rows
 
-    def get(self, rowid) -> Optional[Snippet]:
+    def get(self, rowid: int) -> Optional[Snippet]:
         query = 'SELECT rowid AS id, * FROM snippets WHERE rowid = :id'
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
@@ -144,7 +145,7 @@ class SnippetsDatabase:
             return []
         return rows
 
-    def insert(self, data) -> int:
+    def insert(self, data: Snippet) -> int:
         query = 'INSERT INTO snippets(title, cmd, doc, tag) VALUES(:title, :cmd, :doc, :tag)'
         with self.connection:
             self.cursor.execute(query, data)
@@ -152,7 +153,7 @@ class SnippetsDatabase:
                 self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid
 
-    def insertmany(self, data) -> int:
+    def insertmany(self, data: Iterable[Snippet]) -> int:
         query = '''
             INSERT INTO snippets(
                 title, cmd, doc, tag,
@@ -169,7 +170,7 @@ class SnippetsDatabase:
                 self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid
 
-    def update(self, data) -> int:
+    def update(self, data: Snippet) -> int:
         query = 'UPDATE snippets SET title = :title, cmd = :cmd, doc = :doc, tag = :tag WHERE rowid = :id'
         with self.connection:
             self.cursor.execute(query, data)

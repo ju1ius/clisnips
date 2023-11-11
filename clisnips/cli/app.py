@@ -43,7 +43,8 @@ class Application:
         import_cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
         import_cmd.add_argument('file', type=FileType('r'))
         #
-        export_cmd = sub_parsers.add_parser('export', help='Exports snippets to XML.')
+        export_cmd = sub_parsers.add_parser('export', help='Exports snippets a file.')
+        export_cmd.add_argument('--format', choices=['xml', 'json'], default='xml')
         export_cmd.add_argument('file', type=FileType('w'))
         #
         dump_cmd = sub_parsers.add_parser('dump', help='Runs a SQL dump of the database.')
