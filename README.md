@@ -1,5 +1,5 @@
-clisnips
-========
+# clisnips
+
 
 clisnips is a command-line snippets manager.
 
@@ -10,17 +10,13 @@ It provides a graphical command-line user interface in which you can save, searc
 
 ## Installation
 
-clisnips requires python 3.8 or higher.
+clisnips requires python 3.11 or higher.
 
 ### 1. Install clisnips
 
-The recommended way is to use [pipx](https://pipxproject.github.io/pipx/):
+The recommended way is to use [pipx](https://pypa.github.io/pipx/):
 ```sh
-pipx install clisnips
-```
-But you can also just use pip:
-```sh
-python3 -m pip install clisnips
+pipx install git+https://github.com/ju1ius/clisnips.git
 ```
 
 ### 2. Install shell key-bindings
