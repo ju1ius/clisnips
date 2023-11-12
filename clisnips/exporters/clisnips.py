@@ -33,6 +33,7 @@ def _create_snippet(doc: Document, row: sqlite3.Row) -> Element:
     snip.setAttribute('created-at', str(row['created_at']))
     snip.setAttribute('last-used-at', str(row['last_used_at']))
     snip.setAttribute('usage-count', str(row['usage_count']))
+    snip.setAttribute('ranking', str(row['ranking']))
     _add_field(doc, snip, 'title', row['title'])
     _add_field(doc, snip, 'command', row['cmd'])
     _add_field(doc, snip, 'tag', row['tag'])

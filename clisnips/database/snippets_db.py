@@ -178,11 +178,11 @@ class SnippetsDatabase:
         query = '''
             INSERT INTO snippets(
                 title, cmd, doc, tag,
-                created_at, last_used_at, usage_count
+                created_at, last_used_at, usage_count, ranking
             )
             VALUES(
                 :title, :cmd, :doc, :tag,
-                :created_at, :last_used_at, :usage_count
+                :created_at, :last_used_at, :usage_count, :ranking
             )
         '''
         with self.connection:
