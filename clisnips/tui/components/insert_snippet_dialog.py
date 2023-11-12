@@ -61,12 +61,12 @@ class InsertSnippetDialog(Dialog):
             if response_type == ResponseType.ACCEPT:
                 if self._validate():
                     callback(self.get_output(), *args)
-                    self._parent.close_dialog()
+                    self.close()
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type, *args):
         if response_type == ResponseType.REJECT:
-            self._parent.close_dialog()
+            self.close()
 
     def _on_field_changed(self, field):
         self._update_output(silent=True)

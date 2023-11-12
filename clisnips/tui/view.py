@@ -3,7 +3,7 @@ from typing import Callable, Dict
 
 import urwid
 
-from .widgets.dialog import DialogFrame, DialogOverlay
+from .widgets.dialog import Dialog, DialogFrame, DialogOverlay
 from .widgets.dialogs.error import ErrorDialog
 
 
@@ -18,7 +18,7 @@ class View(urwid.WidgetWrap):
         self._has_dialog = False
         super().__init__(urwid.AttrMap(self._view, 'view:default'))
 
-    def open_dialog(self, dialog, title: str = '', width=('relative', 80), height=('relative', 80)):
+    def open_dialog(self, dialog: Dialog, title: str = '', width=('relative', 80), height=('relative', 80)):
         frame = DialogFrame(self, dialog, title=title)
         overlay = DialogOverlay(self, frame, self._view, align='center', width=width, valign='middle', height=height)
         self._wrapped_widget.original_widget = overlay

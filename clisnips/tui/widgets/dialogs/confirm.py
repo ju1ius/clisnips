@@ -16,7 +16,7 @@ class ConfirmDialog(Dialog):
             (accept_text, ResponseType.ACCEPT),
         ))
         self._frame.focus_position = 1
-        urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self._parent.close_dialog())
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())
 
     def on_accept(self, callback: Callable, *args):
         def handler(dialog, response_type):

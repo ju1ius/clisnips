@@ -32,4 +32,4 @@ class ErrorDialog(Dialog):
             ('OK', ResponseType.ACCEPT),
         ))
         self._frame.focus_position = 1
-        urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self._parent.close_dialog())
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())

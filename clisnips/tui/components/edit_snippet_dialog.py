@@ -43,7 +43,7 @@ class EditSnippetDialog(Dialog):
 
     def _on_response(self, dialog, response_type):
         if response_type == ResponseType.REJECT:
-            self._parent.close_dialog()
+            self.close()
 
     def _collect_values(self):
         snippet = dict(self._snippet)

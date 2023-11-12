@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import enum
-import logging
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import urwid
 from urwid.widget.constants import Align, RELATIVE_100, VAlign
+
+if TYPE_CHECKING:
+    from clisnips.tui.view import View
 
 from .divider import HorizontalDivider
 
@@ -16,7 +20,7 @@ class ResponseType(enum.Enum):
 
 class DialogFrame(urwid.WidgetWrap):
 
-    def __init__(self, parent, body, title=None):
+    def __init__(self, parent: urwid.Widget, body: Dialog, title: str):
         self.parent = parent
         self.line_box = urwid.LineBox(body, title=title)
         super().__init__(self.line_box)
@@ -28,14 +32,6 @@ class DialogOverlay(urwid.Overlay):
         self.parent = parent
         super().__init__(*args, **kwargs)
 
-    # def keypress(self, size, key):
-    #     if key == 'esc':
-    #         self.parent.close_dialog()
-    #         return
-    #     else:
-    #         super().keypress(size, key)
-    #         return
-
 
 class Dialog(urwid.WidgetWrap):
 
@@ -44,8 +40,8 @@ class Dialog(urwid.WidgetWrap):
 
     signals = list(Signals)
 
-    def __init__(self, parent, body):
-        self._parent = parent
+    def __init__(self, view: View, body: urwid.Widget):
+        self._parent_view = view
         self._body = body
         self._action_area: Optional[urwid.GridFlow] = None
         self._frame = urwid.Pile([self._body])
@@ -54,19 +50,17 @@ class Dialog(urwid.WidgetWrap):
         w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=RELATIVE_100)
         w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=RELATIVE_100)
         w = urwid.AttrMap(w, 'body')
-
-        self.view = w
-
         super().__init__(w)
 
+    def close(self):
+        self._parent_view.close_dialog()
+
     def keypress(self, size, key):
-        if key == 'esc':
-            logging.getLogger(__name__).debug('ESC pressed')
-            self._parent.close_dialog()
-            return
-        else:
-            super().keypress(size, key)
-            return
+        match key:
+            case 'esc':
+                self.close()
+            case _:
+                super().keypress(size, key)
 
     def set_buttons(self, settings):
         buttons = []
