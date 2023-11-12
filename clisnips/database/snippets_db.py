@@ -1,4 +1,5 @@
 import logging
+import math
 import os
 import sqlite3
 import stat
@@ -24,15 +25,27 @@ ResultSet = Iterable[sqlite3.Row]
 QueryParameters = Union[tuple, dict]
 
 
-def ranking_function(created: int, last_used: int, num_used: int, timestamp: str) -> float:
-    now = int(timestamp)
-    if created == now or num_used <= 0:
-        return 0.0
+def compute_ranking(created: int, last_used: int, num_used: int, now: float) -> float:
+    assert num_used > 0, 'Ranking must be computed after a snippet is used.'
+    assert now > created, 'Ranking must not be computed for newly created snippets.'
+    assert now > last_used, 'Ranking must not be computed after updating the usage timestamp.'
+
     age = (now - created) / SECONDS_TO_DAYS
     last_used_days = (now - last_used) / SECONDS_TO_DAYS
-    ranking = num_used / pow(last_used_days / age, GRAVITY)
-    logging.getLogger(__name__).debug('ranking: %r', ranking)
-    return ranking
+    return num_used / pow(last_used_days / age, GRAVITY)
+
+
+# TODO: test this frecency algo for sorting
+LOG_2 = math.log(2)
+FRECENCY_HALF_LIFE = SECONDS_TO_DAYS
+FRECENCY_DECAY = LOG_2 / FRECENCY_HALF_LIFE
+
+
+def compute_frecency(now: float, previous: float) -> float:
+    current_decay = now * FRECENCY_DECAY
+    if previous == 0.0:
+        return current_decay
+    return math.log(math.exp(previous - current_decay) + 1) + current_decay
 
 
 class Snippet(TypedDict):
@@ -45,6 +58,11 @@ class Snippet(TypedDict):
     last_used_at: int
     usage_count: int
     ranking: float
+
+
+class SnippetNotFound(RuntimeError):
+    def __init__(self, *args):
+        super().__init__('Snippet not found.', *args)
 
 
 class SnippetsDatabase:
@@ -64,7 +82,6 @@ class SnippetsDatabase:
             os.mknod(db_file, 0o644 | stat.S_IFREG)
         cx = sqlite3.connect(db_file)
         cx.row_factory = sqlite3.Row
-        cx.create_function('rank_snippet', 4, ranking_function, deterministic=True)
         cx.executescript(SCHEMA_QUERY)
 
         return cls(cx)
@@ -111,7 +128,12 @@ class SnippetsDatabase:
             while rows := self.cursor.fetchmany(self.block_size):
                 yield from rows
 
-    def get(self, rowid: int) -> Optional[Snippet]:
+    def get(self, rowid: int) -> Snippet:
+        if snippet := self.find(rowid):
+            return snippet
+        raise SnippetNotFound(rowid)
+
+    def find(self, rowid: int) -> Optional[Snippet]:
         query = 'SELECT rowid AS id, * FROM snippets WHERE rowid = :id'
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 
@@ -125,7 +147,7 @@ class SnippetsDatabase:
 
     @staticmethod
     def get_search_query() -> str:
-        return f'''
+        return '''
             SELECT i.rowid as docid, s.rowid AS id,
             s.title, s.cmd, s.tag,
             s.created_at, s.last_used_at, s.usage_count, s.ranking
@@ -135,15 +157,14 @@ class SnippetsDatabase:
 
     @staticmethod
     def get_search_count_query() -> str:
-        return f'SELECT rowid FROM snippets_index WHERE snippets_index MATCH :term'
+        return 'SELECT rowid FROM snippets_index WHERE snippets_index MATCH :term'
 
     def search(self, term: str) -> ResultSet:
-        query = f'SELECT rowid AS id FROM snippets_index WHERE snippets_index MATCH :term'
+        query = 'SELECT rowid AS id FROM snippets_index WHERE snippets_index MATCH :term'
         try:
-            rows = self.cursor.execute(query, {'term': term}).fetchall()
-        except sqlite3.OperationalError as err:
+            return self.cursor.execute(query, {'term': term}).fetchall()
+        except sqlite3.OperationalError:
             return []
-        return rows
 
     def insert(self, data: Snippet) -> int:
         query = 'INSERT INTO snippets(title, cmd, doc, tag) VALUES(:title, :cmd, :doc, :tag)'
@@ -151,9 +172,9 @@ class SnippetsDatabase:
             self.cursor.execute(query, data)
             if self.cursor.rowcount > 0:
                 self._num_rows += self.cursor.rowcount
-            return self.cursor.lastrowid
+            return self.cursor.lastrowid # type: ignore
 
-    def insertmany(self, data: Iterable[Snippet]) -> int:
+    def insert_many(self, data: Iterable[Snippet]):
         query = '''
             INSERT INTO snippets(
                 title, cmd, doc, tag,
@@ -168,7 +189,6 @@ class SnippetsDatabase:
             self.cursor.executemany(query, data)
             if self.cursor.rowcount > 0:
                 self._num_rows += self.cursor.rowcount
-            return self.cursor.lastrowid
 
     def update(self, data: Snippet) -> int:
         query = 'UPDATE snippets SET title = :title, cmd = :cmd, doc = :doc, tag = :tag WHERE rowid = :id'
@@ -183,10 +203,12 @@ class SnippetsDatabase:
             if self.cursor.rowcount > 0:
                 self._num_rows -= self.cursor.rowcount
 
-    # TODO: use this or remove it
-    def use_snippet(self, rowid: int):
+    def use_snippet(self, rowid: int, now: float):
+        snippet = self.get(rowid)
+        ranking = compute_ranking(snippet['created_at'], snippet['last_used_at'], snippet['usage_count'] + 1, now)
+        # ranking = compute_frecency(now, snippet['ranking'])
         query = ('UPDATE snippets '
-                 'SET last_used_at = strftime("%s", "now"), usage_count = usage_count + 1 '
+                 'SET last_used_at = :now, usage_count = usage_count + 1, ranking = :ranking '
                  'WHERE rowid = :id')
         with self.connection:
-            self.cursor.execute(query, {'id': rowid})
+            self.cursor.execute(query, {'id': rowid, 'now': int(now), 'ranking': ranking})

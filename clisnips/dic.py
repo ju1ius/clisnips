@@ -1,10 +1,12 @@
 from typing import Optional
 
+
 from ._types import AnyPath
 from .config import Config
 from .database.search_pager import SearchPager
 from .database.snippets_db import SnippetsDatabase
 from .stores.snippets import SnippetsStore
+from .utils.clock import Clock, SystemClock
 
 
 class DependencyInjectionContainer:
@@ -18,6 +20,7 @@ class DependencyInjectionContainer:
         self._database: Optional[SnippetsDatabase] = None
         self._pager: Optional[SearchPager] = None
         self._snippets_store: Optional[SnippetsStore] = None
+        self._clock: Clock = SystemClock()
 
     @property
     def config(self) -> Config:
@@ -40,6 +43,7 @@ class DependencyInjectionContainer:
         if not self._snippets_store:
             state = {
                 'search_query': '',
+                'snippet_ids': [],
                 'snippets_by_id': {},
                 'total_rows': 0,
                 'current_page': 1,
@@ -48,7 +52,7 @@ class DependencyInjectionContainer:
                 'sort_by': self.config.pager_sort_column,
                 'sort_order': self.config.pager_sort_order,
             }
-            self._snippets_store = SnippetsStore(state, self.database, self.pager)
+            self._snippets_store = SnippetsStore(state, self.database, self.pager, self._clock)
         return self._snippets_store
 
     @property

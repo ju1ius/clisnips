@@ -6,6 +6,7 @@ from observ import reactive, watch, watch_effect
 from clisnips.database import SortColumn, SortOrder
 from clisnips.database.search_pager import SearchPager, SearchSyntaxError
 from clisnips.database.snippets_db import Snippet, SnippetsDatabase
+from clisnips.utils.clock import Clock
 
 Watched = TypeVar("Watched")
 
@@ -40,10 +41,12 @@ class SnippetsStore:
         initial_state: State,
         db: SnippetsDatabase,
         pager: SearchPager,
+        clock: Clock,
     ):
         self._state: State = reactive(initial_state)
         self._db = db
         self._pager = pager
+        self._clock = clock
         self._fetch_list('')
 
     @property

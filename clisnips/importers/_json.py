@@ -10,7 +10,7 @@ def import_json(db: SnippetsDatabase, file: TextIO, log: Callable):
     start_time = time.time()
     log(('info', f'Importing snippets from {file.name}...'))
 
-    db.insertmany(json.load(file))
+    db.insert_many(json.load(file))
     log(('info', 'Rebuilding & optimizing search index...'))
     db.rebuild_index()
     db.optimize_index()

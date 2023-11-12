@@ -17,7 +17,7 @@ def import_cli_companion(db: SnippetsDatabase, file: TextIO, log: Callable):
     start_time = time.time()
     log(('info', f'Importing snippets from {file.name}...'))
 
-    db.insertmany(_get_snippets(file))
+    db.insert_many(_get_snippets(file))
     log(('info', 'Rebuilding & optimizing search index...'))
     db.rebuild_index()
     db.optimize_index()

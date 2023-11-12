@@ -35,10 +35,13 @@ CREATE INDEX IF NOT EXISTS snip_ranking_idx ON snippets(ranking DESC);
 -- and to keep track of command usage and ranking.
 --
 
+-- drops triggers for old versions (we'll need a migration system at some point)
+DROP TRIGGER IF EXISTS snippets_after_insert;
+DROP TRIGGER IF EXISTS snippets_after_update;
+
 CREATE TRIGGER IF NOT EXISTS snippets_after_insert
 AFTER INSERT ON snippets
 BEGIN
-    -- Update search index
     INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
 END;
 
@@ -59,15 +62,7 @@ END;
 CREATE TRIGGER IF NOT EXISTS snippets_after_update
 AFTER UPDATE ON snippets
 BEGIN
-    -- Update search index
     INSERT INTO snippets_index(rowid, title, tag) VALUES(NEW.rowid, NEW.title, NEW.tag);
-    -- Update Ranking
-    UPDATE snippets SET ranking = rank_snippet(
-        NEW.created_at,
-        NEW.last_used_at,
-        NEW.usage_count,
-        strftime('%s', 'now')
-    ) WHERE rowid = NEW.rowid;
 END;
 
 -- Analyze the whole stuff
