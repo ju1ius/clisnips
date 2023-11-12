@@ -1,5 +1,6 @@
 import enum
 import logging
+from typing import Optional
 
 import urwid
 
@@ -13,9 +14,10 @@ from clisnips.tui.components.list_options_dialog import ListOptionsDialog
 from clisnips.tui.components.pager_infos import PagerInfos
 from clisnips.tui.components.search_input import SearchInput
 from clisnips.tui.components.show_snippet_dialog import ShowSnippetDialog
+from clisnips.tui.components.snippets_list import SnippetsList
+# from clisnips.tui.components.snippets_table import SnippetsTable
 from clisnips.tui.view import View
 from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
-from clisnips.tui.widgets.table import Column, Table, TableStore
 
 
 class SnippetListView(View):
@@ -32,12 +34,8 @@ class SnippetListView(View):
         pager_infos = PagerInfos(store)
         header = urwid.Columns((('weight', 1, search_entry), ('pack', pager_infos)), dividechars=1)
 
-        self._table_store = TableStore()
-        self.snippet_list = Table(self._table_store)
-        self.snippet_list.append_column(Column('cmd'))
-        self.snippet_list.append_column(Column('title'))
-        self.snippet_list.append_column(Column('tag'))
-        urwid.connect_signal(self.snippet_list, 'row-selected', self._on_snippet_list_row_selected)
+        self._list = SnippetsList(store)
+        # self._list = SnippetsTable(store)
 
         footer = urwid.Columns(
             (
@@ -49,73 +47,76 @@ class SnippetListView(View):
         )
 
         body = urwid.Frame(
-            self.snippet_list,
+            self._list,
             header=header,
             footer=footer,
             focus_part='header',
         )
         super().__init__(body)
+        
+    def _get_selected_id(self) -> Optional[int]:
+        index = self._list.get_selected_index()
+        if index is not None:
+            return self._store.state['snippet_ids'][index]
 
-        def on_snippets_changed(snippets: dict[str, dict]):
-            self._table_store.load(list(snippets.values()))
+    def _select_snippet(self):
+        id = self._get_selected_id()
+        if id is None:
+            return
 
-        self._watchers = {
-            'snippets': store.watch(lambda s: s['snippets_by_id'], on_snippets_changed, immediate=True),
-        }
+        def accept(rowid: int, cmd: str):
+            self._store.use_snippet(rowid)
+            self._emit(self.Signals.APPLY_SNIPPET_REQUESTED, cmd)
+            
+        snippet = self._store.fetch_snippet(id)
+        logging.getLogger(__name__).debug('selected %r', dict(snippet))
+        try:
+            cmd = parse_command(snippet['cmd'])
+        except ParsingError as err:
+            # TODO: display the error
+            return
+        if not cmd.field_names:
+            accept(snippet['id'], snippet['cmd'])
+            # urwid.emit_signal(self, self.Signals.APPLY_SNIPPET_REQUESTED, snippet['cmd'])
+            return
+
+        dialog = InsertSnippetDialog(self, snippet)
+        dialog.on_accept(lambda v: accept(snippet['id'], v))
+        self.open_dialog(dialog, title='Insert snippet')
 
     def _open_sort_dialog(self):
         dialog = ListOptionsDialog(self, self._store)
         self.open_dialog(dialog, title='List Options', width=35, height=14)
 
     def _open_show_dialog(self):
-        row = self.snippet_list.get_selected()
-        if not row:
+        id = self._get_selected_id()
+        if id is None:
             return
-        snippet = self._store.fetch_snippet(row['id'])
+        snippet = self._store.fetch_snippet(id)
         dialog = ShowSnippetDialog(self, snippet)
         self.open_dialog(dialog, title='Show snippet')
 
     def _open_create_dialog(self):
-        def on_accept(snippet):
-            self._store.create_snippet(snippet)
-            # TODO: this should be reactive
-            self._table_store.insert(0, snippet)
-            self.close_dialog()
-
         snippet = {'title': '', 'tag': '', 'cmd': '', 'doc': ''}
         dialog = EditSnippetDialog(self, snippet)
-        dialog.on_accept(on_accept)
+        dialog.on_accept(lambda s: self._store.create_snippet(s))
         self.open_dialog(dialog, title='New snippet')
 
     def _open_edit_dialog(self):
-        def on_accept(snippet):
-            self._store.update_snippet(snippet)
-            index, _ = self._table_store.find(lambda r: r['id'] == snippet['id'])
-            if index is not None:
-                self._table_store.update(index, snippet)
-            self.close_dialog()
-
-        row = self.snippet_list.get_selected()
-        if not row:
+        id = self._get_selected_id()
+        if id is None:
             return
-        snippet = self._store.fetch_snippet(row['id'])
+        snippet = self._store.fetch_snippet(id)
         dialog = EditSnippetDialog(self, snippet)
-        dialog.on_accept(on_accept)
+        dialog.on_accept(lambda s: self._store.update_snippet(s))
         self.open_dialog(dialog, title='Edit snippet')
 
     def _open_delete_dialog(self):
-        row = self.snippet_list.get_selected()
-        if not row:
+        id = self._get_selected_id()
+        if id is None:
             return
-
-        def on_accept(*_):
-            self._store.delete_snippet(row['id'])
-            index, _ = self._table_store.find(lambda r: r['id'] == row['id'])
-            if index is not None:
-                self._table_store.delete(index)
-
         dialog = ConfirmDialog(self, 'Are you sure you want to delete this snippet ?')
-        dialog.on_accept(on_accept)
+        dialog.on_accept(lambda *_: self._store.delete_snippet(id))
         self.open_dialog(dialog, 'Caution !')
 
     def _open_help_dialog(self):
@@ -124,70 +125,39 @@ class SnippetListView(View):
 
     def keypress(self, size, key):
         key = super().keypress(size, key)
-        if not key:
-            return
-        if key == 'f1':
-            self._open_help_dialog()
-            return
-        if key == 'f2':
-            self._open_sort_dialog()
-            return
-        if key == '/':
-            self._view.focus_position = 'header'
-            return
-        if key in ('tab', 'shift tab'):
-            if self._view.focus_position == 'header':
-                self._view.focus_position = 'body'
-            else:
+        focus = self._view.focus_position
+        match key:
+            case 'f1':
+                self._open_help_dialog()
+            case 'f2':
+                self._open_sort_dialog()
+            case '/':
                 self._view.focus_position = 'header'
-            return
-        if key == 'down' and self._view.focus_position == 'header':
-            self._view.focus_position = 'body'
-            return
-        if key == 'up' and self._view.focus_position == 'body':
-            self._view.focus_position = 'header'
-            return
-        if key == 'n':
-            self._store.request_next_page()
-            return
-        if key == 'p':
-            self._store.request_previous_page()
-            return
-        if key == 'f':
-            self._store.request_first_page()
-            return
-        if key == 'l':
-            self._store.request_last_page()
-            return
-        if key == 's':
-            self._open_show_dialog()
-            return
-        if key in ('-', 'd', 'delete'):
-            self._open_delete_dialog()
-            return
-        if key in ('+', 'i', 'insert'):
-            self._open_create_dialog()
-            return
-        if key == 'e':
-            self._open_edit_dialog()
-            return
-        # logger.debug(key)
-        return key
-
-    def _on_snippet_list_row_selected(self, table, row):
-        # snippet = self._store.state['snippets_by_id'][row['id']]
-        snippet = self._store.fetch_snippet(row['id'])
-        logging.getLogger(__name__).debug('selected %r', dict(snippet))
-        try:
-            cmd = parse_command(snippet['cmd'])
-        except ParsingError as err:
-            # TODO: display the error
-            return
-        if not cmd.field_names:
-            self._emit(self.Signals.APPLY_SNIPPET_REQUESTED, snippet['cmd'])
-            # urwid.emit_signal(self, self.Signals.APPLY_SNIPPET_REQUESTED, snippet['cmd'])
-            return
-
-        dialog = InsertSnippetDialog(self, snippet)
-        dialog.on_accept(lambda v: self._emit(self.Signals.APPLY_SNIPPET_REQUESTED, v))
-        self.open_dialog(dialog, title='Insert snippet')
+            case 'tab' | 'shift tab' if focus == 'header':
+                self._view.focus_position = 'body'
+            case 'tab' | 'shift tab':
+                self._view.focus_position = 'header'
+            case 'down' if focus == 'header':
+                self._view.focus_position = 'body'
+            case 'up' if focus == 'body':
+                self._view.focus_position = 'header'
+            case 'n':
+                self._store.request_next_page()
+            case 'p':
+                self._store.request_previous_page()
+            case 'f':
+                self._store.request_first_page()
+            case 'l':
+                self._store.request_last_page()
+            case 'enter' if focus == 'body':
+                self._select_snippet()
+            case 's':
+                self._open_show_dialog()
+            case '+' | 'i' | 'insert':
+                self._open_create_dialog()
+            case '-' | 'd' | 'delete':
+                self._open_delete_dialog()
+            case 'e':
+                self._open_edit_dialog()
+            case _:
+                return key

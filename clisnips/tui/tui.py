@@ -29,7 +29,7 @@ class TUI:
             event_loop=urwid.AsyncioEventLoop(loop=get_event_loop()),
             unhandled_input=self._on_unhandled_input,
         )
-        self.main_loop.screen.set_terminal_properties(colors=256)
+        # self.main_loop.screen.set_terminal_properties(colors=256)
 
     def register_view(self, name: Hashable, build_callback: Callable):
         self.builder.register(name, build_callback)

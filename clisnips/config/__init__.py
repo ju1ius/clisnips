@@ -79,4 +79,5 @@ class Config:
         self._state['page_size'] = value
 
     def save(self):
+        # TODO: we should save the store instead
         save_persistent_state(self._state)

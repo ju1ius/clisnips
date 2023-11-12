@@ -1,10 +1,10 @@
 import urwid
 
+from clisnips.tui.layouts.table import LayoutColumn, TableLayout
 from clisnips.tui.widgets.utils import original_widget
+
 from .body import Body
-from .column import Column
 from .input_processor import InputProcessor
-from .layout import TableLayout
 from .row import Row
 from .store import TableStore
 
@@ -43,7 +43,7 @@ class Table(urwid.Frame):
         )
         urwid.register_signal(self.__class__, self.SIGNALS)
 
-    def append_column(self, column: Column):
+    def append_column(self, column: LayoutColumn):
         self._columns.append(column)
         self._layout.append_column(column)
 

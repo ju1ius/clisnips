@@ -1,19 +1,114 @@
 import math
 import re
 import textwrap
+from collections.abc import Iterable
 from math import floor
-from typing import Iterable, Tuple
+from typing import Generic, Optional, Union, TypeVar
 
-from .column import Column
+T = TypeVar('T')
+Key = Union[str, int]
+
+
+class InlinePadding:
+
+    def __init__(self, left: int = 0, right: int = 0):
+        self.left = left
+        self.right = right
+        self.length = left + right
+
+    def __len__(self):
+        return self.length
+
+
+class LayoutColumn:
+    """
+    Represents a table column
+    """
+
+    def __init__(
+        self,
+        key: Key,
+        width: Optional[int] = None,
+        min_width: int = 0,
+        max_width: Union[int, float] = math.inf,
+        padding: tuple[int, int] = (0, 0),
+        wrap: bool = False,
+    ):
+        self.key = key
+        self.width = width
+        self.min_width = min_width
+        self.max_width = max_width if max_width is math.inf else int(max_width)
+        self.word_wrap = wrap
+        self.padding = InlinePadding(*padding)
+
+        self.wrappable = True
+        self.content_width: int = 0
+        self.min_content_width: int = 0
+        self.computed_width: int = 0
+
+    @property
+    def is_resizable(self) -> bool:
+        return not self.is_fixed
+
+    @property
+    def is_fixed(self) -> bool:
+        return bool(self.width) or not self.word_wrap or not self.wrappable
+
+    @property
+    def attr_map(self):
+        return {None: f'table-column:{self.key}'}
+
+    @property
+    def focus_attr_map(self):
+        return {
+            f'table-column:{self.key}': f'table-column:{self.key}:focused',
+        }
+
+    def compute_width(self):
+        self.computed_width = self.width or (self.content_width + self.padding.length)
+
+    def compute_min_width(self):
+        self.min_width = self.min_content_width + self.padding.length
+
+    def __repr__(self):
+        return f'<Column[{self.key}] ({self.computed_width})>'
+
+
+class LayoutRow(Generic[T]):
+
+    def __init__(self, columns: list[LayoutColumn], data: dict[Key, T]):
+        self._columns = columns
+        self._data = dict(data)
+        self.content_height = 0
+        self.min_content_height = 1
+        self.computed_height = 0
+
+    def __len__(self):
+        return len(self._columns)
+
+    def __iter__(self):
+        for column in self._columns:
+            yield column, self._data[column.key]
+
+    def __setitem__(self, column, value):
+        if not isinstance(column, LayoutColumn):
+            raise TypeError(f'Expected <Column>, got {type(column).__name__}')
+        self._data[column.key] = value
+
+    def __getitem__(self, column):
+        if not isinstance(column, LayoutColumn):
+            raise TypeError(f'Expected <Column>, got {type(column).__name__}')
+        return self._data[column.key]
+
 
 _WORD_SPLIT_RX = re.compile(r'\W+', re.UNICODE)
 
 
-class TableLayout:
+class TableLayout(Generic[T]):
 
     def __init__(self):
-        self._columns = []
-        self._rows = []
+        self._columns: list[LayoutColumn] = []
+        self._rows: list[LayoutRow[T]] = []
 
     def __len__(self):
         return len(self._rows)
@@ -23,17 +118,17 @@ class TableLayout:
 
     @property
     def row_focus_attr_map(self):
-        attr_map = {None: 'table-row:focused'}
+        attr_map: dict[str|None, str] = {None: 'table-row:focused'}
         attr_map.update({
-            f'table-column:{col.index}': f'table-column:{col.index}:focused'
+            f'table-column:{col.key}': f'table-column:{col.key}:focused'
             for col in self._columns
         })
         return attr_map
 
-    def append_column(self, column: Column):
+    def append_column(self, column: LayoutColumn):
         self._columns.append(column)
 
-    def layout(self, rows: Iterable, available_width: int):
+    def layout(self, rows: Iterable[dict[Key, T]], available_width: int):
         if not available_width:
             available_width = math.inf
         self._compute_content_sizes(rows)
@@ -45,7 +140,7 @@ class TableLayout:
         for data_row in data_rows:
             layout_row = LayoutRow(self._columns, data_row)
             for column in self._columns:
-                value = data_row[column.index]
+                value = data_row[column.key]
                 content_width, content_height = self._compute_cell_content_size(value)
                 column.content_width = max(column.content_width, content_width)
                 layout_row.content_height = max(layout_row.content_height, content_height)
@@ -95,7 +190,7 @@ class TableLayout:
                 #     continue
                 # if not column.word_wrap:
                 #     continue
-                value = data_row[column.index]
+                value = data_row[column.key]
                 lines = textwrap.wrap(value, column.computed_width - column.padding.length)
                 layout_row.computed_height = max(layout_row.computed_height, len(lines))
                 layout_row[column] = '\n'.join(lines)
@@ -113,7 +208,7 @@ class TableLayout:
         return (col for col in self._columns if col.is_resizable)
 
     @staticmethod
-    def _compute_cell_content_size(value) -> Tuple[int, int]:
+    def _compute_cell_content_size(value) -> tuple[int, int]:
         value = str(value)
         if not value:
             return 0, 0
@@ -130,29 +225,3 @@ class TableLayout:
         longest_word = max(words, key=len)
         return len(longest_word)
 
-
-class LayoutRow:
-
-    def __init__(self, columns, data):
-        self._columns = columns
-        self._data = dict(data)
-        self.content_height = 0
-        self.min_content_height = 1
-        self.computed_height = 0
-
-    def __len__(self):
-        return len(self._columns)
-
-    def __iter__(self):
-        for column in self._columns:
-            yield column, self._data[column.index]
-
-    def __setitem__(self, column, value):
-        if not isinstance(column, Column):
-            raise TypeError(f'Expected <Column>, got {type(column).__name__}')
-        self._data[column.index] = value
-
-    def __getitem__(self, column):
-        if not isinstance(column, Column):
-            raise TypeError(f'Expected <Column>, got {type(column).__name__}')
-        return self._data[column.index]
