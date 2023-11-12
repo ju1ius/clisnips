@@ -1,5 +1,7 @@
 from typing import Optional
 
+from clisnips.config.state import PersistentState, load_persistent_state
+
 
 from ._types import AnyPath
 from .config import Config
@@ -17,6 +19,7 @@ class DependencyInjectionContainer:
             'database': database,
         }
         self._config: Optional[Config] = None
+        self._persitent_state: Optional[PersistentState] = None
         self._database: Optional[SnippetsDatabase] = None
         self._pager: Optional[SearchPager] = None
         self._snippets_store: Optional[SnippetsStore] = None
@@ -41,6 +44,7 @@ class DependencyInjectionContainer:
     @property
     def snippets_store(self) -> SnippetsStore:
         if not self._snippets_store:
+            persitent = self.persistent_state
             state = {
                 'search_query': '',
                 'snippet_ids': [],
@@ -48,9 +52,9 @@ class DependencyInjectionContainer:
                 'total_rows': 0,
                 'current_page': 1,
                 'page_count': 1,
-                'page_size': self.config.pager_page_size,
-                'sort_by': self.config.pager_sort_column,
-                'sort_order': self.config.pager_sort_order,
+                'page_size': persitent['page_size'],
+                'sort_by': persitent['sort_by'],
+                'sort_order': persitent['sort_order'],
             }
             self._snippets_store = SnippetsStore(state, self.database, self.pager, self._clock)
         return self._snippets_store
@@ -59,6 +63,10 @@ class DependencyInjectionContainer:
     def pager(self):
         if not self._pager:
             self._pager = SearchPager(self.database)
-            self._pager.set_sort_column(self.config.pager_sort_column, self.config.pager_sort_order)
-            self._pager.page_size = self.config.pager_page_size
         return self._pager
+
+    @property
+    def persistent_state(self) -> PersistentState:
+        if not self._persitent_state:
+            self._persitent_state = load_persistent_state()
+        return self._persitent_state

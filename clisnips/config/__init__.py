@@ -34,7 +34,8 @@ def _parse_ini() -> configparser.ConfigParser:
         default_section='default',
     )
     match get_config_path('clisnips.ini'):
-        case p if p.exists(): cfg.read(p)
+        case p if p.exists():
+            cfg.read(p)
         case _: ...
     return cfg
 
@@ -43,7 +44,6 @@ class Config:
 
     def __init__(self):
         self._ini = _parse_ini()
-        self._state = load_persistent_state()
 
     @property
     def database_path(self) -> AnyPath:
@@ -53,31 +53,3 @@ class Config:
         if path == ':memory:':
             return path
         return Path(path).expanduser().absolute()
-
-    @property
-    def pager_sort_column(self) -> SortColumn:
-        return self._state['sort_by']
-
-    @pager_sort_column.setter
-    def pager_sort_column(self, value: SortColumn):
-        self._state['sort_by'] = value
-
-    @property
-    def pager_sort_order(self) -> SortOrder:
-        return self._state['sort_order']
-
-    @pager_sort_order.setter
-    def pager_sort_order(self, value: SortOrder):
-        self._state['sort_order'] = value
-
-    @property
-    def pager_page_size(self) -> int:
-        return self._state['page_size']
-
-    @pager_page_size.setter
-    def pager_page_size(self, value: int):
-        self._state['page_size'] = value
-
-    def save(self):
-        # TODO: we should save the store instead
-        save_persistent_state(self._state)

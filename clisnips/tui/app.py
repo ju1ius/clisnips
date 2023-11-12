@@ -33,5 +33,4 @@ class Application:
         self.ui.exit_with_message(command)
 
     def _on_exit(self):
-        self.container.config.save()
         self.container.database.close()
