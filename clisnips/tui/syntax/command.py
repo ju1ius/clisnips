@@ -43,15 +43,15 @@ class CommandLexer(RegexLexer):
 class CommandFormatter(Formatter):
 
     color_scheme = {
-        Text: 'cmd:default',
-        Punctuation: 'cmd:punctuation',
-        Command.Start: 'cmd:field-marker',
-        Command.End: 'cmd:field-marker',
-        Command.ArgName: 'cmd:field-name',
-        Command.Identifier: 'cmd:field-name',
-        Command.ElementIndex: 'cmd:field-name',
-        Command.Conversion: 'cmd:field-conversion',
-        Command.FormatSpec: 'cmd:field-format',
+        Text: 'syn:cmd:default',
+        Punctuation: 'syn:cmd:punctuation',
+        Command.Start: 'syn:cmd:field-marker',
+        Command.End: 'syn:cmd:field-marker',
+        Command.ArgName: 'syn:cmd:field-name',
+        Command.Identifier: 'syn:cmd:field-name',
+        Command.ElementIndex: 'syn:cmd:field-name',
+        Command.Conversion: 'syn:cmd:field-conversion',
+        Command.FormatSpec: 'syn:cmd:field-format',
     }
 
     def format(self, token_stream, outfile):
@@ -59,7 +59,7 @@ class CommandFormatter(Formatter):
             try:
                 style = self.color_scheme[token_type]
             except KeyError:
-                style = 'cmd:default'
+                style = 'syn:cmd:default'
             outfile.write((style, value))
 
 

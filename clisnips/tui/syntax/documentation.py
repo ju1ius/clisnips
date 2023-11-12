@@ -4,7 +4,7 @@ from pygments import highlight
 from pygments.formatter import Formatter
 from pygments.lexer import RegexLexer, bygroups, using
 from pygments.lexers.python import Python3Lexer
-from pygments.token import *
+from pygments.token import Comment, Keyword, Name, Number, Operator, Punctuation, String, Text, Token, Whitespace
 
 from .writer import UrwidMarkupWriter
 
@@ -65,63 +65,63 @@ class DocLexer(RegexLexer):
 class DocFormatter(Formatter):
 
     doc_scheme = {
-        Text: 'doc:default',
-        Whitespace: 'doc:default',
-        Punctuation: 'doc:punctuation',
-        Parameter: 'doc:parameter',
-        ValueHint.Start: 'doc:value-hint',
-        ValueHint.End: 'doc:value-hint',
-        ValueHint.Default: 'doc:value-hint:default',
-        String: 'doc:string',
-        Number: 'doc:number',
-        TypeHint: 'doc:type-hint',
-        Code.Start: 'doc:code-fence',
-        Code.End: 'doc:code-fence',
+        Text: 'syn:doc:default',
+        Whitespace: 'syn:doc:default',
+        Punctuation: 'syn:doc:punctuation',
+        Parameter: 'syn:doc:parameter',
+        ValueHint.Start: 'syn:doc:value-hint',
+        ValueHint.End: 'syn:doc:value-hint',
+        ValueHint.Default: 'syn:doc:value-hint:default',
+        String: 'syn:doc:string',
+        Number: 'syn:doc:number',
+        TypeHint: 'syn:doc:type-hint',
+        Code.Start: 'syn:doc:code-fence',
+        Code.End: 'syn:doc:code-fence',
     }
     python_scheme = {
-        Text: 'python:default',
-        Comment: 'python:comment',
-        Comment.Hashbang: 'python:comment',
-        Comment.Single: 'python:comment',
-        Keyword: 'python:keyword',
-        Keyword.Namespace: 'python:keyword',
-        Keyword.Constant: 'python:keyword',
-        Operator.Word: 'python:keyword',
-        String: 'python:string',
-        String.Escape: 'python:string:escape',
-        String.Double: 'python:string',
-        String.Single: 'python:string',
-        String.Affix: 'python:string',
-        String.Interpol: 'python:string:interp',
-        String.Doc: 'python:comment',
-        Number: 'python:number',
-        Number.Float: 'python:number',
-        Number.Integer: 'python:number',
-        Number.Interger.Long: 'python:number',
-        Number.Hex: 'python:number',
-        Number.Oct: 'python:number',
-        Number.Bin: 'python:number',
-        Name: 'python:name',
-        Name.Function: 'python:function',
-        Name.Function.Magic: 'python:function',
-        Name.Exception: 'python:function',
-        Name.Class: 'python:class',
-        Name.Decorator: 'python:decorator',
-        Name.Builtin: 'python:function',
-        Name.Builtin.Pseudo: 'python:keyword',
+        Text: 'syn:py:default',
+        Comment: 'syn:py:comment',
+        Comment.Hashbang: 'syn:py:comment',
+        Comment.Single: 'syn:py:comment',
+        Keyword: 'syn:py:keyword',
+        Keyword.Namespace: 'syn:py:keyword',
+        Keyword.Constant: 'syn:py:keyword',
+        Operator.Word: 'syn:py:keyword',
+        String: 'syn:py:string',
+        String.Escape: 'syn:py:string:escape',
+        String.Double: 'syn:py:string',
+        String.Single: 'syn:py:string',
+        String.Affix: 'syn:py:string',
+        String.Interpol: 'syn:py:string:interp',
+        String.Doc: 'syn:py:comment',
+        Number: 'syn:py:number',
+        Number.Float: 'syn:py:number',
+        Number.Integer: 'syn:py:number',
+        Number.Interger.Long: 'syn:py:number',
+        Number.Hex: 'syn:py:number',
+        Number.Oct: 'syn:py:number',
+        Number.Bin: 'syn:py:number',
+        Name: 'syn:py:name',
+        Name.Function: 'syn:py:function',
+        Name.Function.Magic: 'syn:py:function',
+        Name.Exception: 'syn:py:function',
+        Name.Class: 'syn:py:class',
+        Name.Decorator: 'syn:py:decorator',
+        Name.Builtin: 'syn:py:function',
+        Name.Builtin.Pseudo: 'syn:py:keyword',
     }
 
     def get_doc_attr(self, key):
         try:
             return self.doc_scheme[key]
         except KeyError:
-            return 'doc:default'
+            return 'syn:doc:default'
 
     def get_code_attr(self, key):
         try:
             return self.python_scheme[key]
         except KeyError:
-            return 'python:default'
+            return 'syn:py:default'
 
     def format(self, token_stream, outfile):
         in_code = False
