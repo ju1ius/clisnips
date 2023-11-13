@@ -1,24 +1,29 @@
+import argparse
+import logging
 import sys
-from argparse import ArgumentParser, FileType
 
 from clisnips.dic import DependencyInjectionContainer
+
+from .command import Command
 from .config_command import ShowConfigCommand
 from .dump_command import DumpCommand
 from .export_command import ExportCommand
 from .import_command import ImportCommand
 from .install_key_bindings_command import InstallShellKeyBindingsCommand
+from .logs_command import LogsCommand
 from .optimize_command import OptimizeCommand
 
 
 class Application:
 
-    commands = {
+    commands: dict[str, type[Command]] = {
         'import': ImportCommand,
         'export': ExportCommand,
         'optimize': OptimizeCommand,
         'dump': DumpCommand,
         'config': ShowConfigCommand,
         'key-bindings': InstallShellKeyBindingsCommand,
+        'logs': LogsCommand,
     }
 
     def run(self) -> int:
@@ -27,41 +32,25 @@ class Application:
             return self._run_command(cls, argv)
         return self._run_tui(argv)
 
-    @staticmethod
-    def _parse_arguments():
-        parser = ArgumentParser(
+    @classmethod
+    def _parse_arguments(cls):
+        parser = argparse.ArgumentParser(
             prog='clisnips',
             description='A command-line snippets manager.',
         )
         parser.add_argument('--database', help='Path to an alternate SQLite database.')
+        parser.add_argument('--log-level', choices=('debug', 'info', 'warning', 'error'), help='')
 
         sub_parsers = parser.add_subparsers(title='Subcommands', dest='command',
                                             description='The following commands are available outside the GUI.')
-
-        import_cmd = sub_parsers.add_parser('import', help='Imports snippets from a file.')
-        import_cmd.add_argument('--format', choices=['xml', 'cli-companion'], default='xml')
-        import_cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
-        import_cmd.add_argument('file', type=FileType('r'))
-        #
-        export_cmd = sub_parsers.add_parser('export', help='Exports snippets a file.')
-        export_cmd.add_argument('--format', choices=['xml', 'json'], default='xml')
-        export_cmd.add_argument('file', type=FileType('w'))
-        #
-        dump_cmd = sub_parsers.add_parser('dump', help='Runs a SQL dump of the database.')
-        dump_cmd.add_argument('file', type=FileType('w'), default=sys.stdout)
-        #
-        optimize_cmd = sub_parsers.add_parser('optimize', help='Runs optimization tasks on the database.')
-        optimize_cmd.add_argument('--rebuild', action='store_true', help='Rebuilds the search index before optimizing.')
-        #
-        config_cmd = sub_parsers.add_parser('config', help='Shows the current configuration.')
-        #
-        bindings_cmd = sub_parsers.add_parser('key-bindings', help='Installs clisnips key bindings for the given shell.')
-        bindings_cmd.add_argument('shell', choices=['bash', 'zsh'])
+        for _, cmd in cls.commands.items():
+            cmd.configure(sub_parsers) # type: ignore
 
         return parser.parse_args()
 
     def _run_command(self, cls, argv) -> int:
-        dic = DependencyInjectionContainer(argv.database)
+        dic = self._create_container(argv)
+        logging.getLogger(__name__).info('launching command: %s', argv)
         command = cls(dic)
         try:
             ret_code = command.run(argv)
@@ -70,15 +59,23 @@ class Application:
             self._print_exception(err)
             return 128
 
-    @staticmethod
-    def _run_tui(argv) -> int:
+    def _run_tui(self, argv) -> int:
         from clisnips.tui.app import Application
-        dic = DependencyInjectionContainer(argv.database)
+        dic = self._create_container(argv)
+        logging.getLogger(__name__).info('launching TUI')
         app = Application(dic)
         return app.run()
+    
+    @staticmethod
+    def _create_container(argv) -> DependencyInjectionContainer:
+        return DependencyInjectionContainer(
+            database=argv.database,
+            log_level=argv.log_level,
+        )
 
     def _print_exception(self, err: Exception):
         from traceback import format_exc
+
         from clisnips.cli.utils import UrwidMarkupHelper
         helper = UrwidMarkupHelper()
         msg = f'{err}\n{format_exc()}'

@@ -1,3 +1,4 @@
+import argparse
 import os
 import sys
 from typing import Optional
@@ -7,6 +8,9 @@ from .utils import UrwidMarkupHelper
 
 
 class Command:
+    @classmethod
+    def configure(cls, action: argparse._SubParsersAction):
+        return NotImplemented
 
     def __init__(self, dic: DependencyInjectionContainer):
         self.container = dic

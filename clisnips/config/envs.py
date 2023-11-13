@@ -7,8 +7,10 @@ from clisnips._types import AnyPath
 
 def _db_path_from_env() -> Optional[AnyPath]:
     match os.environ.get('CLISNIPS_DB'):
-        case '' | None: return None
-        case ':memory:': return ':memory:'
+        case '' | None:
+            return None
+        case ':memory:':
+            return ':memory:'
         case v:
             p = Path(v).expanduser().absolute()
             if p.is_file():

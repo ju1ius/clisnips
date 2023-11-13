@@ -11,7 +11,7 @@ class Application:
     def __init__(self, dic: DependencyInjectionContainer):
         self.container = dic
         self.current_view = None
-        self.ui = TUI()
+        self.ui = TUI(dic.config.palette)
         self.ui.register_view('snippets-list', self._build_snippets_list)
         atexit.register(self._on_exit)
 

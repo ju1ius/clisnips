@@ -1,3 +1,4 @@
+import argparse
 import time
 from typing import Optional
 
@@ -5,6 +6,10 @@ from .command import Command
 
 
 class OptimizeCommand(Command):
+    @classmethod
+    def configure(cls, action: argparse._SubParsersAction):
+        cmd = action.add_parser('optimize', help='Runs optimization tasks on the database.')
+        cmd.add_argument('--rebuild', action='store_true', help='Rebuilds the search index before optimizing.')
 
     def run(self, argv) -> Optional[int]:
         start_time = time.time()

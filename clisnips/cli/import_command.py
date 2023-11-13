@@ -1,3 +1,4 @@
+import argparse
 import shutil
 from typing import Optional
 
@@ -6,6 +7,12 @@ from .command import Command
 
 
 class ImportCommand(Command):
+    @classmethod
+    def configure(cls, action: argparse._SubParsersAction):
+        cmd = action.add_parser('import', help='Imports snippets from a file.')
+        cmd.add_argument('--format', choices=['xml', 'cli-companion'], default='xml')
+        cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
+        cmd.add_argument('file', type=argparse.FileType('r'))
 
     def run(self, argv) -> Optional[int]:
         importer = import_cli_companion if argv.format == 'cli-companion' else import_xml
@@ -16,7 +23,7 @@ class ImportCommand(Command):
             self.print(('warning', f'Backing up database to {backup_path}...'))
             shutil.copyfile(db_path, f'{db_path}.bak')
             db = self.container.database
-            self.print(('warning', f'Dropping tables...'))
+            self.print(('warning', 'Dropping tables...'))
             db.connection.executescript('DROP TABLE snippets_index; DROP TABLE snippets; VACUUM;')
             db.close()
             db = self.container.open_database(db_path)

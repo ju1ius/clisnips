@@ -1,10 +1,10 @@
+import logging
 from typing import Optional
-
-from clisnips.config.state import PersistentState, load_persistent_state
 
 
 from ._types import AnyPath
 from .config import Config
+from .config.state import PersistentState, load_persistent_state
 from .database.search_pager import SearchPager
 from .database.snippets_db import SnippetsDatabase
 from .stores.snippets import SnippetsStore
@@ -13,10 +13,10 @@ from .utils.clock import Clock, SystemClock
 
 class DependencyInjectionContainer:
 
-    def __init__(self, database=None):
-        super().__init__()
+    def __init__(self, database=None, log_level=None):
         self._parameters = {
             'database': database,
+            'log_level': log_level,
         }
         self._config: Optional[Config] = None
         self._persitent_state: Optional[PersistentState] = None
@@ -24,6 +24,8 @@ class DependencyInjectionContainer:
         self._pager: Optional[SearchPager] = None
         self._snippets_store: Optional[SnippetsStore] = None
         self._clock: Clock = SystemClock()
+
+        self._configure_logging()
 
     @property
     def config(self) -> Config:
@@ -70,3 +72,13 @@ class DependencyInjectionContainer:
         if not self._persitent_state:
             self._persitent_state = load_persistent_state()
         return self._persitent_state
+
+    def _configure_logging(self):
+        level = self._parameters.get('log_level')
+        match level:
+            case None | '':
+                logging.basicConfig(handlers=(logging.NullHandler(),))
+            case _:
+                from logging.handlers import SocketHandler
+                handler = SocketHandler(str(self.config.log_file), None)
+                logging.basicConfig(level=level.upper(), handlers=(handler,))
