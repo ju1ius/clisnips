@@ -1,0 +1,36 @@
+// https://go.microsoft.com/fwlink/?linkid=830387
+{
+  "version": "0.2.0",
+  // https://code.visualstudio.com/docs/editor/variables-reference#_input-variables
+  "inputs": [
+    {
+      "id": "cliArgs",
+      "type": "promptString",
+      "description": "CLI arguments",
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Attach to process",
+      "type": "python",
+      "request": "attach",
+      "processId": "${command:pickProcess}",
+      "justMyCode": true,
+    },
+    {
+      "name": "Launch TUI",
+      "type": "python",
+      "request": "launch",
+      "module": "clisnips",
+      "justMyCode": true,
+    },
+    {
+      "name": "Launch CLI",
+      "type": "python",
+      "request": "launch",
+      "module": "clisnips",
+      "args": "${input:cliArgs}",
+      "justMyCode": true,
+    }
+  ]
+}
