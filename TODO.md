@@ -1,36 +1,19 @@
 - [ ] Documentation !!!
 - [ ] Config:
-  - logging level
-  - color palette
+  - [ ] publishable JSON schema
 - [ ] Terminal UI
-    - [ ] actually update snippet usage count
+    - [x] actually update snippet usage count
     - [ ] improve error handling / logging
     - [ ] polish keyboard handling / shortcuts
-    - [x] List View
-        - [x] list & search results
-        - [x] pagination
-        - [x] sorting
-        - [x] Delete snippet action
-        - [x] table layout
-        - [ ] alternative list layout for small screens
+    - [ ] List View
+        - [ ] switch between table and list layout depending on screen size
     - [x] Show view
     - [ ] Edit / Create view
-        - [x] edit in TUI
-        - [x] synchronize pager state
         - [ ] validate documentation / command syntax
-    - [x] Insert snippet dialog
-        - [x] field types
-            - [x] text
-            - [x] flag
-            - [x] choice
-            - [x] path
-            - [x] range
-    - [ ] Allow some markdown in documentation header
-    - [x] Help dialog
     - [ ] About dialog
     - [ ] Switch widget:
-      Off 󰨙 󰔢
-      On 󰨚 󰔡
+          Off 󰨙 󰔢
+          On 󰨚 󰔡
 - [ ] Provide default snippets as a tutorial for first-time users ?
 - [ ] Provide a default xml file to import on install, with a useful set of snippets.
     - [x] tar

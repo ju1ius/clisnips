@@ -1,4 +1,5 @@
 import os
+import sys
 
 import urwid
 from urwid.util import decompose_tagmarkup
@@ -10,6 +11,8 @@ class UrwidMarkupHelper:
 
     palette = {
         'default': ('default', 'default'),
+        'accent': ('dark magenta', 'default'),
+        'accent:inverse': ('black', 'dark magenta'),
         'success': ('dark green', 'default'),
         'success:inverse': ('black', 'dark green'),
         'error': ('dark red', 'default'),
@@ -18,6 +21,8 @@ class UrwidMarkupHelper:
         'warning:inverse': ('black', 'brown'),
         'info': ('dark blue', 'default'),
         'info:inverse': ('white', 'dark blue'),
+        'debug': ('light cyan', 'default'),
+        'debug:inverse': ('black', 'light cyan'),
     }
 
     def __init__(self):
@@ -27,6 +32,13 @@ class UrwidMarkupHelper:
             escape = self._convert_attr_spec(urwid.AttrSpec(*attrs))
             self._palette_escapes[name] = escape
         self._palette_escapes[None] = self._palette_escapes['default']
+
+    def print(self, *args, stderr: bool = False, end: str = '\n', sep: str = ' '):
+        stream = sys.stderr if stderr else sys.stdout
+        tty = os.isatty(stream.fileno())
+        output = sep.join(self.convert_markup(m, tty) for m in args)
+        output += self.reset(tty)
+        print(output, end=end, file=stream)
 
     def convert_markup(self, markup: TextMarkup, tty=True) -> str:
         text, attributes = decompose_tagmarkup(markup)
@@ -42,6 +54,9 @@ class UrwidMarkupHelper:
             output.append(f'{escape}{chunk}')
             pos += length
         return ''.join(output)
+
+    def reset(self, tty=True) -> str:
+        return tty and self.convert_markup(('default', ''), tty=tty) or ''
 
     def _convert_attr_spec(self, attr_spec: urwid.AttrSpec) -> str:
         # noinspection PyProtectedMember
