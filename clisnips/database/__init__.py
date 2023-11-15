@@ -1,14 +1,17 @@
 from enum import StrEnum, auto
+from typing import Self
 
 
 class ScrollDirection(StrEnum):
     FWD = auto()
     BWD = auto()
 
-    def reverse(self):
-        if self is ScrollDirection.FWD:
-            return ScrollDirection.BWD
-        return ScrollDirection.FWD
+    def reversed(self) -> Self:
+        match self:
+            case ScrollDirection.FWD:
+                return ScrollDirection.BWD
+            case ScrollDirection.BWD:
+                return ScrollDirection.FWD
 
 
 class SortOrder(StrEnum):
@@ -16,17 +19,21 @@ class SortOrder(StrEnum):
     DESC = 'DESC'
 
     @classmethod
-    def _missing_(cls, value: object):
-        value = str(value).upper()
-        for member in cls:
-            if member.value == value:
-                return member
-        return None
+    def _missing_(cls, value: object) -> Self | None:
+        match str(value).upper():
+            case 'ASC':
+                return SortOrder.ASC
+            case 'DESC':
+                return SortOrder.DESC
+            case _:
+                return None
 
-    def reverse(self):
-        if self is SortOrder.ASC:
-            return SortOrder.DESC
-        return SortOrder.DESC
+    def reversed(self) -> Self:
+        match self:
+            case SortOrder.ASC:
+                return SortOrder.DESC
+            case SortOrder.DESC:
+                return SortOrder.ASC
 
 
 class Column(StrEnum):

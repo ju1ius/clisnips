@@ -183,7 +183,7 @@ class ScrollingPager(OffsetPager):
         exprs = []
         for name, order in sort_columns:
             if invert:
-                order = order.reverse()
+                order = order.reversed()
             exprs.append(f'{name} {order}')
         return ', '.join(exprs)
 
