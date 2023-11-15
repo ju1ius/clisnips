@@ -6,5 +6,10 @@
     ],
     "editor.formatOnSaveMode": "modifications",
     "editor.wordBasedSuggestions": false
-  }
+  },
+  "python.testing.pytestArgs": [
+    "tests"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }
