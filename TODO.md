@@ -2,19 +2,20 @@
 - [ ] Config:
   - [ ] publishable JSON schema
 - [ ] Terminal UI
-    - [ ] improve error handling / logging
-    - [ ] polish keyboard handling / shortcuts
+    - [ ] logging:
+      - all store actions
+      - db errors
+    - [ ] error handling
+    - [ ] polish keyboard handling / shortcuts (look into `CommandMap`)
     - [ ] List View
-        - [ ] switch between table and list layout depending on screen size
+        - [ ] change search box icon when search query is invalid
     - [ ] Edit / Create view
         - [ ] validate documentation / command syntax
     - [ ] About dialog
-    - [ ] Switch widget:
-          Off 󰨙 󰔢
-          On 󰨚 󰔡
 - [ ] Provide default snippets as a tutorial for first-time users ?
 - [ ] Provide a default xml file to import on install, with a useful set of snippets.
     - [x] tar
     - [ ] git
     - [ ] find
     - [ ] apt
+- [ ] evaluate [textual](https://textual.textualize.io/) (may help us get rid of the urwid mess?)

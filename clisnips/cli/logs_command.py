@@ -28,20 +28,20 @@ class RecordFormatter(logging.Formatter):
         spec = self.levels.get(record.levelname, 'default')
         markup = [
             (spec, f'{record.levelname} '),
-            ('default', '['), ('accent:inverse', record.name), ('default', ']'),
+            ('default', '['), ('accent', record.name), ('default', ']'),
             *self._call_site(record),
             ('default', f': {record.message}'),
         ]
         return self._printer.convert_markup(markup)
 
-    def _call_site(self, record: LogRecord) -> list:
-        return [
+    def _call_site(self, record: LogRecord):
+        return (
             ('default', '['),
             ('debug', record.funcName),
             ('default', ':'),
             ('debug', str(record.lineno)),
             ('default', ']'),
-        ]
+        )
 
 class Server:
     def __init__(self, log_file: Path, printer: UrwidMarkupHelper) -> None:
@@ -69,7 +69,7 @@ class Server:
         record_len, *_ = struct.unpack('>L', header)
         buf = await reader.readexactly(record_len)
         return logging.makeLogRecord(pickle.loads(buf))
-    
+
     def _handle_record(self, record: logging.LogRecord):
         print(self._formatter.format(record))
 

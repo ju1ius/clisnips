@@ -1,5 +1,5 @@
 from collections.abc import Hashable
-from typing import Callable, Dict
+from typing import Callable
 
 import urwid
 
@@ -15,8 +15,9 @@ class View(urwid.WidgetWrap):
 
     def __init__(self, view: urwid.Widget):
         self._view = view
+        self._wrapped_widget = urwid.AttrMap(self._view, 'view:default')
+        super().__init__(self._wrapped_widget)
         self._has_dialog = False
-        super().__init__(urwid.AttrMap(self._view, 'view:default'))
 
     def open_dialog(self, dialog: Dialog, title: str = '', width=('relative', 80), height=('relative', 80)):
         frame = DialogFrame(self, dialog, title=title)
@@ -43,7 +44,7 @@ class ViewBuilder:
 
     def __init__(self, root_widget: urwid.WidgetPlaceholder):
         self.root_widget = root_widget
-        self._on_build_handlers: Dict[Hashable, BuildCallback] = {}
+        self._on_build_handlers: dict[Hashable, BuildCallback] = {}
 
     def register(self, view_id: Hashable, on_build: BuildCallback):
         self._on_build_handlers[view_id] = on_build

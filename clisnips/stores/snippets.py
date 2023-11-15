@@ -1,8 +1,9 @@
 from contextlib import suppress
+import enum
 import logging
-from typing import Any, Callable, TypeVar, TypedDict
+from typing import Any, Callable, TypeVar, TypedDict, cast
 
-from observ import reactive, watch, watch_effect
+from observ import reactive, watch
 
 from clisnips.database import SortColumn, SortOrder
 from clisnips.database.search_pager import SearchPager, SearchSyntaxError
@@ -12,7 +13,13 @@ from clisnips.utils.clock import Clock
 Watched = TypeVar("Watched")
 
 
+class ListLayout(enum.StrEnum):
+    LIST = enum.auto()
+    TABLE = enum.auto()
+
+
 class State(TypedDict):
+    viewport: tuple[int, int]
     search_query: str
     snippet_ids: list[int]
     snippets_by_id: dict[int, Snippet]
@@ -22,19 +29,7 @@ class State(TypedDict):
     page_size: int
     sort_by: SortColumn
     sort_order: SortOrder
-
-
-DEFAULT_STATE: State = {
-    'search_query': '',
-    'snippet_ids': [],
-    'snippets_by_id': {},
-    'total_rows': 0,
-    'current_page': 1,
-    'page_count': 1,
-    'page_size': 25,
-    'sort_by': SortColumn.RANKING,
-    'sort_order': SortOrder.ASC,
-}
+    list_layout: ListLayout
 
 
 class SnippetsStore:
@@ -46,13 +41,29 @@ class SnippetsStore:
         pager: SearchPager,
         clock: Clock,
     ):
-        self._state: State = reactive(initial_state)
+        self._state = cast(State, reactive(initial_state))
         self._db = db
         self._pager = pager
         self._pager.set_sort_column(initial_state['sort_by'], initial_state['sort_order'])
         self._pager.page_size = initial_state['page_size']
         self._clock = clock
         self._fetch_list('')
+
+    @staticmethod
+    def default_state() -> State:
+        return {
+            'viewport': (0, 0),
+            'search_query': '',
+            'snippet_ids': [],
+            'snippets_by_id': {},
+            'total_rows': 0,
+            'current_page': 1,
+            'page_count': 1,
+            'page_size': 25,
+            'sort_by': SortColumn.RANKING,
+            'sort_order': SortOrder.ASC,
+            'list_layout': ListLayout.LIST,
+        }
 
     @property
     def state(self) -> State:
@@ -74,13 +85,13 @@ class SnippetsStore:
             immediate=immediate,
         )
 
-    def effect(self, expr: Callable[[State], Watched], sync=False, deep=False, immediate=False):
-        return watch_effect(
-            fn=lambda: expr(self._state),
-            sync=sync,
-            deep=deep,
-            immediate=immediate,
-        )
+    def change_viewport(self, width: int, height: int):
+        logging.getLogger(__name__).debug('viewport=%r', (width, height))
+        self._state['viewport'] = (width, height)
+
+    def change_layout(self, layout: ListLayout):
+        logging.getLogger(__name__).debug('layout=%r', layout)
+        self._state['list_layout'] = layout
 
     def fetch_snippet(self, rowid: int) -> Snippet:
         return self._db.get(rowid)

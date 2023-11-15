@@ -1,12 +1,14 @@
 import enum
 import logging
-from typing import Optional
 
 import urwid
+from urwid.canvas import CompositeCanvas
 
 from clisnips.exceptions import ParsingError
 from clisnips.stores import SnippetsStore
+from clisnips.stores.snippets import ListLayout
 from clisnips.syntax import parse_command
+from clisnips.tui.components.app_bar import AppBar
 from clisnips.tui.components.edit_snippet_dialog import EditSnippetDialog
 from clisnips.tui.components.help_dialog import HelpDialog
 from clisnips.tui.components.insert_snippet_dialog import InsertSnippetDialog
@@ -15,15 +17,15 @@ from clisnips.tui.components.pager_infos import PagerInfos
 from clisnips.tui.components.search_input import SearchInput
 from clisnips.tui.components.show_snippet_dialog import ShowSnippetDialog
 from clisnips.tui.components.snippets_list import SnippetsList
-# from clisnips.tui.components.snippets_table import SnippetsTable
+from clisnips.tui.components.snippets_table import SnippetsTable
 from clisnips.tui.view import View
 from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
 
 
 class SnippetListView(View):
 
-    class Signals(str, enum.Enum):
-        APPLY_SNIPPET_REQUESTED = 'apply-snippet-requested'
+    class Signals(enum.StrEnum):
+        APPLY_SNIPPET_REQUESTED = enum.auto()
 
     signals = list(Signals)
 
@@ -33,28 +35,42 @@ class SnippetListView(View):
         search_entry = SearchInput(store, ' ')
         pager_infos = PagerInfos(store)
         header = urwid.Columns((('weight', 1, search_entry), ('pack', pager_infos)), dividechars=1)
-
         self._list = SnippetsList(store)
-        # self._list = SnippetsTable(store)
-
-        footer = urwid.Columns(
-            (
-                ('pack', urwid.Text('F1 Help')),
-                ('pack', urwid.Text('F2 Sort')),
-                ('pack', urwid.Text('ESC Quit')),
-            ),
-            dividechars=1,
-        )
-
         body = urwid.Frame(
             self._list,
             header=header,
-            footer=footer,
+            footer=AppBar(store),
             focus_part='header',
         )
         super().__init__(body)
-        
-    def _get_selected_id(self) -> Optional[int]:
+
+        def handle_layout_changed(layout: ListLayout):
+            logging.getLogger(__name__).debug('layout: %r', layout)
+            selected = self._list.get_selected_index()
+            match layout:
+                case ListLayout.LIST:
+                    self._list = SnippetsList(store)
+                case ListLayout.TABLE:
+                    self._list = SnippetsTable(store)
+            if selected is not None:
+                self._list.set_selected_index(selected)
+            body.body = self._list
+            self._invalidate()
+
+        def handle_viewport_changed(viewport):
+            logging.getLogger(__name__).debug('viewport: %r', viewport)
+
+        self._watchers = {
+            'viewport': self._store.watch(
+                lambda s: s['viewport'],
+                handle_viewport_changed,
+                immediate=True,
+                sync=True,
+            ),
+            'layout': self._store.watch(lambda s: s['list_layout'], handle_layout_changed, immediate=True),
+        }
+
+    def _get_selected_id(self) -> int | None:
         index = self._list.get_selected_index()
         if index is not None:
             return self._store.state['snippet_ids'][index]
@@ -67,26 +83,25 @@ class SnippetListView(View):
         def accept(rowid: int, cmd: str):
             self._store.use_snippet(rowid)
             self._emit(self.Signals.APPLY_SNIPPET_REQUESTED, cmd)
-            
+
         snippet = self._store.fetch_snippet(id)
         logging.getLogger(__name__).debug('selected %r', dict(snippet))
         try:
             cmd = parse_command(snippet['cmd'])
-        except ParsingError as err:
+        except ParsingError as _:
             # TODO: display the error
             return
         if not cmd.field_names:
             accept(snippet['id'], snippet['cmd'])
-            # urwid.emit_signal(self, self.Signals.APPLY_SNIPPET_REQUESTED, snippet['cmd'])
             return
 
         dialog = InsertSnippetDialog(self, snippet)
         dialog.on_accept(lambda v: accept(snippet['id'], v))
         self.open_dialog(dialog, title='Insert snippet')
 
-    def _open_sort_dialog(self):
+    def _open_prefs_dialog(self):
         dialog = ListOptionsDialog(self, self._store)
-        self.open_dialog(dialog, title='List Options', width=35, height=14)
+        self.open_dialog(dialog, title='List Options', width=35, height=20)
 
     def _open_show_dialog(self):
         id = self._get_selected_id()
@@ -123,14 +138,19 @@ class SnippetListView(View):
         dialog = HelpDialog(self)
         self.open_dialog(dialog, 'Help')
 
+    def render(self, size, focus: bool = False) -> CompositeCanvas:
+        self._store.change_viewport(*size)
+        return super().render(size, focus)
+
     def keypress(self, size, key):
+        logging.getLogger(__name__).debug('size=%r, key=%r', size, key)
         key = super().keypress(size, key)
         focus = self._view.focus_position
         match key:
             case 'f1':
                 self._open_help_dialog()
             case 'f2':
-                self._open_sort_dialog()
+                self._open_prefs_dialog()
             case '/':
                 self._view.focus_position = 'header'
             case 'tab' | 'shift tab' if focus == 'header':

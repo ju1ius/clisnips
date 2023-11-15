@@ -46,18 +46,8 @@ class DependencyInjectionContainer:
     @property
     def snippets_store(self) -> SnippetsStore:
         if not self._snippets_store:
-            persitent = self.persistent_state
-            state = {
-                'search_query': '',
-                'snippet_ids': [],
-                'snippets_by_id': {},
-                'total_rows': 0,
-                'current_page': 1,
-                'page_count': 1,
-                'page_size': persitent['page_size'],
-                'sort_by': persitent['sort_by'],
-                'sort_order': persitent['sort_order'],
-            }
+            state = SnippetsStore.default_state()
+            state.update(self.persistent_state)
             self._snippets_store = SnippetsStore(state, self.database, self.pager, self._clock)
         return self._snippets_store
 

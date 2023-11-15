@@ -1,20 +1,25 @@
+"""
+Very simple text table layout algorithm.
+
+TODO: https://drafts.csswg.org/css-tables-3
+"""
+
 import math
 import re
 import textwrap
-from collections.abc import Iterable
+from collections.abc import Hashable, Iterable, Mapping
 from math import floor
-from typing import Generic, Optional, Union, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
-T = TypeVar('T')
-Key = Union[str, int]
+T = TypeVar('T', bound=Mapping)
 
 
 class InlinePadding:
 
-    def __init__(self, left: int = 0, right: int = 0):
-        self.left = left
-        self.right = right
-        self.length = left + right
+    def __init__(self, start: int = 0, end: int = 0):
+        self.start = start
+        self.end = end
+        self.length = start + end
 
     def __len__(self):
         return self.length
@@ -27,10 +32,10 @@ class LayoutColumn:
 
     def __init__(
         self,
-        key: Key,
+        key: Hashable,
         width: Optional[int] = None,
         min_width: int = 0,
-        max_width: Union[int, float] = math.inf,
+        max_width: int | float = math.inf,
         padding: tuple[int, int] = (0, 0),
         wrap: bool = False,
     ):
@@ -40,8 +45,13 @@ class LayoutColumn:
         self.max_width = max_width if max_width is math.inf else int(max_width)
         self.word_wrap = wrap
         self.padding = InlinePadding(*padding)
-
+        #
         self.wrappable = True
+        self.content_width: int = 0
+        self.min_content_width: int = 0
+        self.computed_width: int = 0
+
+    def invalidate(self):
         self.content_width: int = 0
         self.min_content_width: int = 0
         self.computed_width: int = 0
@@ -53,16 +63,6 @@ class LayoutColumn:
     @property
     def is_fixed(self) -> bool:
         return bool(self.width) or not self.word_wrap or not self.wrappable
-
-    @property
-    def attr_map(self):
-        return {None: f'table-column:{self.key}'}
-
-    @property
-    def focus_attr_map(self):
-        return {
-            f'table-column:{self.key}': f'table-column:{self.key}:focused',
-        }
 
     def compute_width(self):
         self.computed_width = self.width or (self.content_width + self.padding.length)
@@ -76,12 +76,18 @@ class LayoutColumn:
 
 class LayoutRow(Generic[T]):
 
-    def __init__(self, columns: list[LayoutColumn], data: dict[Key, T]):
+    def __init__(self, columns: list[LayoutColumn], data: T):
         self._columns = columns
         self._data = dict(data)
+        #
         self.content_height = 0
         self.min_content_height = 1
         self.computed_height = 0
+
+    def invalidate(self):
+        self.content_height: int = 0
+        self.min_content_height: int = 0
+        self.computed_height: int = 0
 
     def __len__(self):
         return len(self._columns)
@@ -90,15 +96,14 @@ class LayoutRow(Generic[T]):
         for column in self._columns:
             yield column, self._data[column.key]
 
-    def __setitem__(self, column, value):
-        if not isinstance(column, LayoutColumn):
-            raise TypeError(f'Expected <Column>, got {type(column).__name__}')
+    def __setitem__(self, column: LayoutColumn, value: Any):
         self._data[column.key] = value
 
-    def __getitem__(self, column):
-        if not isinstance(column, LayoutColumn):
-            raise TypeError(f'Expected <Column>, got {type(column).__name__}')
+    def __getitem__(self, column: LayoutColumn):
         return self._data[column.key]
+
+    def __repr__(self) -> str:
+        return f'<Row(height={self.computed_height}, data={self._data!r})>'
 
 
 _WORD_SPLIT_RX = re.compile(r'\W+', re.UNICODE)
@@ -128,14 +133,18 @@ class TableLayout(Generic[T]):
     def append_column(self, column: LayoutColumn):
         self._columns.append(column)
 
-    def layout(self, rows: Iterable[dict[Key, T]], available_width: int):
+    def invalidate(self):
+        for col in self._columns:
+            col.invalidate()
+
+    def layout(self, rows: Iterable[T], available_width: int):
         if not available_width:
             available_width = math.inf
         self._compute_content_sizes(rows)
         self._distribute_width(available_width)
         self._distribute_height(rows)
 
-    def _compute_content_sizes(self, data_rows):
+    def _compute_content_sizes(self, data_rows: Iterable[T]):
         self._rows = []
         for data_row in data_rows:
             layout_row = LayoutRow(self._columns, data_row)
@@ -182,7 +191,7 @@ class TableLayout(Generic[T]):
 
             # bail out if we still don't fit within max_width
 
-    def _distribute_height(self, data_rows):
+    def _distribute_height(self, data_rows: Iterable[T]):
         for index, data_row in enumerate(data_rows):
             layout_row = self._rows[index]
             for column in self._columns:

@@ -1,5 +1,6 @@
 import atexit
 from collections.abc import Hashable
+from clisnips.config.state import save_persistent_state
 
 from clisnips.dic import DependencyInjectionContainer
 from .tui import TUI
@@ -33,4 +34,5 @@ class Application:
         self.ui.exit_with_message(command)
 
     def _on_exit(self):
+        save_persistent_state(self.container.snippets_store.state)
         self.container.database.close()

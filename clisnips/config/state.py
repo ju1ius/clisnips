@@ -4,6 +4,7 @@ import json
 from typing import TypedDict
 
 from clisnips.database import SortColumn, SortOrder
+from clisnips.stores.snippets import ListLayout, State
 from .paths import get_state_path
 
 
@@ -11,12 +12,14 @@ class PersistentState(TypedDict):
     page_size: int
     sort_by: SortColumn
     sort_order: SortOrder
+    list_layout: ListLayout
 
 
 DEFAULTS: PersistentState = {
     'page_size': 25,
     'sort_by': SortColumn.RANKING,
     'sort_order': SortOrder.ASC,
+    'list_layout': ListLayout.LIST,
 }
 
 
@@ -29,9 +32,10 @@ def load_persistent_state() -> PersistentState:
         return DEFAULTS.copy()
 
 
-def save_persistent_state(state: PersistentState):
+def save_persistent_state(state: State):
+    s = {k: state[k] for k in DEFAULTS.keys()}
     with open(get_state_path('state.json'), 'w') as fp:
-        json.dump(state, fp, indent=2)
+        json.dump(s, fp, indent=2)
 
 
 def _merge_defaults(data: dict) -> PersistentState:
@@ -42,4 +46,6 @@ def _merge_defaults(data: dict) -> PersistentState:
         result['sort_by'] = SortColumn(v)
     if v := data.get('sort_order'):
         result['sort_order'] = SortOrder(v)
+    if v := data.get('list_layout'):
+        result['list_layout'] = ListLayout(v)
     return result
