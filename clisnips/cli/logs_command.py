@@ -6,6 +6,7 @@ from logging import LogRecord
 from pathlib import Path
 import pickle
 import struct
+import sys
 
 from .command import Command
 from .utils import UrwidMarkupHelper
@@ -32,7 +33,7 @@ class RecordFormatter(logging.Formatter):
             *self._call_site(record),
             ('default', f': {record.message}'),
         ]
-        return self._printer.convert_markup(markup)
+        return self._printer.convert_markup(markup, sys.stdout.isatty())
 
     def _call_site(self, record: LogRecord):
         return (

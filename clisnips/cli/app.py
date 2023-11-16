@@ -1,5 +1,6 @@
 import argparse
 import logging
+import os
 import sys
 
 from clisnips.dic import DependencyInjectionContainer
@@ -78,6 +79,9 @@ class Application:
 
         from clisnips.cli.utils import UrwidMarkupHelper
         helper = UrwidMarkupHelper()
-        msg = f'{err}\n{format_exc()}'
-        output = helper.convert_markup(('error', msg), tty=True)
+        markup = [
+            ('error', str(err)),
+            ('default', f'\n{format_exc()}'),
+        ]
+        output = helper.convert_markup(markup, tty=sys.stderr.isatty())
         print(output, file=sys.stderr)

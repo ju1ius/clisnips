@@ -1,9 +1,8 @@
-import sqlite3
 import time
 from typing import Callable, TextIO
 from xml.dom.minidom import Document, Element
 
-from clisnips.database.snippets_db import SnippetsDatabase
+from clisnips.database.snippets_db import Snippet, SnippetsDatabase
 
 
 def export(db: SnippetsDatabase, file: TextIO, log: Callable):
@@ -28,7 +27,7 @@ def export(db: SnippetsDatabase, file: TextIO, log: Callable):
     log(('success', f'Success: exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.'))
 
 
-def _create_snippet(doc: Document, row: sqlite3.Row) -> Element:
+def _create_snippet(doc: Document, row: Snippet) -> Element:
     snip = doc.createElement('snippet')
     snip.setAttribute('created-at', str(row['created_at']))
     snip.setAttribute('last-used-at', str(row['last_used_at']))

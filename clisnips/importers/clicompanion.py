@@ -3,35 +3,45 @@ parsing code adapted from:
 https://bazaar.launchpad.net/~clicompanion-devs/clicompanion/trunk/view/head:/plugins/LocalCommandList.py
 """
 
+from collections.abc import Iterable
+from pathlib import Path
 import re
 import time
-from typing import Callable, TextIO
+from typing import TextIO
+from clisnips.database.snippets_db import Snippet
 
-from clisnips.database.snippets_db import SnippetsDatabase
 from clisnips.utils.list import pad_list
+
+from .base import Importer
 
 _ARGS_RE = re.compile(r'(?<!\\)((?:\\\\)*\?)')
 
 
-def import_cli_companion(db: SnippetsDatabase, file: TextIO, log: Callable):
-    start_time = time.time()
-    log(('info', f'Importing snippets from {file.name}...'))
+class CliCompanionImporter(Importer):
+    def import_path(self, path: Path) -> None:
+        start_time = time.time()
+        self._log(('info', f'Importing snippets from {path}...'))
 
-    db.insert_many(_get_snippets(file))
-    log(('info', 'Rebuilding & optimizing search index...'))
-    db.rebuild_index()
-    db.optimize_index()
+        with open(path) as fp:
+            if self._dry_run:
+                for _ in _get_snippets(fp): ...
+            else:
+                self._db.insert_many(_get_snippets(fp))
+            self._log(('info', 'Rebuilding & optimizing search index...'))
+            if not self._dry_run:
+                self._db.rebuild_index()
+                self._db.optimize_index()
 
-    elapsed_time = time.time() - start_time
-    log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
+        elapsed_time = time.time() - start_time
+        self._log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
 
 
-def _get_snippets(file):
-    for row in _parse(file):
-        yield _translate(row)
+def _get_snippets(file: TextIO) -> Iterable[Snippet]:
+    for cmd, ui, desc in _parse(file):
+        yield _translate(cmd, ui, desc)
 
 
-def _parse(file):
+def _parse(file: TextIO) -> list[tuple[str, str, str]]:
     commands, seen = [], set()
     # try to detect if the line is a old fashion config line
     # (separated by ':')
@@ -62,13 +72,12 @@ def _parse(file):
     return commands
 
 
-def _translate(row):
+def _translate(cmd: str, ui: str, desc: str) -> Snippet:
     """
     Since ui is free form text, we have to make an educated guess...
     """
-    cmd, ui, desc = row
     now = time.time()
-    result = {
+    result = Snippet(**{
         'title': desc,
         'cmd': cmd,
         'doc': ui,
@@ -76,7 +85,7 @@ def _translate(row):
         'created_at': now,
         'last_used_at': now,
         'usage_count': 0
-    }
+    })
     nargs = len(_ARGS_RE.findall(cmd))
     if not nargs:
         # no user arguments

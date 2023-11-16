@@ -18,4 +18,4 @@ class Command:
         return NotImplemented
 
     def print(self, *args, stderr: bool = False, end: str = '\n', sep: str = ' '):
-        self._markup_helper.print(*args, stderr, end, sep)
+        self._markup_helper.print(*args, stderr=stderr, end=end, sep=sep)

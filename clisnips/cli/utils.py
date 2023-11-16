@@ -35,7 +35,7 @@ class UrwidMarkupHelper:
 
     def print(self, *args, stderr: bool = False, end: str = '\n', sep: str = ' '):
         stream = sys.stderr if stderr else sys.stdout
-        tty = os.isatty(stream.fileno())
+        tty = stream.isatty()
         output = sep.join(self.convert_markup(m, tty) for m in args)
         output += self.reset(tty)
         print(output, end=end, file=stream)
@@ -43,7 +43,7 @@ class UrwidMarkupHelper:
     def convert_markup(self, markup: TextMarkup, tty=True) -> str:
         text, attributes = decompose_tagmarkup(markup)
         if not tty:
-            return text
+            return str(text)
         pos, output = 0, []
         for attr, length in attributes:
             try:
