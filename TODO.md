@@ -1,6 +1,6 @@
 - [ ] Documentation !!!
-- [ ] Config:
-  - [ ] publishable JSON schema
+- [ ] CLI:
+  - [ ] version command
 - [ ] Terminal UI
     - [ ] logging:
       - all store actions
@@ -18,4 +18,5 @@
     - [ ] git
     - [ ] find
     - [ ] apt
+- [ ] evaluate [stretchable](https://github.com/mortencombat/stretchable) for proper flexbox/grid layout
 - [ ] evaluate [textual](https://textual.textualize.io/) (may help us get rid of the urwid mess?)

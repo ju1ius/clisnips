@@ -1,16 +1,6 @@
 from __future__ import annotations
 
-from typing import NotRequired
-from typing_extensions import TypedDict
-
-
-class PaletteEntry(TypedDict):
-    fg: str
-    bg: str
-    mono: NotRequired[str|None]
-    fg_hi: NotRequired[str|None]
-    bg_hi: NotRequired[str|None]
-
+from pydantic import BaseModel, ConfigDict, Field, create_model
 
 default_palette = {
     'default': {'fg': 'light gray', 'bg': 'black'},
@@ -75,8 +65,30 @@ default_palette = {
 }
 
 
-Palette = TypedDict(
-    'Palette',
-    {k: PaletteEntry | str for k in default_palette.keys()},
-    total=False,
-)
+class PaletteEntry(BaseModel):
+    model_config = ConfigDict(
+        title='An Urwid palette entry',
+        json_schema_extra={
+            'description': (
+                'See available color values at: '
+                'https://urwid.org/manual/displayattributes.html#foreground-and-background-settings'
+            ),
+        },
+    )
+
+    fg: str = Field(title='Foreground color in 16-color mode')
+    bg: str = Field(title='Background color in 16-color mode')
+    mono: str | None = Field(title='Color in monochrome mode', default=None)
+    fg_hi: str | None = Field(title='Foreground color in high-color mode', default=None)
+    bg_hi: str | None = Field(title='Background color in high-color mode', default=None)
+
+
+_palette_field_defs = {
+    k: (
+        PaletteEntry | str,
+        Field(default=PaletteEntry(**v)),
+    )
+    for k, v in default_palette.items()
+}
+
+Palette = create_model('Palette', **_palette_field_defs) # type: ignore

@@ -1,15 +1,19 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from .paths import get_data_path
-from .palette import Palette
+from .palette import Palette, default_palette
 
 
 class AppSettings(BaseModel):
+    model_config = ConfigDict(
+        title='Clisnips configuration settings.'
+    )
     database: str = Field(
         title='Path to the snippets SQLite database',
         default_factory=lambda: str(get_data_path('snippets.sqlite')),
     )
-    palette: Palette = Field(
-        title='The application colors',
-        default={},
+    palette: Palette = Field( # type: ignore
+        title='The application color palette',
+        default_factory=lambda: Palette(**default_palette),
+        json_schema_extra={'default': {}},
     )

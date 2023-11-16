@@ -1,0 +1,928 @@
+{
+  "$defs": {
+    "Palette": {
+      "properties": {
+        "default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Default"
+        },
+        "info": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "white",
+            "bg": "dark blue",
+            "mono": null,
+            "fg_hi": "h186",
+            "bg_hi": "g20"
+          },
+          "title": "Info"
+        },
+        "warning": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "black",
+            "bg": "brown",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Warning"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "white",
+            "bg": "dark red",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Error"
+        },
+        "button:suggested": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan,bold",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Button:Suggested"
+        },
+        "button:destructive": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark red,bold",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Button:Destructive"
+        },
+        "help:key": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Help:Key"
+        },
+        "view:default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "View:Default"
+        },
+        "search-entry:caption": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Search-Entry:Caption"
+        },
+        "snippets-list:focused": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "dark gray",
+            "mono": "standout",
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Focused"
+        },
+        "snippets-list:cmd": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark green",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Cmd"
+        },
+        "snippets-list:cmd:focused": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark green",
+            "bg": "dark gray",
+            "mono": "standout",
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Cmd:Focused"
+        },
+        "snippets-list:title": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray,italics",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Title"
+        },
+        "snippets-list:title:focused": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray,italics",
+            "bg": "dark gray",
+            "mono": "standout",
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Title:Focused"
+        },
+        "snippets-list:tag": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "brown",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Tag"
+        },
+        "snippets-list:tag:focused": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "brown",
+            "bg": "dark gray",
+            "mono": "standout",
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Snippets-List:Tag:Focused"
+        },
+        "path-completion:file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "default",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Path-Completion:File"
+        },
+        "path-completion:directory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark blue",
+            "bg": "default",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Path-Completion:Directory"
+        },
+        "path-completion:symlink-directory": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "default",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Path-Completion:Symlink-Directory"
+        },
+        "path-completion:symlink-file": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "brown",
+            "bg": "default",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Path-Completion:Symlink-File"
+        },
+        "syn:cmd:default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark green",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Cmd:Default"
+        },
+        "syn:cmd:punctuation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Cmd:Punctuation"
+        },
+        "syn:cmd:field-marker": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark magenta",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Cmd:Field-Marker"
+        },
+        "syn:cmd:field-name": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark magenta",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Cmd:Field-Name"
+        },
+        "syn:cmd:field-conversion": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Cmd:Field-Conversion"
+        },
+        "syn:cmd:field-format": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Cmd:Field-Format"
+        },
+        "syn:doc:default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Default"
+        },
+        "syn:doc:parameter": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark magenta",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Parameter"
+        },
+        "syn:doc:type-hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Type-Hint"
+        },
+        "syn:doc:value-hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "brown",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Value-Hint"
+        },
+        "syn:doc:value-hint:default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Value-Hint:Default"
+        },
+        "syn:doc:string": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark green",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:String"
+        },
+        "syn:doc:number": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "yellow",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Number"
+        },
+        "syn:doc:code-fence": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark red",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Doc:Code-Fence"
+        },
+        "syn:py:default": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Default"
+        },
+        "syn:py:name": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Name"
+        },
+        "syn:py:comment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Comment"
+        },
+        "syn:py:keyword": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark magenta",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Keyword"
+        },
+        "syn:py:class": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "brown",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Class"
+        },
+        "syn:py:decorator": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "brown",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Decorator"
+        },
+        "syn:py:string": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark green",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:String"
+        },
+        "syn:py:string:escape": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:String:Escape"
+        },
+        "syn:py:string:interp": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:String:Interp"
+        },
+        "syn:py:function": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark cyan",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Function"
+        },
+        "syn:py:number": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "yellow",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Syn:Py:Number"
+        },
+        "diff:insert": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark magenta",
+            "bg": "black",
+            "mono": "standout",
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Diff:Insert"
+        },
+        "diff:delete": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "light gray,bold",
+            "bg": "dark red",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Diff:Delete"
+        }
+      },
+      "title": "Palette",
+      "type": "object"
+    },
+    "PaletteEntry": {
+      "description": "See available color values at: https://urwid.org/manual/displayattributes.html#foreground-and-background-settings",
+      "properties": {
+        "fg": {
+          "title": "Foreground color in 16-color mode",
+          "type": "string"
+        },
+        "bg": {
+          "title": "Background color in 16-color mode",
+          "type": "string"
+        },
+        "mono": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Color in monochrome mode"
+        },
+        "fg_hi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Foreground color in high-color mode"
+        },
+        "bg_hi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Background color in high-color mode"
+        }
+      },
+      "required": [
+        "fg",
+        "bg"
+      ],
+      "title": "An Urwid palette entry",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "database": {
+      "title": "Path to the snippets SQLite database",
+      "type": "string"
+    },
+    "palette": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Palette"
+        }
+      ],
+      "default": {},
+      "title": "The application color palette"
+    }
+  },
+  "title": "Clisnips configuration settings.",
+  "type": "object"
+}

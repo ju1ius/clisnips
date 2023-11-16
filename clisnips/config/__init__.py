@@ -5,11 +5,11 @@ from clisnips._types import AnyPath
 from .settings import AppSettings
 from .envs import DB_PATH
 from .paths import get_config_path, get_runtime_path
-from .palette import Palette, default_palette
 
-VERSION = "0.1"
+VERSION = "0.5"
 AUTHORS = ['Jules Bernable (ju1ius)']
 HELP_URI = 'https://github.com/ju1ius/clisnips/wiki'
+SCHEMA_BASE_URI = 'https://raw.githubusercontent.com/ju1ius/clisnips/master/schemas'
 LICENSE = """\
 Copyright (C) {authors}
 
@@ -54,16 +54,15 @@ class Config:
 
     @property
     def palette(self):
-        p = default_palette
-        p.update(self._cfg.palette) # type: ignore
-        return p
-    
+        return self._cfg.palette.model_dump()
+
     @property
     def log_file(self):
         return get_runtime_path('logs.sock')
 
     def write(self, fp):
         data = {
+            '$schema': f'{SCHEMA_BASE_URI}/settings.json',
             'database': str(self.database_path),
             'palette': self.palette,
         }

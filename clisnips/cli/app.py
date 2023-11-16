@@ -65,7 +65,7 @@ class Application:
         logging.getLogger(__name__).info('launching TUI')
         app = Application(dic)
         return app.run()
-    
+
     @staticmethod
     def _create_container(argv) -> DependencyInjectionContainer:
         return DependencyInjectionContainer(
