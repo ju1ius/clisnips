@@ -63,7 +63,7 @@ class CommandFormatter(Formatter):
             outfile.write((style, value))
 
 
-_lexer = CommandLexer()
+_lexer = CommandLexer(encoding='utf8', stripall=True, ensurenl=False)
 _formatter = CommandFormatter()
 _writer = UrwidMarkupWriter()
 

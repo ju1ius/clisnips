@@ -8,7 +8,7 @@ from pygments.token import Comment, Keyword, Name, Number, Operator, Punctuation
 
 from .writer import UrwidMarkupWriter
 
-__all__ = ['highlight_documentation']
+__all__ = ('highlight_documentation',)
 
 Parameter = Token.Parameter
 TypeHint = Token.TypeHint
@@ -139,7 +139,7 @@ class DocFormatter(Formatter):
             outfile.write((style, value))
 
 
-_lexer = DocLexer()
+_lexer = DocLexer(encoding="utf8", stripall=True, ensurenl=True)
 _formatter = DocFormatter()
 _writer = UrwidMarkupWriter()
 

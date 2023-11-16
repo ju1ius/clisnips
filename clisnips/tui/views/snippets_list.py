@@ -143,7 +143,7 @@ class SnippetListView(View):
         return super().render(size, focus)
 
     def keypress(self, size, key):
-        logging.getLogger(__name__).debug('size=%r, key=%r', size, key)
+        # logging.getLogger(__name__).debug('size=%r, key=%r', size, key)
         key = super().keypress(size, key)
         focus = self._view.focus_position
         match key:

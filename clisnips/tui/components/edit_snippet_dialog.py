@@ -1,4 +1,5 @@
 from contextlib import suppress
+import logging
 from typing import Callable
 
 import urwid
@@ -14,6 +15,7 @@ class EditSnippetDialog(Dialog):
 
     def __init__(self, parent, snippet):
         self._snippet = dict(snippet)
+        logging.getLogger(__name__).debug('snippet: %r', self._snippet)
         self._fields = {}
 
         body = urwid.ListBox(urwid.SimpleListWalker([
@@ -38,6 +40,7 @@ class EditSnippetDialog(Dialog):
         def handler(dialog, response_type):
             if response_type == ResponseType.ACCEPT:
                 snippet = self._collect_values()
+                logging.getLogger(__name__).debug('accept: %r', snippet)
                 callback(snippet)
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
@@ -48,10 +51,8 @@ class EditSnippetDialog(Dialog):
         self.close()
 
     def _collect_values(self):
-        snippet = dict(self._snippet)
         values = {name: entry.get_edit_text() for name, entry in self._fields.items()}
-        snippet.update(values)
-        return snippet
+        return {**self._snippet, **values}
 
     def _create_field(self, name: str, label: str, multiline=False, entry_factory=None):
         value = self._snippet[name]
