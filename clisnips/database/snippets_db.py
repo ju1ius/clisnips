@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Iterable, Optional, TypedDict, Union
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 
 __DIR__ = Path(__file__).absolute().parent
 

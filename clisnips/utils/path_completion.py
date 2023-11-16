@@ -13,7 +13,7 @@ __all__ = [
     'FileSystemPathCompletionProvider',
 ]
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 
 
 class FileAttributes(enum.IntFlag):

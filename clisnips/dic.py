@@ -2,7 +2,7 @@ import logging
 from typing import Optional
 
 
-from ._types import AnyPath
+from .ty import AnyPath
 from .config import Config
 from .config.state import PersistentState, load_persistent_state
 from .database.search_pager import SearchPager

@@ -3,7 +3,7 @@ from pathlib import Path
 import shutil
 from typing import Optional
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 from clisnips.database.snippets_db import SnippetsDatabase
 from .command import Command
 

@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 from .settings import AppSettings
 from .envs import DB_PATH
 from .paths import get_config_path, get_runtime_path

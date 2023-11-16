@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 
 
 def _db_path_from_env() -> Optional[AnyPath]:

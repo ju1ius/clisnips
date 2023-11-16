@@ -5,7 +5,7 @@ import urwid
 from urwid.command_map import Command
 import observ
 
-from clisnips._types import Ref
+from clisnips.ty import Ref
 
 
 class Switch(urwid.WidgetWrap):

@@ -2,7 +2,7 @@ import enum
 
 import urwid
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.edit import EmacsEdit
 from clisnips.tui.widgets.menu import PopupMenu

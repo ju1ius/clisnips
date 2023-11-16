@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from clisnips._types import AnyPath
+from clisnips.ty import AnyPath
 
 _APP = 'clisnips'
 
