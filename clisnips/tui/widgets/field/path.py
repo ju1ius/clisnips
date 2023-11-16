@@ -1,12 +1,14 @@
 import enum
+from collections.abc import Iterable
 
 import urwid
 
-from clisnips.ty import AnyPath
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.edit import EmacsEdit
 from clisnips.tui.widgets.menu import PopupMenu
+from clisnips.ty import AnyPath
 from clisnips.utils.path_completion import FileSystemPathCompletionProvider, PathCompletion, PathCompletionEntry
+
 from .field import Entry, SimpleField
 
 
@@ -81,11 +83,11 @@ class PathCompletionMenu(PopupMenu):
 
     signals = PopupMenu.signals + list(Signals)
 
-    def set_completions(self, completions):
+    def set_completions(self, completions: Iterable[PathCompletionEntry]):
         items = []
         for entry in completions:
             item = PathCompletionMenuItem(entry)
-            urwid.connect_signal(item, 'click', self._on_item_clicked, user_args=[entry])
+            urwid.connect_signal(item, 'click', self._on_item_clicked, user_args=(entry,))
             items.append(item)
         self._walker[:] = items
         self._walker.set_focus(0)

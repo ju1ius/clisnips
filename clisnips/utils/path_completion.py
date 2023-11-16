@@ -2,10 +2,10 @@ import enum
 import functools
 import os
 import os.path
+from collections.abc import Iterable
 from dataclasses import dataclass
 from locale import strxfrm
 from pathlib import Path
-from typing import Iterable
 
 __all__ = [
     'FileAttributes', 'PathCompletionEntry',
@@ -63,7 +63,7 @@ class PathCompletion:
         self._show_files = show_files
         self._show_hidden = show_hidden
 
-    def get_completions(self, path: AnyPath):
+    def get_completions(self, path: AnyPath) -> list[PathCompletionEntry]:
         results = []
         match_part = self._get_match_part(path)
         for entry in self._provider.get_completions(path):
@@ -73,17 +73,21 @@ class PathCompletion:
         return sorted(results)
 
     @staticmethod
-    def complete(path, completion: PathCompletionEntry) -> str:
+    def complete(path: AnyPath, completion: PathCompletionEntry) -> str:
         dir_part, file_part = os.path.split(path)
-        return os.path.join(dir_part, completion.display_name)
+        try:
+            return str(Path(dir_part).expanduser() / completion.display_name)
+        except RuntimeError:
+            # expanduser failed
+            return os.path.join(dir_part, completion.display_name)
 
     @staticmethod
-    def _get_match_part(path) -> str:
+    def _get_match_part(path: AnyPath) -> str:
         dir_part, file_part = os.path.split(path)
         return file_part
 
     def _entry_matches(self, entry: PathCompletionEntry, pattern: str) -> bool:
-        if not entry.is_dir and not self._show_files:
+        if not self._show_files and not entry.is_dir:
             return False
         if not self._show_hidden and entry.is_hidden:
             return False
