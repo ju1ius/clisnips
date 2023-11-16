@@ -1,5 +1,4 @@
 import argparse
-from typing import Optional
 
 from clisnips.dic import DependencyInjectionContainer
 from .utils import UrwidMarkupHelper
@@ -14,7 +13,7 @@ class Command:
         self.container = dic
         self._markup_helper = UrwidMarkupHelper()
 
-    def run(self, argv) -> Optional[int]:
+    def run(self, argv) -> int:
         return NotImplemented
 
     def print(self, *args, stderr: bool = False, end: str = '\n', sep: str = ' '):

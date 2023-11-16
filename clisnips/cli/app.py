@@ -1,6 +1,5 @@
 import argparse
 import logging
-import os
 import sys
 
 from clisnips.dic import DependencyInjectionContainer
@@ -42,20 +41,22 @@ class Application:
         parser.add_argument('--database', help='Path to an alternate SQLite database.')
         parser.add_argument('--log-level', choices=('debug', 'info', 'warning', 'error'), help='')
 
-        sub_parsers = parser.add_subparsers(title='Subcommands', dest='command',
-                                            description='The following commands are available outside the GUI.')
+        sub_parsers = parser.add_subparsers(
+            title='Subcommands',
+            dest='command',
+            description='The following commands are available outside the GUI.',
+        )
         for _, cmd in cls.commands.items():
             cmd.configure(sub_parsers) # type: ignore
 
         return parser.parse_args()
 
-    def _run_command(self, cls, argv) -> int:
+    def _run_command(self, cls: type[Command], argv) -> int:
         dic = self._create_container(argv)
         logging.getLogger(__name__).info('launching command: %s', argv)
         command = cls(dic)
         try:
-            ret_code = command.run(argv)
-            return ret_code if ret_code is not None else 0
+            return command.run(argv)
         except Exception as err:
             self._print_exception(err)
             return 128

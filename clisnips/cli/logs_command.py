@@ -80,7 +80,7 @@ class LogsCommand(Command):
     def configure(cls, action: argparse._SubParsersAction):
         action.add_parser('logs', help='Watch clisnips logs')
 
-    def run(self, argv) -> int | None:
+    def run(self, argv) -> int:
         log_file = self.container.config.log_file
 
         async def serve():

@@ -1,7 +1,6 @@
 import argparse
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from .command import Command
 
@@ -20,7 +19,7 @@ class InstallShellKeyBindingsCommand(Command):
         cmd = action.add_parser('key-bindings', help='Installs clisnips key bindings for the given shell.')
         cmd.add_argument('shell', choices=['bash', 'zsh'])
 
-    def run(self, argv) -> Optional[int]:
+    def run(self, argv) -> int:
         shell = argv.shell
         self.print(('info', f'Installing key bindings for {shell}...'))
         bindings_src = __dir__ / 'shell' / f'key-bindings.{shell}'

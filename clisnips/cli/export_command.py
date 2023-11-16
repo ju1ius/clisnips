@@ -1,5 +1,4 @@
 import argparse
-from typing import Optional
 
 from clisnips.exporters import export_xml, export_json
 from .command import Command
@@ -12,7 +11,7 @@ class ExportCommand(Command):
         cmd.add_argument('--format', choices=['xml', 'json'], default='xml')
         cmd.add_argument('file', type=argparse.FileType('w'))
 
-    def run(self, argv) -> Optional[int]:
+    def run(self, argv) -> int:
         export = export_json if argv.format == 'json' else export_xml
         export(self.container.database, argv.file, self.print)
         return 0

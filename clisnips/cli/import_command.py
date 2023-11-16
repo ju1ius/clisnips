@@ -1,7 +1,6 @@
 import argparse
 from pathlib import Path
 import shutil
-from typing import Optional
 
 from clisnips.ty import AnyPath
 from clisnips.database.snippets_db import SnippetsDatabase
@@ -17,7 +16,7 @@ class ImportCommand(Command):
         cmd.add_argument('--dry-run', action='store_true', help='Just pretend.')
         cmd.add_argument('file', type=Path)
 
-    def run(self, argv) -> Optional[int]:
+    def run(self, argv) -> int:
         if argv.replace:
             db_path = argv.database or self.container.config.database_path
             self._backup_and_drop_db(db_path, argv.dry_run)
