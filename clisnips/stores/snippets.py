@@ -1,4 +1,4 @@
-from contextlib import suppress
+import contextlib
 import enum
 import logging
 from typing import Any, Callable, TypeVar, TypedDict, cast
@@ -18,9 +18,15 @@ class ListLayout(enum.StrEnum):
     TABLE = enum.auto()
 
 
+class QueryState(enum.Enum):
+    VALID = enum.auto()
+    INVALID = enum.auto()
+
+
 class State(TypedDict):
     viewport: tuple[int, int]
     search_query: str
+    query_state: QueryState
     snippet_ids: list[int]
     snippets_by_id: dict[int, Snippet]
     total_rows: int
@@ -54,6 +60,7 @@ class SnippetsStore:
         return {
             'viewport': (0, 0),
             'search_query': '',
+            'query_state': QueryState.VALID,
             'snippet_ids': [],
             'snippets_by_id': {},
             'total_rows': 0,
@@ -103,7 +110,7 @@ class SnippetsStore:
 
     def create_snippet(self, snippet: Snippet):
         rowid = self._db.insert(snippet)
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             self._pager.count()
         # TODO: make it so we don't need to refetch the whole thing
         snippet = self._db.get(rowid)
@@ -118,7 +125,7 @@ class SnippetsStore:
         self._db.delete(rowid)
         self._state['snippet_ids'].remove(rowid)
         del self._state['snippets_by_id'][rowid]
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             self._pager.count()
 
     def change_search_query(self, search_query: str):
@@ -127,22 +134,22 @@ class SnippetsStore:
 
     def request_first_page(self):
         # TODO: skip loading if we don't need to paginate
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             rows = self._pager.first()
             self._load_result_set(rows)
 
     def request_next_page(self):
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             rows = self._pager.next()
             self._load_result_set(rows)
 
     def request_previous_page(self):
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             rows = self._pager.previous()
             self._load_result_set(rows)
 
     def request_last_page(self):
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             rows = self._pager.last()
             self._load_result_set(rows)
 
@@ -163,7 +170,7 @@ class SnippetsStore:
         self._fetch_list(self._state['search_query'])
 
     def _fetch_list(self, search_query: str):
-        with suppress(SearchSyntaxError):
+        with self._handle_syntax_error():
             rows = self._pager.list() if not search_query else self._pager.search(search_query)
             self._load_result_set(rows)
 
@@ -172,10 +179,18 @@ class SnippetsStore:
         ids = list(by_id.keys())
         self._state['snippets_by_id'] = by_id
         self._state['snippet_ids'] = ids
-        logging.getLogger(__name__).debug('result: %s', self._state['snippets_by_id'])
         self._update_pager_infos()
 
     def _update_pager_infos(self):
         self._state['total_rows'] = self._pager.total_rows
         self._state['page_count'] = self._pager.page_count
         self._state['current_page'] = self._pager.current_page
+
+    @contextlib.contextmanager
+    def _handle_syntax_error(self):
+        try:
+            yield
+        except SearchSyntaxError:
+            self._state['query_state'] = QueryState.INVALID
+        else:
+            self._state['query_state'] = QueryState.VALID

@@ -32,7 +32,7 @@ class SnippetListView(View):
     def __init__(self, store: SnippetsStore):
         self._store = store
 
-        search_entry = SearchInput(store, ' ')
+        search_entry = SearchInput(store)
         pager_infos = PagerInfos(store)
         header = urwid.Columns((('weight', 1, search_entry), ('pack', pager_infos)), dividechars=1)
         self._list = SnippetsList(store)

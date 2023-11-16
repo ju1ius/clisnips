@@ -4,9 +4,10 @@ from pydantic import BaseModel, ConfigDict, Field, create_model
 
 default_palette = {
     'default': {'fg': 'light gray', 'bg': 'black'},
-    'info': {'fg': 'white', 'bg': 'dark blue', 'mono': None, 'fg_hi': 'h186', 'bg_hi': 'g20'},
-    'warning': {'fg': 'black', 'bg': 'brown'},
-    'error': {'fg': 'white', 'bg': 'dark red'},
+    'info': {'fg': 'dark blue', 'bg': 'default'},
+    'success': {'fg': 'dark green', 'bg': 'default'},
+    'warning': {'fg': 'brown', 'bg': 'default'},
+    'error': {'fg': 'dark red', 'bg': 'default'},
     'button:suggested': {'fg': 'dark cyan,bold', 'bg': 'black'},
     'button:destructive': {'fg': 'dark red,bold', 'bg': 'black'},
 

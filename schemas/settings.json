@@ -30,13 +30,31 @@
             }
           ],
           "default": {
-            "fg": "white",
-            "bg": "dark blue",
+            "fg": "dark blue",
+            "bg": "default",
             "mono": null,
-            "fg_hi": "h186",
-            "bg_hi": "g20"
+            "fg_hi": null,
+            "bg_hi": null
           },
           "title": "Info"
+        },
+        "success": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark green",
+            "bg": "default",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Success"
         },
         "warning": {
           "anyOf": [
@@ -48,8 +66,8 @@
             }
           ],
           "default": {
-            "fg": "black",
-            "bg": "brown",
+            "fg": "brown",
+            "bg": "default",
             "mono": null,
             "fg_hi": null,
             "bg_hi": null
@@ -66,8 +84,8 @@
             }
           ],
           "default": {
-            "fg": "white",
-            "bg": "dark red",
+            "fg": "dark red",
+            "bg": "default",
             "mono": null,
             "fg_hi": null,
             "bg_hi": null

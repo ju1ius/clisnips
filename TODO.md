@@ -7,8 +7,6 @@
       - db errors
     - [ ] error handling
     - [ ] polish keyboard handling / shortcuts (look into `CommandMap`)
-    - [ ] List View
-        - [ ] change search box icon when search query is invalid
     - [ ] Edit / Create view
         - [ ] validate documentation / command syntax
     - [ ] About dialog
