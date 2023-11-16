@@ -11,9 +11,9 @@ class ImportCommand(Command):
     @classmethod
     def configure(cls, action: argparse._SubParsersAction):
         cmd = action.add_parser('import', help='Imports snippets from a file.')
-        cmd.add_argument('--format', choices=['xml', 'json', 'toml', 'cli-companion'], default='xml')
+        cmd.add_argument('-f', '--format', choices=['xml', 'json', 'toml', 'cli-companion'], default='xml')
         cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
-        cmd.add_argument('--dry-run', action='store_true', help='Just pretend.')
+        cmd.add_argument('-D', '--dry-run', action='store_true', help='Just pretend.')
         cmd.add_argument('file', type=Path)
 
     def run(self, argv) -> int:

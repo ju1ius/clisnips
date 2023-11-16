@@ -1,16 +1,18 @@
 import json
+from pathlib import Path
 import time
-from typing import Callable, TextIO
 
-from clisnips.database.snippets_db import SnippetsDatabase
+from clisnips.exporters.base import Exporter
 
 
-def export(db: SnippetsDatabase, file: TextIO, log: Callable):
-    start_time = time.time()
-    num_rows = len(db)
-    log(('info', f'Converting {num_rows:n} snippets to JSON...'))
+class JsonExporter(Exporter):
+    def export(self, path: Path):
+        start_time = time.time()
+        num_rows = len(self._db)
+        self._log(('info', f'Converting {num_rows:n} snippets to JSON...'))
 
-    json.dump([dict(row) for row in db], file, indent=2)
+        with open(path, 'w') as fp:
+            json.dump([dict(row) for row in self._db], fp, indent=2)
 
-    elapsed_time = time.time() - start_time
-    log(('success', f'Success: exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.'))
+        elapsed_time = time.time() - start_time
+        self._log(('success', f'Success: exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.'))

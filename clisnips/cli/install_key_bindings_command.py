@@ -35,7 +35,7 @@ class InstallShellKeyBindingsCommand(Command):
         self.print(
             ('success', 'Done !'),
             ('info', 'To use the new key bindings, either open a new shell or run:'),
-            ('warning', f'$ source {rc_file}'),
+            ('default', f'$ source {rc_file}'),
             sep='\n'
         )
 
