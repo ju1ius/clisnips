@@ -42,8 +42,10 @@ class EditSnippetDialog(Dialog):
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type):
-        if response_type == ResponseType.REJECT:
-            self.close()
+        if response_type == ResponseType.ACCEPT:
+            # TODO: validation
+            ...
+        self.close()
 
     def _collect_values(self):
         snippet = dict(self._snippet)

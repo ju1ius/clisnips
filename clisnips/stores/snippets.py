@@ -93,7 +93,7 @@ class SnippetsStore:
         )
 
     def change_viewport(self, width: int, height: int):
-        logging.getLogger(__name__).debug('viewport=%r', (width, height))
+        # logging.getLogger(__name__).debug('viewport=%r', (width, height))
         self._state['viewport'] = (width, height)
 
     def change_layout(self, layout: ListLayout):
