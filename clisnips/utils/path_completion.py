@@ -75,11 +75,7 @@ class PathCompletion:
     @staticmethod
     def complete(path: AnyPath, completion: PathCompletionEntry) -> str:
         dir_part, file_part = os.path.split(path)
-        try:
-            return str(Path(dir_part).expanduser() / completion.display_name)
-        except RuntimeError:
-            # expanduser failed
-            return os.path.join(dir_part, completion.display_name)
+        return os.path.join(dir_part, completion.display_name)
 
     @staticmethod
     def _get_match_part(path: AnyPath) -> str:
