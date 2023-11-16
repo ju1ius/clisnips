@@ -4,7 +4,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry]
 name = "clisnips"
-version = "0.1.0"
+version = "0.4.0"
 description = "A command-line snippets manager."
 authors = ["ju1ius <jules.bernable@gmail.com>"]
 license = "GPL-3.0+"
@@ -20,7 +20,7 @@ classifiers = [
   'Operating System :: POSIX',
   'Operating System :: Microsoft :: Windows',
   'Programming Language :: Python',
-  'Programming Language :: Python :: 3.7',
+  'Programming Language :: Python :: 3.11',
   'Programming Language :: Python :: Implementation :: CPython',
   'Topic :: Terminals',
   'Topic :: Terminals :: Terminal Emulators/X Terminals',
