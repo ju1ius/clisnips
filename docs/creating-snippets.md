@@ -25,7 +25,7 @@ Follow the steps 1 to 4 from section I. above, using the following values for st
 |---------------|--------------------|
 | Title         | Example n°1        |
 | Tags          | tutorial           |
-| Command       | mv {} {}           |
+| Command       | `mv {} {}`         |
 | Documentation | Moves stuff around |
 
 Notice that the value for our `command` field contains to template fields.
@@ -36,16 +36,18 @@ focus it and press `enter`.
 Clisnips now recognizes that the snippet is parametrized and opens a dialog
 to prompt you for the two values corresponding to the template fields we provided for the command.
 
-Since we did not provide a name for the fields they are implicitly numbered 0 and 1.
+Since we did not provide a name for the fields they are implicitly numbered `0` and `1`.
 
 If you fill-in the input fields with the values `foo` and `bar` and press the `< Apply >` button,
 clisnips should now have inserted the command `mv foo bar` in your terminal.
 
-Congratulations, you just created your first parametrized snippet ! 
+Congratulations, you just created your first parametrized snippet !
 
 ### Going further
 
-There is more you can do with parametrized snippets.
+There is more you can do with parametrized snippets,
+but before going further you may want to read about
+[a snippet's anatomy](./snippet-anatomy.md).
 
 #### Field naming
 
@@ -55,7 +57,7 @@ for example `mv {source} {destination}`.
 
 #### Field syntax
 
-The template fields in commands follow the [Python format string syntax](https://docs.python.org/3.8/library/string.html#format-string-syntax).
+The template fields in commands follow the [Python format string syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
 
 Since clisnips is written in python, this means you can use all the formatting options of the aforementioned syntax
 (i.e. using `{: >4}` to pad a string with up-to 4 space characters).

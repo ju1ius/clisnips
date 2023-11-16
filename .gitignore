@@ -1,5 +1,4 @@
 *~
-/.idea
 *.bak
 *.sqlite
 *.pyc
@@ -7,6 +6,7 @@ __pycache__
 .pytest_cache
 .mypy_cache
 
+/.idea
 .venv
 /dist
 /tmp
