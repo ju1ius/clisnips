@@ -1,67 +1,87 @@
-import operator
 import re
 
 import urwid
 
+from clisnips.tui.urwid_types import TextMarkup
 
-def _next_word_position(text: str, start_position: int, backward=False) -> int:
-    if backward:
-        match_iterator = re.finditer(r'(\w+\b|^)', text, flags=re.UNICODE)
-        match_positions = reversed([m.start() for m in match_iterator])
-        op = operator.lt
-    else:
-        match_iterator = re.finditer(r'(\b\W+|$)', text, flags=re.UNICODE)
-        match_positions = (m.start() for m in match_iterator)
-        op = operator.gt
-    for pos in match_positions:
-        if op(pos, start_position):
-            return pos
-    # TODO: return something here
+
+def _next_word_position(text: str, start_position: int) -> int:
+    matches = re.finditer(r'(\b\W+|$)', text, flags=re.UNICODE)
+    positions = (m.start() for m in matches)
+    return next(
+        (p for p in positions if p > start_position),
+        len(text),
+    )
+
+
+def _prev_word_position(text: str, start_position: int) -> int:
+    matches = re.finditer(r'(\w+\b|^)', text, flags=re.UNICODE)
+    positions = reversed([m.start() for m in matches])
+    return next(
+        (p for p in positions if p < start_position),
+        0,
+    )
+
+
+def _next_line_position(text: str, start_position: int) -> int:
+    pos = text.find('\n', start_position)
+    return pos if pos > -1 else len(text) - 1
+
+
+def _prev_line_position(text: str, start_position: int) -> int:
+    pos = text.rfind('\n', 0, start_position)
+    return pos + 1 if pos > -1 else 0
 
 
 class EmacsEdit(urwid.Edit):
 
-    def keypress(self, size, key):
-        if key == 'ctrl left':
-            return super().keypress(size, 'home')
-        if key == 'ctrl right':
-            return super().keypress(size, 'end')
-        if key in ('alt right', 'alt f'):
-            # goto next word
-            self.set_edit_pos(_next_word_position(self.edit_text, self.edit_pos))
-            return None
-        if key in ('alt left', 'alt b'):
-            # goto previous word
-            self.set_edit_pos(_next_word_position(self.edit_text, self.edit_pos, backward=True))
-            return None
-        if key == 'ctrl k':
-            # delete to EOL
-            self.edit_text = self.edit_text[:self.edit_pos]
-            return None
-        if key in ('ctrl u', 'ctrl backspace'):
-            # delete to SOL
-            self.edit_text = ''
-            return None
-        if key == 'ctrl d':
-            # delete char under cursor
-            return super().keypress(size, 'delete')
-        if key == 'ctrl w':
-            # delete next word
-            end_pos = self.edit_pos
-            start_pos = _next_word_position(self.edit_text, end_pos, backward=True)
-            if start_pos is not None:
-                self.set_edit_text(self.edit_text[:start_pos] + self.edit_text[end_pos:])
-            return None
-        if key in ('alt d', 'alt backspace'):
-            # delete previous word
-            end_pos = self.edit_pos
-            start_pos = _next_word_position(self.edit_text, end_pos)
-            if start_pos is not None:
-                self.set_edit_text(self.edit_text[:start_pos] + self.edit_text[end_pos:])
-            return None
-        if key == 'space':
-            return super().keypress(size, ' ')
-        return super().keypress(size, key)
+    def keypress(self, size, key: str):
+        match key:
+            case 'ctrl left':
+                return super().keypress(size, 'home')
+            case 'ctrl right':
+                return super().keypress(size, 'end')
+            case 'meta right' | 'meta f':
+                # goto next word
+                self.edit_pos = _next_word_position(self.edit_text, self.edit_pos)
+                return None
+            case 'meta left' | 'meta b':
+                # goto previous word
+                self.edit_pos = _prev_word_position(self.edit_text, self.edit_pos)
+                return None
+            case 'ctrl k':
+                # delete to EOL
+                start = self.edit_pos
+                end = _next_line_position(self.edit_text, start)
+                self.edit_text = self.edit_text[:start] + self.edit_text[end:]
+                return None
+            case 'ctrl u' | 'ctrl backspace':
+                # delete to SOL
+                end = self.edit_pos
+                start = _prev_line_position(self.edit_text, end)
+                self.edit_text = self.edit_text[:start] + self.edit_text[end:]
+                self.edit_pos = start
+                return None
+            case 'ctrl d':
+                # delete char under cursor
+                return super().keypress(size, 'delete')
+            case 'meta d' | 'meta backspace':
+                # delete next word
+                start = self.edit_pos
+                end = _next_word_position(self.edit_text, start)
+                self.edit_text = self.edit_text[:start] + self.edit_text[end:]
+                return None
+            case 'ctrl w':
+                # delete previous word
+                end = self.edit_pos
+                start = _prev_word_position(self.edit_text, end)
+                self.edit_text = self.edit_text[:start] + self.edit_text[end:]
+                self.edit_pos = start
+                return None
+            case 'space':
+                return super().keypress(size, ' ')
+            case _:
+                return super().keypress(size, key)
 
 
 class SourceEdit(EmacsEdit):
@@ -75,7 +95,7 @@ class SourceEdit(EmacsEdit):
         super().__init__(*args, **kwargs)
         self._edit_attrs = []
 
-    def set_edit_markup(self, markup):
+    def set_edit_markup(self, markup: TextMarkup):
         """
         Call this when markup changes but the underlying text does not.
         You should arrange for this to be called from the 'change' signal.

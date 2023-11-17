@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 
-AttributedText = str | tuple[str, str]
-TextMarkup = AttributedText | Iterable[AttributedText]
+AttributedText = str | tuple[str, 'AttributedText']
+TextMarkup = AttributedText | list[AttributedText]

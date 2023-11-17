@@ -30,7 +30,7 @@
       "request": "launch",
       "module": "clisnips",
       "args": "${input:cliArgs}",
-      "justMyCode": true,
+      "justMyCode": false,
     }
   ]
 }
