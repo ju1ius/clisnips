@@ -1,7 +1,7 @@
 import sys
 import time
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional
 
 
 class Direction(Enum):
@@ -18,7 +18,7 @@ class Action(Enum):
 
 class NavigationCommand:
 
-    def __init__(self, action: Action, direction: Direction, offset: Union[int, str]):
+    def __init__(self, action: Action, direction: Direction, offset: int | str):
         self.action = action,
         self.direction = direction
         self.offset = offset

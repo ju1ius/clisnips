@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple, Union
+from collections.abc import Iterable
 
-_AttributedText = Union[str, Tuple[str, str]]
-TextMarkup = Union[_AttributedText, Iterable[_AttributedText]]
+AttributedText = str | tuple[str, str]
+TextMarkup = AttributedText | Iterable[AttributedText]

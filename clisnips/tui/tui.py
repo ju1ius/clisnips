@@ -1,7 +1,7 @@
 import atexit
 import signal
 import sys
-from typing import Callable, Hashable, Iterable
+from collections.abc import Callable, Hashable, Iterable
 
 import observ
 import urwid

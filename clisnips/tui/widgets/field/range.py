@@ -1,10 +1,9 @@
-from typing import Union
-
 import urwid
 
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.edit import EmacsEdit
 from clisnips.utils.number import get_num_decimals
+
 from .field import Entry, SimpleField
 
 
@@ -64,6 +63,7 @@ class RangeModel:
         decimals = [get_num_decimals(x) for x in (start, end, step)]
         self._num_decimals = max(decimals)
         self._is_integer = all(x == 0 for x in decimals)
+        self._value: int | float = 0
         self.set_value(default if default is not None else start)
 
     def get_value(self) -> str:
@@ -72,10 +72,10 @@ class RangeModel:
 
     def set_value(self, value: str):
         try:
-            value = int(value) if self._is_integer else float(value)
+            v = int(value) if self._is_integer else float(value)
         except ValueError:
             return
-        self._set_numeric_value(value)
+        self._set_numeric_value(v)
 
     def increment(self):
         self._set_numeric_value(self._value + self._step)
@@ -83,5 +83,5 @@ class RangeModel:
     def decrement(self):
         self._set_numeric_value(self._value - self._step)
 
-    def _set_numeric_value(self, value: Union[int, float]):
+    def _set_numeric_value(self, value: int | float):
         self._value = min(self._end, max(self._start, value))

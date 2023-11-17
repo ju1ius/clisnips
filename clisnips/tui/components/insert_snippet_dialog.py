@@ -1,4 +1,4 @@
-from typing import Callable, Dict
+from collections.abc import Callable
 
 import urwid
 
@@ -71,7 +71,7 @@ class InsertSnippetDialog(Dialog):
     def _on_field_changed(self, field):
         self._update_output(silent=True)
 
-    def _create_fields(self, command: CommandTemplate, documentation: Documentation) -> Dict[str, Field]:
+    def _create_fields(self, command: CommandTemplate, documentation: Documentation) -> dict[str, Field]:
         fields = {}
         for name in command.field_names:
             field = field_from_documentation(name, documentation)
@@ -110,8 +110,11 @@ class InsertSnippetDialog(Dialog):
     def _get_output_markup(self, fields) -> TextMarkup:
         markup = []
         for is_field, value in self._command.apply(fields):
-            if is_field:
-                markup.append(('diff:insert', value))
-            else:
-                markup.append(value)
+            match is_field, value:
+                case _, '':
+                    continue
+                case True, _:
+                    markup.append(('diff:insert', value))
+                case False, _:
+                    markup.append(('syn:cmd:default', value))
         return markup

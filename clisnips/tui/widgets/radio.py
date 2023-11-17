@@ -1,11 +1,11 @@
 import enum
-from collections.abc import Iterator
-from typing import Generic, Hashable, Literal, Optional, Self, TypeVar, Union
+from collections.abc import Iterator, Hashable
+from typing import Generic, Literal, Optional, Self, TypeVar
 
 import urwid
 
 V = TypeVar('V', bound=Hashable)
-RadioState = Union[bool, Literal['mixed']]
+RadioState = bool | Literal['mixed']
 
 
 class RadioItem(urwid.RadioButton, Generic[V]):

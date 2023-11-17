@@ -1,5 +1,5 @@
 from string import Formatter as _StringFormatter
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional
 
 
 class Text:
@@ -59,7 +59,7 @@ class _CommandFormatter(_StringFormatter):
 
 class CommandTemplate:
 
-    def __init__(self, raw: str, nodes: List[Union[Text, Field]]):
+    def __init__(self, raw: str, nodes: list[Text | Field]):
         self.raw = raw
         self.nodes = nodes
         self._formatter = _CommandFormatter()
@@ -69,17 +69,17 @@ class CommandTemplate:
         return ''.join(n.text for n in self.nodes if isinstance(n, Text))
 
     @property
-    def replacement_fields(self) -> List[Field]:
+    def replacement_fields(self) -> list[Field]:
         return [n for n in self.nodes if isinstance(n, Field)]
 
     @property
-    def field_names(self) -> List[str]:
+    def field_names(self) -> list[str]:
         return [n.name for n in self.nodes if isinstance(n, Field)]
 
-    def render(self, context: Dict[str, str]) -> str:
+    def render(self, context: dict[str, str]) -> str:
         return ''.join(v for _, v in self.apply(context))
 
-    def apply(self, context: Dict[str, str]) -> List[Tuple[bool, str]]:
+    def apply(self, context: dict[str, str]) -> list[tuple[bool, str]]:
         output = []
         for node in self.nodes:
             if isinstance(node, Text):

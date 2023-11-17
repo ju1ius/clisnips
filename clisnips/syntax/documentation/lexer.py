@@ -1,7 +1,7 @@
 import enum
 import re
 from collections import deque
-from typing import Match, Optional, Union
+from typing import Match, Optional
 
 from clisnips.syntax.string_lexer import EMPTY, StringLexer
 from clisnips.syntax.token import Token
@@ -336,7 +336,7 @@ class Lexer(StringLexer):
             char = self.advance()
         return char
 
-    def _consume_match(self, match: Match, group: Union[int, str] = 0) -> str:
+    def _consume_match(self, match: Match, group: int | str = 0) -> str:
         if not match:
             return EMPTY
         self.advance(match.end(group) - 1 - match.start(group))

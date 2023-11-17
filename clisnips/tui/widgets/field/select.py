@@ -1,7 +1,8 @@
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.combobox import ComboBox
+
 from .field import Entry, SimpleField
 
 
@@ -14,7 +15,7 @@ class SelectField(SimpleField):
 
 class SelectEntry(Entry, ComboBox):
 
-    def __init__(self, choices: Optional[Iterable[str]] = None, default: int = 0):
+    def __init__(self, choices: Iterable[str] | None = None, default: int = 0):
         super().__init__()
         if choices:
             for i, choice in enumerate(choices):

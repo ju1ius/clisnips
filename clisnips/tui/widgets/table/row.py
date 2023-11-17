@@ -1,5 +1,3 @@
-from typing import Tuple
-
 import urwid
 
 from .cell import Cell
@@ -18,5 +16,5 @@ class Row(urwid.Columns):
     def selectable(self) -> bool:
         return True
 
-    def keypress(self, size: Tuple[int, ...], key) -> str:
+    def keypress(self, size: tuple[int] | tuple[int, int], key: str) -> str | None:
         return key

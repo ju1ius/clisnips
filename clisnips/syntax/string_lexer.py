@@ -1,8 +1,8 @@
 import re
-from typing import Dict, Pattern, Tuple, Union
+from typing import Pattern
 
 EMPTY = ''
-_RE_CACHE: Dict[Tuple[str, bool], Pattern[str]] = {}
+_RE_CACHE: dict[tuple[str, bool], Pattern[str]] = {}
 
 
 class StringLexer:
@@ -129,12 +129,12 @@ class StringLexer:
     def unconsume(self, string: str):
         self.recede(len(string))
 
-    def read_until(self, pattern: Union[str, Pattern], negate: bool = True, accumulate: bool = True) -> str:
+    def read_until(self, pattern: str | Pattern, negate: bool = True, accumulate: bool = True) -> str:
         """
         Consumes the input string until we find a match for pattern
         """
         if not isinstance(pattern, Pattern):
-            cache_key: Tuple[str, bool] = (pattern, negate)
+            cache_key: tuple[str, bool] = (pattern, negate)
             if cache_key not in _RE_CACHE:
                 neg = '^' if negate else ''
                 _RE_CACHE[cache_key] = re.compile(fr'[{neg}{pattern}]+')

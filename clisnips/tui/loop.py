@@ -1,6 +1,6 @@
 import asyncio
 from asyncio import Handle, TimerHandle
-from typing import Callable, Union
+from collections.abc import Callable
 
 __loop = asyncio.get_event_loop()
 
@@ -9,7 +9,7 @@ def get_event_loop():
     return __loop
 
 
-def set_timeout(timeout: Union[int, float], callback: Callable, *args) -> TimerHandle:
+def set_timeout(timeout: int | float, callback: Callable, *args) -> TimerHandle:
     return __loop.call_later(timeout / 1000, callback, *args)
 
 

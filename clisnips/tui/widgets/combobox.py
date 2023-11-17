@@ -1,6 +1,6 @@
 import enum
 from collections.abc import Iterable
-from typing import Generic, Literal, Optional, TypeVar, Union
+from typing import Generic, Optional, TypeVar
 
 import urwid
 

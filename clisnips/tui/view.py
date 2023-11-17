@@ -1,5 +1,4 @@
-from collections.abc import Hashable
-from typing import Callable
+from collections.abc import Callable, Hashable
 
 import urwid
 

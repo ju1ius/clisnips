@@ -1,7 +1,8 @@
 import contextlib
 import enum
 import logging
-from typing import Any, Callable, TypeVar, TypedDict, cast
+from collections.abc import Callable
+from typing import Any, TypeVar, TypedDict, cast
 
 from observ import reactive, watch
 

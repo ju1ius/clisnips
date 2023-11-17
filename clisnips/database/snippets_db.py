@@ -4,7 +4,8 @@ import sqlite3
 import stat
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterable, Optional, TypedDict, Union
+from collections.abc import Iterable
+from typing import TypedDict
 
 from clisnips.ty import AnyPath
 
@@ -21,7 +22,7 @@ with open(__DIR__ / 'schema.sql', 'r') as fp:
 
 
 ResultSet = Iterable[sqlite3.Row]
-QueryParameters = Union[tuple, dict]
+QueryParameters = tuple | dict
 
 
 def compute_ranking(created: int, last_used: int, num_used: int, now: float) -> float:
@@ -132,7 +133,7 @@ class SnippetsDatabase:
             return snippet
         raise SnippetNotFound(rowid)
 
-    def find(self, rowid: int) -> Optional[Snippet]:
+    def find(self, rowid: int) -> Snippet | None:
         query = 'SELECT rowid AS id, * FROM snippets WHERE rowid = :id'
         return self.cursor.execute(query, {'id': rowid}).fetchone()
 

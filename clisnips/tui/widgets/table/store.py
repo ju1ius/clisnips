@@ -1,5 +1,6 @@
 import enum
-from typing import Any, Callable, Tuple, Union
+from typing import Any
+from collections.abc import Callable
 
 import urwid
 
@@ -36,7 +37,7 @@ class TableStore:
         self._rows.pop(index)
         self.emit(self.Signals.ROW_DELETED, index)
 
-    def find(self, callback: Callable[[Any], bool]) -> Union[Tuple[int, Any], Tuple[None, None]]:
+    def find(self, callback: Callable[[Any], bool]) -> tuple[int, Any] | tuple[None, None]:
         for index, row in enumerate(self._rows):
             if callback(row):
                 return index, row
@@ -52,7 +53,7 @@ class TableStore:
     def connect(self, signal: Signals, callback):
         urwid.connect_signal(self, signal, callback)
 
-    def __getitem__(self, key: Union[int, slice]):
+    def __getitem__(self, key: int | slice):
         if isinstance(key, (int, slice)):
             return self._rows[key]
         raise TypeError(f'Table store indices must be int or slice, not {type(key).__name__}')

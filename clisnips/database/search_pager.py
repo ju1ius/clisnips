@@ -1,13 +1,15 @@
+from __future__ import annotations
+
 import sqlite3
 from contextlib import contextmanager
-from typing import Iterable, Union
+from collections.abc import Iterable
 
 from . import SortColumn, SortOrder
 from .pager import Pager
 from .scrolling_pager import ScrollingPager, SortColumnDefinition
 from .snippets_db import SnippetsDatabase
 
-SearchPagerType = Union[Pager, 'SearchPager']
+SearchPagerType = Pager | type['SearchPager']
 
 
 class SearchSyntaxError(RuntimeError):

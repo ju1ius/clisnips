@@ -1,7 +1,7 @@
 
 from abc import abstractmethod, ABC
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 from clisnips.database.snippets_db import SnippetsDatabase
 

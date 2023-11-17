@@ -1,9 +1,10 @@
-from typing import Iterable, Optional, Union
+from collections.abc import Iterable
+from typing import Optional
 
 from . import ScrollDirection, SortOrder
 from .offset_pager import OffsetPager
 
-SortColumnDefinition = Union[tuple[str, SortOrder], tuple[str, SortOrder, bool]]
+SortColumnDefinition = tuple[str, SortOrder] | tuple[str, SortOrder, bool]
 
 _WHERE_OP = {
     (ScrollDirection.FWD, SortOrder.ASC): '>',
