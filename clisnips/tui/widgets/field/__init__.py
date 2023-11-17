@@ -1,5 +1,6 @@
 from clisnips.syntax.documentation.nodes import Documentation, Parameter, ValueList, ValueRange
 from clisnips.tui.urwid_types import TextMarkup
+
 from .field import Field
 from .flag import FlagField
 from .path import PathField
@@ -43,9 +44,9 @@ def _field_from_param(param: Parameter) -> Field:
 
 
 def _label_from_param(param: Parameter) -> TextMarkup:
-    markup = [('bold', param.name)]
+    markup: TextMarkup = [('syn:doc:parameter', param.name)]
     if param.type_hint:
-        markup.extend([' (', ('italics', param.type_hint), ')'])
+        markup.append(('syn:doc:type-hint', f' ({param.type_hint})'))
     if param.text:
-        markup.append(f' {param.text.strip()}')
+        markup.append(('syn:doc:default', f' {param.text.strip()}'))
     return markup
