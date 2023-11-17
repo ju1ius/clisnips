@@ -11,10 +11,10 @@ class ConfirmDialog(Dialog):
         text = urwid.Text(message)
         body = urwid.Filler(urwid.Padding(text, width='pack', align='center'), valign='middle')
         super().__init__(parent, body)
-        self.set_buttons((
-            (reject_text, ResponseType.REJECT),
-            (accept_text, ResponseType.ACCEPT),
-        ))
+        self.set_actions(
+            Dialog.Action(reject_text, ResponseType.REJECT),
+            Dialog.Action(accept_text, ResponseType.ACCEPT),
+        )
         self._frame.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())
 

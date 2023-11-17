@@ -45,10 +45,10 @@ class InsertSnippetDialog(Dialog):
         ]))
 
         super().__init__(parent, body)
-        self.set_buttons((
-            ('Apply', ResponseType.ACCEPT),
-            ('Cancel', ResponseType.REJECT),
-        ))
+        self.set_actions(
+            Dialog.Action('Apply', ResponseType.ACCEPT, 'action:suggested'),
+            Dialog.Action('Cancel', ResponseType.REJECT),
+        )
         self._action_area.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, self._on_response)
 
@@ -114,7 +114,7 @@ class InsertSnippetDialog(Dialog):
                 case _, '':
                     continue
                 case True, _:
-                    markup.append(('diff:insert', value))
+                    markup.append(('syn:cmd:field-name', value))
                 case False, _:
                     markup.append(('syn:cmd:default', value))
         return markup

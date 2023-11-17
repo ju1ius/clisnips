@@ -5,9 +5,9 @@ import stat
 from collections.abc import Iterator
 from pathlib import Path
 from collections.abc import Iterable
-from typing import TypedDict
 
 from clisnips.ty import AnyPath
+from . import NewSnippet, Snippet
 
 __DIR__ = Path(__file__).absolute().parent
 
@@ -46,18 +46,6 @@ def compute_frecency(now: float, previous: float) -> float:
     if previous == 0.0:
         return current_decay
     return math.log(math.exp(previous - current_decay) + 1) + current_decay
-
-
-class Snippet(TypedDict):
-    id: int
-    title: str
-    cmd: str
-    tag: str
-    doc: str
-    created_at: int
-    last_used_at: int
-    usage_count: int
-    ranking: float
 
 
 class SnippetNotFound(RuntimeError):
@@ -166,7 +154,7 @@ class SnippetsDatabase:
         except sqlite3.OperationalError:
             return []
 
-    def insert(self, data: Snippet) -> int:
+    def insert(self, data: NewSnippet) -> int:
         query = 'INSERT INTO snippets(title, cmd, doc, tag) VALUES(:title, :cmd, :doc, :tag)'
         with self.connection:
             self.cursor.execute(query, data)

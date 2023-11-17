@@ -6,9 +6,9 @@ from typing import Any, TypeVar, TypedDict, cast
 
 from observ import reactive, watch
 
-from clisnips.database import SortColumn, SortOrder
+from clisnips.database import NewSnippet, Snippet, SortColumn, SortOrder
 from clisnips.database.search_pager import SearchPager, SearchSyntaxError
-from clisnips.database.snippets_db import Snippet, SnippetsDatabase
+from clisnips.database.snippets_db import SnippetsDatabase
 from clisnips.utils.clock import Clock
 
 Watched = TypeVar("Watched")
@@ -109,7 +109,7 @@ class SnippetsStore:
         # so we don't need to update the state
         self._db.use_snippet(rowid, self._clock.now())
 
-    def create_snippet(self, snippet: Snippet):
+    def create_snippet(self, snippet: NewSnippet):
         rowid = self._db.insert(snippet)
         with self._handle_syntax_error():
             self._pager.count()

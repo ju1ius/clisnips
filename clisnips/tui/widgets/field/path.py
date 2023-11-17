@@ -78,8 +78,8 @@ class PathEntry(Entry, urwid.PopUpLauncher):
 
 class PathCompletionMenu(PopupMenu):
 
-    class Signals(str, enum.Enum):
-        COMPLETION_SELECTED = 'completion_selected'
+    class Signals(enum.StrEnum):
+        COMPLETION_SELECTED = enum.auto()
 
     signals = PopupMenu.signals + list(Signals)
 

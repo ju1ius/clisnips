@@ -4,11 +4,13 @@ import logging
 import urwid
 from urwid.canvas import CompositeCanvas
 
+from clisnips.database import NewSnippet, Snippet
 from clisnips.exceptions import ParsingError
 from clisnips.stores import SnippetsStore
 from clisnips.stores.snippets import ListLayout
 from clisnips.syntax import parse_command
 from clisnips.tui.components.app_bar import AppBar
+from clisnips.tui.components.delete_snippet_dialog import DeleteSnippetDialog
 from clisnips.tui.components.edit_snippet_dialog import EditSnippetDialog
 from clisnips.tui.components.help_dialog import HelpDialog
 from clisnips.tui.components.insert_snippet_dialog import InsertSnippetDialog
@@ -19,7 +21,6 @@ from clisnips.tui.components.show_snippet_dialog import ShowSnippetDialog
 from clisnips.tui.components.snippets_list import SnippetsList
 from clisnips.tui.components.snippets_table import SnippetsTable
 from clisnips.tui.view import View
-from clisnips.tui.widgets.dialogs.confirm import ConfirmDialog
 
 
 class SnippetListView(View):
@@ -112,8 +113,7 @@ class SnippetListView(View):
         self.open_dialog(dialog, title='Show snippet')
 
     def _open_create_dialog(self):
-        snippet = {'title': '', 'tag': '', 'cmd': '', 'doc': ''}
-        dialog = EditSnippetDialog(self, snippet)
+        dialog = EditSnippetDialog(self, NewSnippet({'title': '', 'tag': '', 'cmd': '', 'doc': ''}))
         dialog.on_accept(lambda s: self._store.create_snippet(s))
         self.open_dialog(dialog, title='New snippet')
 
@@ -122,7 +122,7 @@ class SnippetListView(View):
         if id is None:
             return
         snippet = self._store.fetch_snippet(id)
-        dialog = EditSnippetDialog(self, snippet)
+        dialog = EditSnippetDialog(self, Snippet(snippet))
         dialog.on_accept(lambda s: self._store.update_snippet(s))
         self.open_dialog(dialog, title='Edit snippet')
 
@@ -130,7 +130,7 @@ class SnippetListView(View):
         id = self._get_selected_id()
         if id is None:
             return
-        dialog = ConfirmDialog(self, 'Are you sure you want to delete this snippet ?')
+        dialog = DeleteSnippetDialog(self)
         dialog.on_accept(lambda *_: self._store.delete_snippet(id))
         self.open_dialog(dialog, 'Caution !')
 

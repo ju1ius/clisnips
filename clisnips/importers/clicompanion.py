@@ -8,8 +8,8 @@ from pathlib import Path
 import re
 import time
 from typing import TextIO
-from clisnips.database.snippets_db import Snippet
 
+from clisnips.database import Snippet
 from clisnips.utils.list import pad_list
 
 from .base import Importer

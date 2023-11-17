@@ -15,8 +15,8 @@ V = TypeVar('V')
 
 class Select(PopupMenu, Generic[V]):
 
-    class Signals(str, enum.Enum):
-        CHANGED = 'changed'
+    class Signals(enum.StrEnum):
+        CHANGED = enum.auto()
 
     signals = PopupMenu.signals + list(Signals)
 

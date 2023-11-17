@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import enum
-from typing import Optional, TYPE_CHECKING
+from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Optional
 
 import urwid
-from urwid.widget.constants import Align, RELATIVE_100, VAlign
+from urwid.widget.constants import Align, VAlign, WHSettings
 
 if TYPE_CHECKING:
     from clisnips.tui.view import View
@@ -35,10 +37,17 @@ class DialogOverlay(urwid.Overlay):
 
 class Dialog(urwid.WidgetWrap):
 
-    class Signals(str, enum.Enum):
+    class Signals(enum.StrEnum):
         RESPONSE = 'response'
 
     signals = list(Signals)
+
+    @dataclass
+    class Action:
+        label: str
+        response_type: ResponseType
+        attr_map: str | Mapping[str, str] | None = None
+        focus_attr_map: str | Mapping[str, str] | None = None
 
     def __init__(self, view: View, body: urwid.Widget):
         self._parent_view = view
@@ -47,8 +56,8 @@ class Dialog(urwid.WidgetWrap):
         self._frame = urwid.Pile([self._body])
         w = self._frame
         # pad area around listbox
-        w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=RELATIVE_100)
-        w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=RELATIVE_100)
+        w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=(WHSettings.RELATIVE, 100))
+        w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=(WHSettings.RELATIVE, 100))
         w = urwid.AttrMap(w, 'body')
         super().__init__(w)
 
@@ -62,22 +71,23 @@ class Dialog(urwid.WidgetWrap):
             case _:
                 super().keypress(size, key)
 
-    def set_buttons(self, settings):
+    def set_actions(self, *actions: Action):
         buttons = []
         cell_width = 0
-        for label, response_type, *args in settings:
-            cell_width = max(cell_width, len(label))
-            button = urwid.Button(label)
-            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=[response_type, *args])
-            button = urwid.AttrMap(button, 'selectable', 'focus')
+        for action in actions:
+            cell_width = max(cell_width, len(action.label))
+            button = urwid.Button(action.label)
+            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=(action,))
+            if action.attr_map:
+                button = urwid.AttrMap(button, action.attr_map, action.focus_attr_map or action.attr_map)
             buttons.append(button)
         cell_width += 4  # account for urwid internal button decorations
-        self._action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align='center')
+        self._action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align=Align.CENTER)
         footer = urwid.Pile([HorizontalDivider(), self._action_area], focus_item=1)
         self._frame.contents = [
             (self._body, ('weight', 1)),
             (footer, ('pack', None)),
         ]
 
-    def _on_button_clicked(self, response_type, button, *args):
-        self._emit(self.Signals.RESPONSE, response_type, *args)
+    def _on_button_clicked(self, action: Action, button, *args):
+        self._emit(self.Signals.RESPONSE, action.response_type, *args)

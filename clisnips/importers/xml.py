@@ -5,7 +5,7 @@ from textwrap import dedent
 from typing import TextIO
 from xml.etree import ElementTree
 
-from clisnips.database.snippets_db import Snippet
+from clisnips.database import Snippet
 from .base import Importer
 
 

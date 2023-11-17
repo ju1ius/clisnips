@@ -2,7 +2,7 @@ from pathlib import Path
 import time
 from xml.dom.minidom import Document, Element
 
-from clisnips.database.snippets_db import Snippet
+from clisnips.database import Snippet
 from clisnips.exporters.base import Exporter
 
 

@@ -92,7 +92,7 @@
           },
           "title": "Error"
         },
-        "button:suggested": {
+        "action:suggested": {
           "anyOf": [
             {
               "$ref": "#/$defs/PaletteEntry"
@@ -108,9 +108,9 @@
             "fg_hi": null,
             "bg_hi": null
           },
-          "title": "Button:Suggested"
+          "title": "Action:Suggested"
         },
-        "button:destructive": {
+        "action:destructive": {
           "anyOf": [
             {
               "$ref": "#/$defs/PaletteEntry"
@@ -126,7 +126,7 @@
             "fg_hi": null,
             "bg_hi": null
           },
-          "title": "Button:Destructive"
+          "title": "Action:Destructive"
         },
         "help:key": {
           "anyOf": [
@@ -829,42 +829,6 @@
             "bg_hi": null
           },
           "title": "Syn:Py:Number"
-        },
-        "diff:insert": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PaletteEntry"
-            },
-            {
-              "type": "string"
-            }
-          ],
-          "default": {
-            "fg": "dark magenta",
-            "bg": "black",
-            "mono": "standout",
-            "fg_hi": null,
-            "bg_hi": null
-          },
-          "title": "Diff:Insert"
-        },
-        "diff:delete": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/PaletteEntry"
-            },
-            {
-              "type": "string"
-            }
-          ],
-          "default": {
-            "fg": "light gray,bold",
-            "bg": "dark red",
-            "mono": null,
-            "fg_hi": null,
-            "bg_hi": null
-          },
-          "title": "Diff:Delete"
         }
       },
       "title": "Palette",

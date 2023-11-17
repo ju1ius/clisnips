@@ -1,5 +1,5 @@
 from enum import StrEnum, auto
-from typing import Self
+from typing import Self, TypedDict
 
 
 class ScrollDirection(StrEnum):
@@ -53,3 +53,22 @@ class SortColumn(StrEnum):
     USAGE_COUNT = str(Column.USAGE_COUNT)
     LAST_USED_AT = str(Column.LAST_USED_AT)
     CREATED_AT = str(Column.CREATED_AT)
+
+
+class Snippet(TypedDict):
+    id: int
+    title: str
+    cmd: str
+    tag: str
+    doc: str
+    created_at: int
+    last_used_at: int
+    usage_count: int
+    ranking: float
+
+
+class NewSnippet(TypedDict):
+    title: str
+    cmd: str
+    tag: str
+    doc: str

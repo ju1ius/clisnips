@@ -42,8 +42,8 @@ class HelpDialog(Dialog):
         body = urwid.Pile(body, 0)
 
         super().__init__(parent, body)
-        self.set_buttons((
-            ('OK', ResponseType.ACCEPT),
-        ))
+        self.set_actions(
+            Dialog.Action('OK', ResponseType.ACCEPT, 'action:suggested'),
+        )
         self._frame.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())

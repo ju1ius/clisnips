@@ -19,17 +19,16 @@ class ErrorDialog(Dialog):
     def __init__(self, parent, err: Exception):
         message = _format_error_message(err)
         details = _format_stack_trace(err)
-        # body = urwid.Filler(urwid.Padding(text, width='pack', align='center'), valign='middle')
 
         body = urwid.Pile([
             urwid.Text(('error', message)),
             HorizontalDivider(),
-            urwid.Text(('error', details)),
+            urwid.Text(('default', details)),
         ])
 
         super().__init__(parent, body)
-        self.set_buttons((
-            ('OK', ResponseType.ACCEPT),
-        ))
+        self.set_actions(
+            Dialog.Action('OK', ResponseType.ACCEPT),
+        )
         self._frame.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())

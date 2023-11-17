@@ -8,8 +8,8 @@ default_palette = {
     'success': {'fg': 'dark green', 'bg': 'default'},
     'warning': {'fg': 'brown', 'bg': 'default'},
     'error': {'fg': 'dark red', 'bg': 'default'},
-    'button:suggested': {'fg': 'dark cyan,bold', 'bg': 'black'},
-    'button:destructive': {'fg': 'dark red,bold', 'bg': 'black'},
+    'action:suggested': {'fg': 'dark cyan,bold', 'bg': 'black'},
+    'action:destructive': {'fg': 'dark red,bold', 'bg': 'black'},
 
     # key binding
     'help:key': {'fg': 'dark cyan', 'bg': 'black'},
@@ -59,10 +59,6 @@ default_palette = {
     'syn:py:string:interp': {'fg': 'light gray', 'bg': 'black'},
     'syn:py:function': {'fg': 'dark cyan', 'bg': 'black'},
     'syn:py:number': {'fg': 'yellow', 'bg': 'black'},
-
-    # diffs
-    'diff:insert': {'fg': 'dark magenta', 'bg': 'black', 'mono': 'standout'},
-    'diff:delete': {'fg': 'light gray,bold', 'bg': 'dark red'},
 }
 
 
@@ -87,7 +83,7 @@ class PaletteEntry(BaseModel):
 _palette_field_defs = {
     k: (
         PaletteEntry | str,
-        Field(default=PaletteEntry(**v)),
+        Field(default=v if isinstance(v, str) else PaletteEntry(**v)),
     )
     for k, v in default_palette.items()
 }

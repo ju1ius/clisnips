@@ -2,7 +2,7 @@ from typing import Optional
 
 import urwid
 
-from clisnips.database.snippets_db import Snippet
+from clisnips.database import Snippet
 from clisnips.stores.snippets import SnippetsStore
 from clisnips.tui.widgets.list_box import CyclingFocusListBox
 

@@ -3,7 +3,7 @@ import logging
 import urwid
 from urwid.widget.constants import WrapMode
 
-from clisnips.database.snippets_db import Snippet
+from clisnips.database import Snippet
 from clisnips.stores.snippets import SnippetsStore, State
 from clisnips.tui.layouts.table import TableLayout
 from clisnips.tui.widgets.list_box import CyclingFocusListBox
