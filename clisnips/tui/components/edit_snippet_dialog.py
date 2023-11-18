@@ -1,4 +1,3 @@
-from contextlib import suppress
 import logging
 from collections.abc import Callable
 from typing import Generic, TypeVar
@@ -81,14 +80,10 @@ class EditSnippetDialog(Dialog, Generic[S]):
         urwid.connect_signal(entry, 'change', self._on_documentation_changed)
         return entry
 
-    @staticmethod
-    def _on_command_changed(entry, text):
-        with suppress(ParsingError):
-            markup = highlight_command(text)
-            entry.set_edit_markup(markup)
+    def _on_command_changed(self, entry, text):
+        markup = highlight_command(text)
+        entry.set_edit_markup(markup)
 
-    @staticmethod
-    def _on_documentation_changed(entry, text):
-        with suppress(ParsingError):
-            markup = highlight_documentation(text)
-            entry.set_edit_markup(markup)
+    def _on_documentation_changed(self, entry, text):
+        markup = highlight_documentation(text)
+        entry.set_edit_markup(markup)

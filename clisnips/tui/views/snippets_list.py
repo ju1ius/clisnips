@@ -92,7 +92,7 @@ class SnippetListView(View):
         except ParsingError as _:
             # TODO: display the error
             return
-        if not cmd.field_names:
+        if not cmd.has_fields():
             accept(snippet['id'], snippet['cmd'])
             return
 

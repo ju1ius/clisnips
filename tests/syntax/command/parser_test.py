@@ -2,7 +2,7 @@ import pytest
 
 from clisnips.exceptions import ParsingError
 from clisnips.syntax.command.parser import parse
-from clisnips.syntax.command.nodes import *
+from clisnips.syntax.command.nodes import Field, Text
 
 
 def test_no_replacement_fields():
@@ -74,35 +74,35 @@ def test_format_spec():
 def test_it_cannot_switch_from_auto_to_manual_numbering():
     raw = 'i haz {1} {} fields'
     with pytest.raises(ParsingError, match='field numbering'):
-        cmd = parse(raw)
+        _ = parse(raw)
 
 
 def test_field_inside_format_spec():
     raw = 'i haz {one:%s {2}} field'
     with pytest.raises(ParsingError, match='not supported'):
-        cmd = parse(raw)
+        _ = parse(raw)
 
 
 def test_field_getitem():
     raw = 'i haz {foo[bar]} field'
     with pytest.raises(ParsingError):
-        cmd = parse(raw)
+        _ = parse(raw)
 
 
 def test_field_getattr():
     raw = 'i haz {foo.bar} field'
     with pytest.raises(ParsingError):
-        cmd = parse(raw)
+        _ = parse(raw)
 
 
 def test_command_apply():
     raw = 'i haz {} {:.2f} fields'
     cmd = parse(raw)
-    output = cmd.apply({
+    output = list(cmd.apply({
         '0': 'zaroo',
-        '1': 1 / 3,
+        '1': 1 / 3, # type: ignore (we're testing if it handles other types correctly)
         'foo': {'bar': 42}
-    })
+    }))
     expected = [
         (False, 'i haz '),
         (True, 'zaroo'),
