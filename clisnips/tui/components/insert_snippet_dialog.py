@@ -1,25 +1,26 @@
 from collections.abc import Callable
+import logging
 
 import urwid
 
-from clisnips.syntax.command import parse as parse_command
 from clisnips.syntax.command.nodes import CommandTemplate
-from clisnips.syntax.documentation import Documentation, parse as parse_documentation
+from clisnips.syntax.documentation import Documentation
 from clisnips.tui.urwid_types import TextMarkup
-from clisnips.tui.widgets.dialog import Dialog, ResponseType
+from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 from clisnips.tui.widgets.divider import HorizontalDivider
 from clisnips.tui.widgets.field import Field, field_from_documentation
 from clisnips.utils.iterable import intersperse
 
+logger = logging.getLogger(__name__)
+
 
 class InsertSnippetDialog(Dialog):
 
-    def __init__(self, parent, snippet):
-        self._command = parse_command(snippet['cmd'])
-        self._doc = parse_documentation(snippet['doc'])
+    def __init__(self, parent, title: str, cmd: CommandTemplate, doc: Documentation):
+        self._command = cmd
+        self._doc = doc
         self._fields = self._create_fields(self._command, self._doc)
 
-        title = urwid.Text(snippet['title'])
         doc_text = urwid.Text('')
         if self._doc.header:
             doc_text.set_text(self._doc.header.strip())
@@ -36,7 +37,7 @@ class InsertSnippetDialog(Dialog):
 
         body = urwid.ListBox(urwid.SimpleFocusListWalker([
             urwid.Pile([
-                title,
+                urwid.Text(title),
                 doc_text,
                 HorizontalDivider(),
             ]),
@@ -46,8 +47,8 @@ class InsertSnippetDialog(Dialog):
 
         super().__init__(parent, body)
         self.set_actions(
-            Dialog.Action('Apply', ResponseType.ACCEPT, 'action:suggested'),
-            Dialog.Action('Cancel', ResponseType.REJECT),
+            Dialog.Action('Apply', ResponseKind.ACCEPT, Dialog.Action.Kind.SUGGESTED),
+            Dialog.Action('Cancel', ResponseKind.REJECT),
         )
         self._action_area.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, self._on_response)
@@ -58,14 +59,14 @@ class InsertSnippetDialog(Dialog):
 
     def on_accept(self, callback: Callable, *args):
         def handler(dialog, response_type):
-            if response_type == ResponseType.ACCEPT:
+            if response_type == ResponseKind.ACCEPT:
                 if self._validate():
                     callback(self.get_output(), *args)
                     self.close()
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type, *args):
-        if response_type == ResponseType.REJECT:
+        if response_type == ResponseKind.REJECT:
             self.close()
 
     def _on_field_changed(self, field):
@@ -102,8 +103,8 @@ class InsertSnippetDialog(Dialog):
     def _validate(self):
         try:
             self._update_output(silent=False)
-        except Exception:
-            # TODO: show error message
+        except Exception as err:
+            logger.error(err)
             return False
         return True
 

@@ -3,7 +3,7 @@ from collections.abc import Callable
 import urwid
 from urwid.widget.constants import Align, VAlign, WHSettings
 
-from clisnips.tui.widgets.dialog import Dialog, ResponseType
+from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 
 
 class DeleteSnippetDialog(Dialog):
@@ -14,14 +14,14 @@ class DeleteSnippetDialog(Dialog):
         super().__init__(parent, body)
 
         self.set_actions(
-            Dialog.Action('Cancel', ResponseType.REJECT),
-            Dialog.Action('Confirm', ResponseType.ACCEPT, 'action:destructive'),
+            Dialog.Action('Cancel', ResponseKind.REJECT),
+            Dialog.Action('Confirm', ResponseKind.ACCEPT, Dialog.Action.Kind.DESTRUCTIVE),
         )
         self._frame.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())
 
     def on_accept(self, callback: Callable, *args):
         def handler(dialog, response_type):
-            if response_type == ResponseType.ACCEPT:
+            if response_type == ResponseKind.ACCEPT:
                 callback(*args)
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)

@@ -2,7 +2,7 @@ import contextlib
 import enum
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar, TypedDict, cast
+from typing import Any, TypeVar, TypedDict
 
 from observ import reactive, watch
 
@@ -160,7 +160,6 @@ class SnippetsStore:
         self._fetch_list(self._state['search_query'])
 
     def change_sort_order(self, order: SortOrder):
-        logging.getLogger(__name__).debug('srot order %s', order)
         self._state['sort_order'] = order
         self._pager.set_sort_column(self._state['sort_by'], order)
         self._fetch_list(self._state['search_query'])

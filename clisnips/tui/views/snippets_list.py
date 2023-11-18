@@ -5,10 +5,10 @@ import urwid
 from urwid.canvas import CompositeCanvas
 
 from clisnips.database import NewSnippet, Snippet
-from clisnips.exceptions import ParsingError
+from clisnips.exceptions import ParseError
 from clisnips.stores import SnippetsStore
 from clisnips.stores.snippets import ListLayout
-from clisnips.syntax import parse_command
+from clisnips.syntax import parse_command, parse_documentation
 from clisnips.tui.components.app_bar import AppBar
 from clisnips.tui.components.delete_snippet_dialog import DeleteSnippetDialog
 from clisnips.tui.components.edit_snippet_dialog import EditSnippetDialog
@@ -20,8 +20,10 @@ from clisnips.tui.components.search_input import SearchInput
 from clisnips.tui.components.show_snippet_dialog import ShowSnippetDialog
 from clisnips.tui.components.snippets_list import SnippetsList
 from clisnips.tui.components.snippets_table import SnippetsTable
+from clisnips.tui.components.syntax_error_dialog import SyntaxErrorDialog
 from clisnips.tui.view import View
 
+logger = logging.getLogger(__name__)
 
 class SnippetListView(View):
 
@@ -46,7 +48,7 @@ class SnippetListView(View):
         super().__init__(body)
 
         def handle_layout_changed(layout: ListLayout):
-            logging.getLogger(__name__).debug('layout: %r', layout)
+            logger.debug('layout: %r', layout)
             selected = self._list.get_selected_index()
             match layout:
                 case ListLayout.LIST:
@@ -59,7 +61,7 @@ class SnippetListView(View):
             self._invalidate()
 
         def handle_viewport_changed(viewport):
-            logging.getLogger(__name__).debug('viewport: %r', viewport)
+            logger.debug('viewport: %r', viewport)
 
         self._watchers = {
             'viewport': self._store.watch(
@@ -80,23 +82,35 @@ class SnippetListView(View):
         id = self._get_selected_id()
         if id is None:
             return
+        snippet = self._store.fetch_snippet(id)
+        logger.debug('selected %r', dict(snippet))
 
         def accept(rowid: int, cmd: str):
             self._store.use_snippet(rowid)
             self._emit(self.Signals.APPLY_SNIPPET_REQUESTED, cmd)
 
-        snippet = self._store.fetch_snippet(id)
-        logging.getLogger(__name__).debug('selected %r', dict(snippet))
+        def show_error_dialog():
+            dialog = SyntaxErrorDialog(self)
+            dialog.on_accept(lambda *_: self._open_edit_dialog(id))
+            self.open_dialog(dialog, title='Syntax error')
+
         try:
             cmd = parse_command(snippet['cmd'])
-        except ParsingError as _:
-            # TODO: display the error
+        except ParseError as err:
+            logger.warn(err)
+            show_error_dialog()
             return
         if not cmd.has_fields():
             accept(snippet['id'], snippet['cmd'])
             return
+        try:
+            doc = parse_documentation(snippet['doc'])
+        except ParseError as err:
+            logger.warn(err)
+            show_error_dialog()
+            return
 
-        dialog = InsertSnippetDialog(self, snippet)
+        dialog = InsertSnippetDialog(self, snippet['title'], cmd, doc)
         dialog.on_accept(lambda v: accept(snippet['id'], v))
         self.open_dialog(dialog, title='Insert snippet')
 
@@ -117,8 +131,8 @@ class SnippetListView(View):
         dialog.on_accept(lambda s: self._store.create_snippet(s))
         self.open_dialog(dialog, title='New snippet')
 
-    def _open_edit_dialog(self):
-        id = self._get_selected_id()
+    def _open_edit_dialog(self, id: int | None = None):
+        id = id if id is not None else self._get_selected_id()
         if id is None:
             return
         snippet = self._store.fetch_snippet(id)
@@ -143,7 +157,7 @@ class SnippetListView(View):
         return super().render(size, focus)
 
     def keypress(self, size, key):
-        # logging.getLogger(__name__).debug('size=%r, key=%r', size, key)
+        # logger.debug('size=%r, key=%r', size, key)
         key = super().keypress(size, key)
         focus = self._view.focus_position
         match key:

@@ -1,6 +1,6 @@
 from typing import Generic, Never
 
-from clisnips.exceptions import ParsingError
+from clisnips.exceptions import ParseError
 from clisnips.syntax.string_lexer import StringLexer
 from clisnips.syntax.token import Kind, Token
 
@@ -52,9 +52,13 @@ class LLkParser(Generic[Kind]):
     def _lookahead(self, offset: int = 1) -> Token[Kind]:
         return self._buffer[(self.position + offset - 1) % self._K]
 
-    def _lookahead_kind(self, offset: int = 1) -> Kind | None:
+    def _lookahead_kind(self, offset: int = 1) -> Kind:
         return self._lookahead(offset).kind
 
     def _unexpected_token(self, token: Token[Kind], *expected: Kind) -> Never:
         exp = ', '.join(t.name for t in expected)
-        raise ParsingError(f'Unexpected token: {token.name} (expected {exp})')
+        raise ParseError(
+            f'Unexpected token: {token.name}'
+            f' on line {token.start_line + 1}, column {token.start_col + 1}'
+            f' (expected {exp})'
+        )

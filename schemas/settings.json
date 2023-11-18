@@ -128,6 +128,24 @@
           },
           "title": "Action:Destructive"
         },
+        "action:disabled": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark gray,bold",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Action:Disabled"
+        },
         "help:key": {
           "anyOf": [
             {

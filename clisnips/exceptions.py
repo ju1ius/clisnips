@@ -1,16 +1,15 @@
 
 
-class ParsingError(Exception):
+class ParseError(Exception):
     ...
 
 
-class CommandParsingError(ParsingError):
+class CommandParseError(ParseError):
     def __init__(self, msg: str, cmd: str):
         super().__init__(msg)
         self.cmd = cmd
 
 
-class DocumentationParsingError(ParsingError):
-    def __init__(self, msg: str, doc: str):
+class DocumentationParseError(ParseError):
+    def __init__(self, msg: str):
         super().__init__(msg)
-        self.doc = doc

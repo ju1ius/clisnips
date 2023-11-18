@@ -1,6 +1,6 @@
 import pytest
 
-from clisnips.exceptions import ParsingError
+from clisnips.exceptions import ParseError
 from clisnips.syntax.command.parser import parse
 from clisnips.syntax.command.nodes import Field, Text
 
@@ -73,25 +73,25 @@ def test_format_spec():
 
 def test_it_cannot_switch_from_auto_to_manual_numbering():
     raw = 'i haz {1} {} fields'
-    with pytest.raises(ParsingError, match='field numbering'):
+    with pytest.raises(ParseError, match='field numbering'):
         _ = parse(raw)
 
 
 def test_field_inside_format_spec():
     raw = 'i haz {one:%s {2}} field'
-    with pytest.raises(ParsingError, match='not supported'):
+    with pytest.raises(ParseError, match='not supported'):
         _ = parse(raw)
 
 
 def test_field_getitem():
     raw = 'i haz {foo[bar]} field'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         _ = parse(raw)
 
 
 def test_field_getattr():
     raw = 'i haz {foo.bar} field'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         _ = parse(raw)
 
 

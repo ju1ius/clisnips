@@ -2,7 +2,7 @@ from traceback import format_exc
 
 import urwid
 
-from clisnips.tui.widgets.dialog import Dialog, ResponseType
+from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 from clisnips.tui.widgets.divider import HorizontalDivider
 
 
@@ -28,7 +28,7 @@ class ErrorDialog(Dialog):
 
         super().__init__(parent, body)
         self.set_actions(
-            Dialog.Action('OK', ResponseType.ACCEPT),
+            Dialog.Action('OK', ResponseKind.ACCEPT),
         )
         self._frame.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())

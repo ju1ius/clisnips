@@ -19,10 +19,10 @@ digit:          INTEGER | FLOAT
 
 from collections.abc import Iterable
 
-from clisnips.exceptions import ParsingError
+from clisnips.exceptions import DocumentationParseError
 from clisnips.syntax.llk_parser import LLkParser
 
-from .lexer import Tokens
+from .lexer import Lexer, Tokens
 from .nodes import CodeBlock, Documentation, Parameter, ValueList, ValueRange
 
 
@@ -34,7 +34,7 @@ def _to_number(string: str) -> int | float:
 
 class Parser(LLkParser[Tokens]):
 
-    def __init__(self, lexer):
+    def __init__(self, lexer: Lexer):
         super().__init__(lexer, Tokens.EOF, 2)
         self._auto_field_count = -1
         self._has_numeric_field = False
@@ -88,9 +88,9 @@ class Parser(LLkParser[Tokens]):
             try:
                 block = CodeBlock(code)
             except SyntaxError as err:
-                raise ParsingError(f'Syntax error in code block: {code!r}') from err
+                raise DocumentationParseError(f'Syntax error in code block: {code!r}') from err
             except TypeError as err:
-                raise ParsingError(f'Null bytes in code block: {code!r}') from err
+                raise DocumentationParseError(f'Null bytes in code block: {code!r}') from err
             else:
                 code_blocks.append(block)
             self._match(Tokens.CODE_FENCE)
@@ -108,13 +108,13 @@ class Parser(LLkParser[Tokens]):
         token = self._lookahead()
         if token.kind is Tokens.LEFT_PAREN:
             if param.type_hint == 'flag':
-                raise ParsingError('A flag cannot have a type hint.')
+                raise DocumentationParseError('A flag cannot have a type hint.')
             param.type_hint = self._typehint()
             token = self._lookahead()
 
         if token.kind is Tokens.LEFT_BRACKET:
             if param.type_hint == 'flag':
-                raise ParsingError('A flag cannot have a value hint.')
+                raise DocumentationParseError('A flag cannot have a value hint.')
             param.value_hint = self._valuehint()
             token = self._lookahead()
 
@@ -127,7 +127,7 @@ class Parser(LLkParser[Tokens]):
         # no identifier, try automatic numbering
         if self._lookahead_kind() is Tokens.RIGHT_BRACE:
             if self._has_numeric_field:
-                raise ParsingError('Cannot switch from manual to automatic field numbering')
+                raise DocumentationParseError('Cannot switch from manual to automatic field numbering')
             self._auto_field_count += 1
             return Parameter(str(self._auto_field_count))
 
@@ -141,7 +141,7 @@ class Parser(LLkParser[Tokens]):
         # it's an integer, check that numbering is correct
         if token.kind is Tokens.INTEGER:
             if self._auto_field_count > -1:
-                raise ParsingError('Cannot switch from automatic to manual field numbering')
+                raise DocumentationParseError('Cannot switch from automatic to manual field numbering')
             self._has_numeric_field = True
 
         return Parameter(token.value)
@@ -225,8 +225,8 @@ class Parser(LLkParser[Tokens]):
         return ValueRange(
             _to_number(start),
             _to_number(end),
-            _to_number(step) if step is not None else step,
-            _to_number(default) if default is not None else default,
+            _to_number(step) if step is not None else None,
+            _to_number(default) if default is not None else None,
         )
 
     def _digit(self):

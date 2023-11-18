@@ -10,6 +10,7 @@ default_palette = {
     'error': {'fg': 'dark red', 'bg': 'default'},
     'action:suggested': {'fg': 'dark cyan,bold', 'bg': 'black'},
     'action:destructive': {'fg': 'dark red,bold', 'bg': 'black'},
+    'action:disabled': {'fg': 'dark gray,bold', 'bg': 'black'},
 
     # key binding
     'help:key': {'fg': 'dark cyan', 'bg': 'black'},

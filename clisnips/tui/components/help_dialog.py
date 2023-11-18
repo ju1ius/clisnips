@@ -1,6 +1,6 @@
 import urwid
 
-from clisnips.tui.widgets.dialog import Dialog, ResponseType
+from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 
 SHORTCUTS = (
     ('F1', 'Help'),
@@ -43,7 +43,7 @@ class HelpDialog(Dialog):
 
         super().__init__(parent, body)
         self.set_actions(
-            Dialog.Action('OK', ResponseType.ACCEPT, 'action:suggested'),
+            Dialog.Action('OK', ResponseKind.ACCEPT, Dialog.Action.Kind.SUGGESTED),
         )
         self._frame.focus_position = 1
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *x: self.close())

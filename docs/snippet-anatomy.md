@@ -39,7 +39,7 @@ The content of this property will NOT influence the snippets search result.
 A command can be a simple string, like `cat /etc/passwd`,
 but it can also contain template fields like `zip -r -9 {archive_name}.zip {input_directory}`.
 
-Template fields MUST conform to the [Python format string syntax](https://docs.python.org/3.8/library/string.html#format-string-syntax).
+Template fields MUST conform to the [Python format string syntax](https://docs.python.org/3/library/string.html#format-string-syntax).
 
 If a snippet's `cmd` property contains template fields,
 clisnips will prompt you for a value before inserting a snippet into the terminal.

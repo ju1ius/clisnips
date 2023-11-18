@@ -1,7 +1,7 @@
 import re
 from string import Formatter
 
-from clisnips.exceptions import CommandParsingError
+from clisnips.exceptions import CommandParseError
 
 from .nodes import CommandTemplate, Field, Text
 
@@ -20,7 +20,7 @@ def parse(subject: str) -> CommandTemplate:
     try:
         stream = list(__lexer.parse(subject))
     except Exception as err:
-        raise CommandParsingError(str(err), subject) from err
+        raise CommandParseError(str(err), subject) from None
     nodes = []
     auto_count = -1
     has_explicit_numeric_field = False
@@ -36,18 +36,18 @@ def parse(subject: str) -> CommandTemplate:
         if field_name:
             m = _FIELD_NAME_RX.match(field_name)
             if not m:
-                raise CommandParsingError(f'Invalid replacement field {field_name!r}', subject)
+                raise CommandParseError(f'Invalid replacement field {field_name!r}', subject)
             name = m.group(1) if m.group(1) else m.group(2)
             end += len(name)
         if not name:
             if has_explicit_numeric_field:
-                raise CommandParsingError('Cannot switch from manual to automatic field numbering', subject)
+                raise CommandParseError('Cannot switch from manual to automatic field numbering', subject)
             auto_count += 1
             name = str(auto_count)
         elif name.isdigit():
             has_explicit_numeric_field = True
             if auto_count > -1:
-                raise CommandParsingError('Cannot switch from automatic to manual field numbering', subject)
+                raise CommandParseError('Cannot switch from automatic to manual field numbering', subject)
         if format_spec:
             _check_format_spec(format_spec)
             end += len(format_spec) + 1
@@ -67,7 +67,7 @@ def _check_format_spec(format_spec: str):
     """
     for prefix, name, spec, conversion in __lexer.parse(format_spec):
         if name is not None:
-            raise CommandParsingError(
+            raise CommandParseError(
                 'Replacement fields in format specifications are not supported',
                 format_spec,
             )

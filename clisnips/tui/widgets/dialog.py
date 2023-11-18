@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import enum
-from collections.abc import Mapping
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import urwid
 from urwid.widget.constants import Align, VAlign, WHSettings
@@ -14,10 +12,58 @@ if TYPE_CHECKING:
 from .divider import HorizontalDivider
 
 
-class ResponseType(enum.Enum):
+class ResponseKind(enum.Enum):
     NONE = 0
     ACCEPT = 1
     REJECT = 2
+
+
+class Action(urwid.WidgetWrap):
+    class Signals(enum.StrEnum):
+        ACTIVATED = enum.auto()
+
+    signals = list(Signals)
+
+    class Kind(enum.StrEnum):
+        DEFAULT = enum.auto()
+        SUGGESTED = enum.auto()
+        DESTRUCTIVE = enum.auto()
+
+    def __init__(
+        self,
+        label: str,
+        response_kind: ResponseKind,
+        kind: Kind = Kind.DEFAULT
+    ):
+        self._response_kind = response_kind
+        self._kind = kind
+        self._enabled = True
+
+        self._button = urwid.Button(label)
+        self._attrs = urwid.AttrMap(self._button, self._get_attr_map())
+        urwid.connect_signal(self._button, 'click', self._on_activated)
+
+        super().__init__(self._attrs)
+
+    def enable(self):
+        self.toggle(True)
+
+    def disable(self):
+        self.toggle(False)
+
+    def toggle(self, enabled: bool):
+        self._enabled = enabled
+        self._attrs.attr_map = self._get_attr_map()
+        self._attrs.focus_map = self._get_attr_map()
+
+    def _on_activated(self, btn):
+        if self._enabled:
+            self._emit(Action.Signals.ACTIVATED, self._response_kind)
+
+    def _get_attr_map(self):
+        if not self._enabled:
+            return {None: 'action:disabled'}
+        return {None: f'action:{self._kind}'}
 
 
 class DialogFrame(urwid.WidgetWrap):
@@ -42,17 +88,12 @@ class Dialog(urwid.WidgetWrap):
 
     signals = list(Signals)
 
-    @dataclass
-    class Action:
-        label: str
-        response_type: ResponseType
-        attr_map: str | Mapping[str, str] | None = None
-        focus_attr_map: str | Mapping[str, str] | None = None
+    Action = Action
 
     def __init__(self, view: View, body: urwid.Widget):
         self._parent_view = view
         self._body = body
-        self._action_area: Optional[urwid.GridFlow] = None
+        self._action_area: urwid.GridFlow | None = None
         self._frame = urwid.Pile([self._body])
         w = self._frame
         # pad area around listbox
@@ -72,22 +113,18 @@ class Dialog(urwid.WidgetWrap):
                 super().keypress(size, key)
 
     def set_actions(self, *actions: Action):
-        buttons = []
         cell_width = 0
         for action in actions:
-            cell_width = max(cell_width, len(action.label))
-            button = urwid.Button(action.label)
-            urwid.connect_signal(button, 'click', self._on_button_clicked, user_args=(action,))
-            if action.attr_map:
-                button = urwid.AttrMap(button, action.attr_map, action.focus_attr_map or action.attr_map)
-            buttons.append(button)
+            cell_width = max(cell_width, len(action._button.label))
+            urwid.connect_signal(action, Action.Signals.ACTIVATED, self._on_action_activated)
         cell_width += 4  # account for urwid internal button decorations
-        self._action_area = urwid.GridFlow(buttons, cell_width=cell_width, h_sep=3, v_sep=1, align=Align.CENTER)
+        self._action_area = urwid.GridFlow(actions, cell_width=cell_width, h_sep=3, v_sep=1, align=Align.CENTER)
         footer = urwid.Pile([HorizontalDivider(), self._action_area], focus_item=1)
         self._frame.contents = [
             (self._body, ('weight', 1)),
             (footer, ('pack', None)),
         ]
 
-    def _on_button_clicked(self, action: Action, button, *args):
-        self._emit(self.Signals.RESPONSE, action.response_type, *args)
+    def _on_action_activated(self, action: Action, response_kind: ResponseKind):
+        # TODO: pass the action to signal handler
+        self._emit(self.Signals.RESPONSE, response_kind)

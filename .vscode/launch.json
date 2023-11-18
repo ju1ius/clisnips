@@ -22,6 +22,10 @@
       "type": "python",
       "request": "launch",
       "module": "clisnips",
+      "args": [
+        "--log-level",
+        "debug",
+      ],
       "justMyCode": false,
     },
     {

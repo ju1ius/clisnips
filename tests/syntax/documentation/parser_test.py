@@ -1,6 +1,6 @@
 import pytest
 
-from clisnips.exceptions import ParsingError
+from clisnips.exceptions import ParseError
 from clisnips.syntax.documentation import parse
 from clisnips.syntax.documentation.nodes import CodeBlock, Parameter, ValueList, ValueRange
 
@@ -62,11 +62,11 @@ def test_automatic_numbering():
     assert '1' in doc.parameters
     #
     text = '{} foo\n{1} bar'
-    with pytest.raises(ParsingError, match='field numbering'):
+    with pytest.raises(ParseError, match='field numbering'):
         doc = parse(text)
     #
     text = '{1} foo\n{} bar'
-    with pytest.raises(ParsingError, match='field numbering'):
+    with pytest.raises(ParseError, match='field numbering'):
         doc = parse(text)
 
 
@@ -186,25 +186,25 @@ if fields['infile'] and not fields['outfile']:
 
 def test_error_handling():
     text = '{$$$}'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)
     text = '{} ($$$)'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)
     text = '{} (string) [$$$]'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)
     text = '{}\n{1}'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)
     text = '{1}\n{}'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)
     # flags cannot have a type_hint
     text = '{-f} (string)'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)
     # flags cannot have a value_hint
     text = '{-f} ["foo", "bar"]'
-    with pytest.raises(ParsingError):
+    with pytest.raises(ParseError):
         parse(text)

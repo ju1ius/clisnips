@@ -30,7 +30,7 @@ class TUI:
             handle_mouse=False,
             pop_ups=True,
             screen=screen,
-            event_loop=urwid.AsyncioEventLoop(loop=get_event_loop()),
+            event_loop=get_event_loop(),
             unhandled_input=self._on_unhandled_input,
         )
 
