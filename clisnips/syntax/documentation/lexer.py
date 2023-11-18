@@ -1,9 +1,10 @@
 import enum
 import re
 from collections import deque
-from typing import Match, Optional
+from collections.abc import Callable
+from typing import Match
 
-from clisnips.syntax.string_lexer import EMPTY, StringLexer
+from clisnips.syntax.string_lexer import StringLexer
 from clisnips.syntax.token import Token
 
 
@@ -58,33 +59,39 @@ SQ_STR_RX = re.compile(r"'(?:\\.|[^'])*'")
 TQ_STR_RX = re.compile(r'(\'\'\'|""")(?:\\.|[^\\])*\1')
 
 
-class Lexer(StringLexer):
+class Lexer(StringLexer[Tokens]):
     """
     A stateful lexer
     """
 
     def __init__(self, text):
         super().__init__(text)
-        self.state = self.free_text_state
-        self.token_queue = deque()
+        self.state: Callable[[], bool] = self.free_text_state
+        self.token_queue: deque[Token[Tokens]] = deque()
 
     def __iter__(self):
         self.token_queue = deque()
         while True:
-            if not self.state():
+            more = self.state()
+            while self.token_queue:
+                yield self.token_queue.popleft()
+            if not more:
                 yield Token(Tokens.EOF, self.line, self.col)
                 break
-            while self.token_queue:
-                token = self.token_queue.popleft()
-                yield token
 
-    def init_token(self, type: Tokens, value: str = EMPTY) -> Token:
-        token = Token(type, self.line, self.col, value)
+    def init_token(self, kind: Tokens, value: str = '') -> Token[Tokens]:
+        token = Token(kind, self.line, self.col, value)
         token.start_pos = self.pos
         return token
 
-    def finalize_token(self, token: Token, line: Optional[int] = None, col: Optional[int] = None,
-                       pos: Optional[int] = None, value: Optional[str] = None):
+    def finalize_token(
+        self,
+        token: Token,
+        line: int | None = None,
+        col: int | None = None,
+        pos: int | None = None,
+        value: str | None = None,
+    ) -> Token[Tokens]:
         if value is not None:
             token.value = value
         token.end_pos = pos if pos is not None else self.pos
@@ -94,181 +101,163 @@ class Lexer(StringLexer):
 
     def free_text_state(self) -> bool:
         char = self.advance()
-        if char is EMPTY:
-            return False
-        if char == '{':
-            token = self.init_token(Tokens.LEFT_BRACE, '{')
-            self.finalize_token(token)
-            self.token_queue.append(token)
-            self.state = self.param_state
-            return True
-        if char == '`':
-            if self.lookahead(2, True) == '``':
+        match char:
+            case '':
+                return False
+            case '{':
+                token = self.init_token(Tokens.LEFT_BRACE, '{')
+                self.finalize_token(token)
+                self.token_queue.append(token)
+                self.state = self.param_state
+                return True
+            case '`' if self.lookahead(2, True) == '``':
                 token = self.init_token(Tokens.CODE_FENCE, '```')
                 self.advance(2)
                 self.finalize_token(token)
                 self.token_queue.append(token)
                 self.state = self.code_block_state
                 return True
-        token = self.init_token(Tokens.TEXT)
-        text = self._consume_free_text()
-        if not text:
-            text = self.read_until('$')
-        self.finalize_token(token, value=text)
-        self.token_queue.append(token)
-        return True
+            case _:
+                token = self.init_token(Tokens.TEXT)
+                text = self._consume_free_text()
+                if not text:
+                    text = self.read_until('$')
+                self.finalize_token(token, value=text)
+                self.token_queue.append(token)
+                return True
 
     def param_state(self) -> bool:
         while True:
-            token = None
             char = self._skip_whitespace()
-            if char == '}':
-                token = self.init_token(Tokens.RIGHT_BRACE, '}')
-                self.finalize_token(token)
-                self.token_queue.append(token)
-                self.state = self.after_param_state
-                break
-            if char.isalnum() or char == '_':
-                token = self._handle_param_identifier()
-                if not token:
+            match char:
+                case '}':
+                    token = self.init_token(Tokens.RIGHT_BRACE, '}')
+                    self.finalize_token(token)
+                    self.token_queue.append(token)
+                    self.state = self.after_param_state
+                    return True
+                case '-':
+                    if token := self._handle_flag():
+                        self.token_queue.append(token)
+                    else:
+                        self.state = self.free_text_state
+                        return True
+                case c if c.isalnum() or c == '_':
+                    if token := self._handle_param_identifier():
+                        self.token_queue.append(token)
+                    else:
+                        self.state = self.free_text_state
+                        return True
+                case _:
                     self.state = self.free_text_state
-                    break
-                self.token_queue.append(token)
-            elif char == '-':
-                token = self._handle_flag()
-                if not token:
-                    self.state = self.free_text_state
-                    break
-                self.token_queue.append(token)
-            else:
-                self.state = self.free_text_state
-                break
-        return True
+                    return True
 
     def after_param_state(self) -> bool:
         char = self._skip_whitespace()
-        if char is EMPTY:
-            return False
-        if char == '(':
-            token = self.init_token(Tokens.LEFT_PAREN, '(')
-            self.token_queue.append(token)
-            self.state = self.type_hint_state
-            return True
-        if char == '[':
-            token = self.init_token(Tokens.LEFT_BRACKET, '[')
-            self.token_queue.append(token)
-            self.state = self.value_hint_state
-            return True
-        self.recede()
-        self.state = self.free_text_state
-        return True
+        match char:
+            case '':
+                return False
+            case '(':
+                token = self.init_token(Tokens.LEFT_PAREN, '(')
+                self.token_queue.append(token)
+                self.state = self.type_hint_state
+                return True
+            case '[':
+                token = self.init_token(Tokens.LEFT_BRACKET, '[')
+                self.token_queue.append(token)
+                self.state = self.value_hint_state
+                return True
+            case _:
+                self.recede()
+                self.state = self.free_text_state
+                return True
 
     def type_hint_state(self) -> bool:
         while True:
             char = self._skip_whitespace()
-            if char is EMPTY:
-                return False
-            if char == ')':
-                token = self.init_token(Tokens.RIGHT_PAREN, ')')
-                self.token_queue.append(token)
-                self.state = self.after_param_state
-                break
-            m = IDENTIFIER_RX.match(self.text, self.pos)
-            if not m:
-                self.recede()
-                self.state = self.free_text_state
-                break
-            token = self.init_token(Tokens.IDENTIFIER, m.group(0))
-            self._consume_match(m)
-            self.finalize_token(token)
-            self.token_queue.append(token)
-        return True
+            match char:
+                case '':
+                    return False
+                case ')':
+                    token = self.init_token(Tokens.RIGHT_PAREN, ')')
+                    self.token_queue.append(token)
+                    self.state = self.after_param_state
+                    return True
+                case _ if m := IDENTIFIER_RX.match(self.text, self.pos):
+                    token = self.init_token(Tokens.IDENTIFIER, m.group(0))
+                    self._consume_match(m)
+                    self.finalize_token(token)
+                    self.token_queue.append(token)
+                case _:
+                    self.recede()
+                    self.state = self.free_text_state
+                    return True
 
     def value_hint_state(self) -> bool:
         while True:
-            token = None
             char = self._skip_whitespace()
-            if char is EMPTY:
-                return False
-            if char == ']':
-                token = self.init_token(Tokens.RIGHT_BRACKET, ']')
-                self.finalize_token(token)
-                self.token_queue.append(token)
-                self.state = self.free_text_state
-                break
-            elif char in ('"', "'"):
-                token = self._handle_quoted_string()
-                if not token:
+            match char:
+                case '':
+                    return False
+                case ']':
+                    token = self.init_token(Tokens.RIGHT_BRACKET, ']')
+                    self.finalize_token(token)
+                    self.token_queue.append(token)
                     self.state = self.free_text_state
-                    break
-                self.token_queue.append(token)
-            elif char == ',':
-                token = self.init_token(Tokens.COMMA, ',')
-                self.finalize_token(token)
-                self.token_queue.append(token)
-            elif char == ':':
-                token = self.init_token(Tokens.COLON, ':')
-                self.token_queue.append(token)
-            elif char == '=':
-                if self.lookahead() == '>':
+                    return True
+                case '"' | "'" if token := self._handle_quoted_string():
+                    self.token_queue.append(token)
+                case ',':
+                    token = self.init_token(Tokens.COMMA, ',')
+                    self.finalize_token(token)
+                    self.token_queue.append(token)
+                case ':':
+                    token = self.init_token(Tokens.COLON, ':')
+                    self.token_queue.append(token)
+                case '=' if self.lookahead() == '>':
                     token = self.init_token(Tokens.DEFAULT_MARKER, '=>')
                     self.advance()
                     self.finalize_token(token)
                     self.token_queue.append(token)
-                else:
+                case _ if token := self._handle_digit():
+                    self.token_queue.append(token)
+                case _:
                     self.recede()
                     self.state = self.free_text_state
-                    break
-            else:
-                token = self._handle_digit()
-                if not token:
-                    self.recede()
-                    self.state = self.free_text_state
-                    break
-                self.token_queue.append(token)
-        return True
+                    return True
 
     def code_block_state(self) -> bool:
         code = self.init_token(Tokens.TEXT, '')
         while True:
             code.value += self.read_until(r'"\'`')
-            char = self.advance()
-            if not char:
-                self.finalize_token(code)
-                self.token_queue.append(code)
-                return False
-            if char == '"':
-                if self.lookahead(2, True) == '""':
-                    m = TQ_STR_RX.match(self.text, self.pos)
-                    if m:
+            match self.advance():
+                case '':
+                    self.finalize_token(code)
+                    self.token_queue.append(code)
+                    return False
+                case '"' if self.lookahead(2, True) == '""':
+                    if m := TQ_STR_RX.match(self.text, self.pos):
                         code.value += m.group(0)
                         self._consume_match(m)
                     else:
-                        code.value += char
-                    continue
-                m = DQ_STR_RX.match(self.text, self.pos)
-                if m:
+                        code.value += '"'
+                case '"' if m := DQ_STR_RX.match(self.text, self.pos):
                     code.value += m.group(0)
                     self._consume_match(m)
-                else:
-                    code.value += char
-            elif char == "'":
-                if self.lookahead(2, True) == "''":
-                    m = TQ_STR_RX.match(self.text, self.pos)
-                    if m:
+                case '"':
+                    code.value += '"'
+                case "'" if self.lookahead(2, True) == "''":
+                    if m := TQ_STR_RX.match(self.text, self.pos):
                         code.value += m.group(0)
                         self._consume_match(m)
                     else:
-                        code.value += char
-                    continue
-                m = SQ_STR_RX.match(self.text, self.pos)
-                if m:
+                        code.value += "'"
+                case "'" if m := SQ_STR_RX.match(self.text, self.pos):
                     code.value += m.group(0)
                     self._consume_match(m)
-                else:
-                    code.value += char
-            elif char == '`':
-                if self.lookahead(2, True) == '``':
+                case "'":
+                    code.value += "'"
+                case '`' if self.lookahead(2, True) == '``':
                     self.finalize_token(code)
                     self.token_queue.append(code)
                     token = self.init_token(Tokens.CODE_FENCE, '```')
@@ -276,23 +265,20 @@ class Lexer(StringLexer):
                     self.finalize_token(token)
                     self.token_queue.append(token)
                     self.state = self.free_text_state
-                    break
-                code.value += char
-        return True
+                    return True
+                case '`':
+                    code.value += '`'
 
-    def _handle_param_identifier(self) -> Optional[Token]:
+    def _handle_param_identifier(self) -> Token[Tokens] | None:
         m = PARAM_RX.match(self.text, self.pos)
         if not m:
             return None
-        if m.group(1):
-            _type = Tokens.INTEGER
-        elif m.group(2):
-            _type = Tokens.IDENTIFIER
-        token = self.init_token(_type, m.group(0))
+        kind = Tokens.INTEGER if m.group(1) else Tokens.IDENTIFIER
+        token = self.init_token(kind, m.group(0))
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _handle_flag(self) -> Optional[Token]:
+    def _handle_flag(self) -> Token[Tokens] | None:
         m = FLAG_RX.match(self.text, self.pos)
         if not m:
             return None
@@ -300,7 +286,7 @@ class Lexer(StringLexer):
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _handle_quoted_string(self) -> Optional[Token]:
+    def _handle_quoted_string(self) -> Token[Tokens] | None:
         m = STRING_RX.match(self.text, self.pos)
         if not m:
             return None
@@ -308,22 +294,19 @@ class Lexer(StringLexer):
         self._consume_match(m)
         return self.finalize_token(token)
 
-    def _handle_digit(self) -> Optional[Token]:
+    def _handle_digit(self) -> Token[Tokens] | None:
         m = DIGIT_RX.match(self.text, self.pos)
         if not m:
             return None
-        if m.group(1):
-            _type = Tokens.FLOAT
-        elif m.group(2):
-            _type = Tokens.INTEGER
-        token = self.init_token(_type, m.group(0))
+        kind = Tokens.FLOAT if m.group(1) else Tokens.INTEGER
+        token = self.init_token(kind, m.group(0))
         self._consume_match(m)
         return self.finalize_token(token)
 
     def _consume_free_text(self) -> str:
         m = FREE_TEXT_BOUNDS_RX.search(self.text, self.pos)
         if not m:
-            return EMPTY
+            return ''
         end = m.end()
         text = self.text[self.pos:end]
         self.advance(end - self.pos - 1)
@@ -338,6 +321,6 @@ class Lexer(StringLexer):
 
     def _consume_match(self, match: Match, group: int | str = 0) -> str:
         if not match:
-            return EMPTY
+            return ''
         self.advance(match.end(group) - 1 - match.start(group))
         return match.group(group)

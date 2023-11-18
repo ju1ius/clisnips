@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 from copy import deepcopy
+
 from clisnips.utils.number import get_num_decimals
 
 
-class Documentation(object):
+class Documentation:
 
     def __init__(self):
         self.header: str = ''
@@ -26,9 +29,15 @@ class Documentation(object):
         return str(self)
 
 
-class Parameter(object):
+class Parameter:
 
-    def __init__(self, name: str, type_hint=None, value_hint=None, text: str = ''):
+    def __init__(
+        self,
+        name: str,
+        type_hint: str | None = None,
+        value_hint: ValueList | ValueRange | None = None,
+        text: str = '',
+    ):
         self.name = name
         self.type_hint = type_hint
         self.value_hint = value_hint
@@ -41,7 +50,7 @@ class Parameter(object):
         return str(self)
 
 
-class ValueRange(object):
+class ValueRange:
 
     def __init__(self, start, end, step=None, default=None):
         self.start = start
@@ -68,7 +77,7 @@ class ValueRange(object):
         return str(self)
 
 
-class ValueList(object):
+class ValueList:
 
     def __init__(self, values, default=0):
         self.values = values
@@ -93,7 +102,7 @@ class ValueList(object):
         return str(self)
 
 
-class CodeBlock(object):
+class CodeBlock:
 
     def __init__(self, code):
         self.code = code

@@ -5,6 +5,12 @@ from clisnips.syntax.documentation import parse
 from clisnips.syntax.documentation.nodes import CodeBlock, Parameter, ValueList, ValueRange
 
 
+def test_parse_empty_string():
+    doc = parse('')
+    assert doc.header == ''
+    assert list(doc.parameters.values()) == []
+
+
 def test_parse_free_text():
     text = """
         This is the global description of the command.
@@ -73,7 +79,7 @@ def test_parse_value_list():
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
     assert param.type_hint is None
-    assert param.text is ''
+    assert param.text == ''
     values = param.value_hint
     assert isinstance(values, ValueList)
     assert values.values == [1, -2, 0.3]
@@ -86,7 +92,7 @@ def test_parse_value_list():
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
     assert param.type_hint is None
-    assert param.text is ''
+    assert param.text == ''
     values = param.value_hint
     assert isinstance(values, ValueList)
     assert values.values == ["foo", "bar", "baz"]
@@ -101,7 +107,7 @@ def test_parse_value_range():
     assert isinstance(param, Parameter)
     assert param.name == 'par1'
     assert param.type_hint is None
-    assert param.text is ''
+    assert param.text == ''
     hint = param.value_hint
     assert isinstance(hint, ValueRange)
     assert hint.start == 1
@@ -114,6 +120,7 @@ def test_parse_value_range():
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
     hint = param.value_hint
+    assert isinstance(hint, ValueRange)
     assert hint.step == 1
     assert hint.default == 5
     # default step
@@ -122,6 +129,7 @@ def test_parse_value_range():
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
     hint = param.value_hint
+    assert isinstance(hint, ValueRange)
     assert hint.step == 0.01
     # default step
     text = '{par1} [1:1.255]'
@@ -129,6 +137,7 @@ def test_parse_value_range():
     assert 'par1' in doc.parameters
     param = doc.parameters['par1']
     hint = param.value_hint
+    assert isinstance(hint, ValueRange)
     assert hint.step == 0.001
 
 

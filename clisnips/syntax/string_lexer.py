@@ -1,11 +1,15 @@
+from abc import ABC, abstractmethod
+from collections.abc import Iterator
 import re
-from typing import Pattern
+from typing import Generic, Pattern
+
+from .token import Kind, Token
 
 EMPTY = ''
 _RE_CACHE: dict[tuple[str, bool], Pattern[str]] = {}
 
 
-class StringLexer:
+class StringLexer(ABC, Generic[Kind]):
     """
     A simple String lexer
     """
@@ -19,6 +23,9 @@ class StringLexer:
         self.newline_pending: bool = False
         if text:
             self.set_text(text)
+
+    @abstractmethod
+    def __iter__(self) -> Iterator[Token[Kind]]: ...
 
     def set_text(self, text: str):
         self.text = text

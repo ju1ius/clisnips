@@ -1,59 +1,60 @@
+from typing import Generic, Never
+
 from clisnips.exceptions import ParsingError
+from clisnips.syntax.string_lexer import StringLexer
+from clisnips.syntax.token import Kind, Token
 
 
-class LLkParser(object):
+class LLkParser(Generic[Kind]):
 
-    def __init__(self, lexer, k=2):
+    def __init__(self, lexer: StringLexer[Kind], eof: Kind, k: int = 2):
         self._K = k
+        self._eof_marker = Token(eof, 0, 0)
         self.lexer = lexer
-        self.token_stream = None
+        self.token_stream = iter(self.lexer)
         self.position = 0
-        self._buffer = []
+        self._buffer = [self._eof_marker for _ in range(self._K)]
 
     def reset(self):
         self.lexer.reset()
         self.token_stream = iter(self.lexer)
         self.position = 0
-        self._buffer = [None for i in range(self._K)]
-        for i in range(self._K):
+        self._buffer = [self._eof_marker for _ in range(self._K)]
+        for _ in range(self._K):
             self._consume()
 
-    def _match(self, *types):
-        token = self._ensure(*types)
+    def _match(self, *kinds: Kind):
+        token = self._ensure(*kinds)
         self._consume()
         return token
 
-    def _ensure(self, *types):
+    def _ensure(self, *kinds: Kind) -> Token[Kind]:
         token = self._lookahead()
-        if token.type not in types:
-            self._unexpected_token(token, *types)
+        if token.kind not in kinds:
+            self._unexpected_token(token, *kinds)
         return token
 
     def _consume(self):
         try:
             token = next(self.token_stream)
         except StopIteration:
-            token = None
+            token = self._eof_marker
         self._buffer[self.position] = token
         self.position = (self.position + 1) % self._K
 
-    def _consume_until(self, types):
-        if isinstance(types, (tuple, list)):
-            while self._lookahead_type() not in types:
-                self._consume()
-        else:
-            while self._lookahead_type() != types:
-                self._consume()
+    def _consume_until(self, *kinds: Kind):
+        while self._lookahead_kind() not in kinds:
+            self._consume()
 
-    def _current(self):
+    def _current(self) -> Token[Kind] | None:
         return self._buffer[self.position]
 
-    def _lookahead(self, offset=1):
+    def _lookahead(self, offset: int = 1) -> Token[Kind]:
         return self._buffer[(self.position + offset - 1) % self._K]
 
-    def _lookahead_type(self, offset=1):
-        return self._lookahead(offset).type
+    def _lookahead_kind(self, offset: int = 1) -> Kind | None:
+        return self._lookahead(offset).kind
 
-    def _unexpected_token(self, token, *expected):
-        expected = ', '.join(t.name for t in expected)
-        raise ParsingError(f'Unexpected token: {token.name} (expected {expected})')
+    def _unexpected_token(self, token: Token[Kind], *expected: Kind) -> Never:
+        exp = ', '.join(t.name for t in expected)
+        raise ParsingError(f'Unexpected token: {token.name} (expected {exp})')
