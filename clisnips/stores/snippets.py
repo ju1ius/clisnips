@@ -48,7 +48,7 @@ class SnippetsStore:
         pager: SearchPager,
         clock: Clock,
     ):
-        self._state = cast(State, reactive(initial_state))
+        self._state = reactive(initial_state)
         self._db = db
         self._pager = pager
         self._pager.set_sort_column(initial_state['sort_by'], initial_state['sort_order'])

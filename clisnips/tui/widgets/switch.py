@@ -1,11 +1,8 @@
 import enum
-from typing import cast
 
 import urwid
 from urwid.command_map import Command
 import observ
-
-from clisnips.ty import Ref
 
 
 class Switch(urwid.WidgetWrap):
@@ -34,7 +31,7 @@ class Switch(urwid.WidgetWrap):
             focus_column=2,
         )
         super().__init__(inner)
-        self._state = cast(Ref[Switch.State], observ.ref(state))
+        self._state = observ.ref(state)
         self._watchers = {
             'state': observ.watch(lambda: self._state['value'], self._handle_state_changed, immediate=True)
         }
