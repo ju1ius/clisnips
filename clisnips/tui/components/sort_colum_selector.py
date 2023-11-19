@@ -5,7 +5,7 @@ from clisnips.stores import SnippetsStore
 from clisnips.tui.widgets.radio import RadioGroup
 
 choices = {
-    SortColumn.RANKING: 'Sort by frecency',
+    SortColumn.RANKING: 'Sort by popularity',
     SortColumn.USAGE_COUNT: 'Sort by usage count',
     SortColumn.LAST_USED_AT: 'Sort by last usage date',
     SortColumn.CREATED_AT: 'Sort by creation date',
