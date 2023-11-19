@@ -1,8 +1,18 @@
-from pathlib import Path
-import tomllib
 import time
+from pathlib import Path
 
-from .base import Importer
+import tomllib
+from pydantic import TypeAdapter
+from typing_extensions import TypedDict
+
+from .base import ImportableSnippet, Importer
+
+
+class _Document(TypedDict):
+    snippets: list[ImportableSnippet]
+
+
+_DocumentAdapter = TypeAdapter(_Document)
 
 
 class TomlImporter(Importer):
@@ -11,9 +21,9 @@ class TomlImporter(Importer):
         self._log(('info', f'Importing snippets from {path}...'))
 
         with open(path, 'rb') as fp:
-            data = tomllib.load(fp)['snippets']
+            data = _DocumentAdapter.validate_python(tomllib.load(fp))
             if not self._dry_run:
-                self._db.insert_many(data)
+                self._db.insert_many(data) # type: ignore
             self._log(('info', 'Rebuilding & optimizing search index...'))
             if not self._dry_run:
                 self._db.rebuild_index()

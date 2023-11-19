@@ -1,12 +1,13 @@
+import time
 from collections.abc import Iterable
 from pathlib import Path
-import time
 from textwrap import dedent
 from typing import TextIO
 from xml.etree import ElementTree
 
 from clisnips.database import Snippet
-from .base import Importer
+
+from .base import ImportableSnippet, Importer
 
 
 class XmlImporter(Importer):
@@ -30,17 +31,17 @@ class XmlImporter(Importer):
 
 def _parse_snippets(file: TextIO) -> Iterable[Snippet]:
     now = int(time.time())
-    for event, el in ElementTree.iterparse(file):
+    for _, el in ElementTree.iterparse(file):
         if el.tag != 'snippet':
             continue
-        yield Snippet(
+        yield ImportableSnippet(
             id = 0,
             title = el.findtext('title').strip(),
             tag = el.findtext('tag').strip(),
             cmd = dedent(el.findtext('command')),
             doc = dedent(el.findtext('doc').strip()),
             created_at = el.attrib.get('created-at', now),
-            last_used_at = el.attrib.get('last-used-at', now),
+            last_used_at = el.attrib.get('last-used-at', 0),
             usage_count = el.attrib.get('usage-count', 0),
-            ranking = el.attrib.get('ranking', 0),
-        )
+            ranking = el.attrib.get('ranking', 0.0),
+        ).model_dump() # type: ignore
