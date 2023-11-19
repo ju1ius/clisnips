@@ -3,13 +3,14 @@ from __future__ import annotations
 import sqlite3
 from contextlib import contextmanager
 from collections.abc import Iterable
+from typing import TypeAlias
 
 from . import SortColumn, SortOrder
 from .pager import Pager
 from .scrolling_pager import ScrollingPager, SortColumnDefinition
 from .snippets_db import SnippetsDatabase
 
-SearchPagerType = Pager | type['SearchPager']
+SearchPagerType: TypeAlias = Pager | type['SearchPager']
 
 
 class SearchSyntaxError(RuntimeError):
@@ -18,9 +19,12 @@ class SearchSyntaxError(RuntimeError):
 
 class SearchPager:
 
-    def __init__(self, db: SnippetsDatabase,
-                 sort_column: SortColumnDefinition = (SortColumn.RANKING, SortOrder.DESC),
-                 page_size: int = 50):
+    def __init__(
+        self,
+        db: SnippetsDatabase,
+        sort_column: tuple[SortColumn, SortOrder] = (SortColumn.RANKING, SortOrder.DESC),
+        page_size: int = 50,
+    ):
         self._page_size = page_size
         self._list_pager = ScrollingPager(db.connection, page_size)
         self._list_pager.set_query(db.get_listing_query())
@@ -61,7 +65,7 @@ class SearchPager:
     def set_sort_column(self, column: SortColumn, order: SortOrder = SortOrder.DESC):
         self.set_sort_columns((
             (column, order),
-            ('id', SortOrder.ASC, True)
+            ('id', SortOrder.ASC, True),
         ))
 
     def set_sort_columns(self, columns: Iterable[SortColumnDefinition]):
@@ -93,12 +97,12 @@ class SearchPager:
         try:
             yield
         except sqlite3.OperationalError as err:
-            if self._is_searching and is_search_syntax_error(err):
+            if self._is_searching and _is_search_syntax_error(err):
                 raise SearchSyntaxError(*err.args) from err
             raise err
 
 
-def is_search_syntax_error(err: sqlite3.OperationalError) -> bool:
+def _is_search_syntax_error(err: sqlite3.OperationalError) -> bool:
     if not err.args:
         return False
     msg = str(err.args[0])

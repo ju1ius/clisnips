@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Self
 
 from .snippets_db import QueryParameters, ResultSet
 
@@ -46,7 +47,7 @@ class Pager(ABC):
     def set_page_size(self, size: int): ...
 
     @abstractmethod
-    def execute(self, params: QueryParameters = (), count_params: QueryParameters = ()) -> 'Pager': ...
+    def execute(self, params: QueryParameters = (), count_params: QueryParameters = ()) -> Self: ...
 
     @abstractmethod
     def get_page(self, page: int) -> ResultSet: ...

@@ -1,20 +1,21 @@
 from math import ceil
+import sqlite3
 
 from .pager import Pager
 
 
 class OffsetPager(Pager):
 
-    def __init__(self, connection, page_size: int = 100):
+    def __init__(self, connection: sqlite3.Connection, page_size: int = 100):
         self._con = connection
         self._current_page: int = 1
         self._page_count: int = 1
         self._page_size: int = page_size
         self._total_size = 0
-        self._query = None
+        self._query = ''
         self._query_params = ()
-        self._count_query = None
-        self._count_query_params = None
+        self._count_query = ''
+        self._count_query_params = ()
 
         self._executed = False
 
