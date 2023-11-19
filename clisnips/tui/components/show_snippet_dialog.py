@@ -1,6 +1,6 @@
 import urwid
 
-from clisnips.tui.syntax import highlight_command, highlight_documentation
+from clisnips.tui.highlighters import highlight_command, highlight_documentation
 from clisnips.tui.widgets.dialog import Dialog
 from clisnips.tui.widgets.divider import HorizontalDivider
 
