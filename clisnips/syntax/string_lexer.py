@@ -1,6 +1,6 @@
+import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-import re
 from typing import Generic, Pattern
 
 from .token import Kind, Token

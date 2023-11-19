@@ -1,6 +1,7 @@
 import argparse
 
 from clisnips.dic import DependencyInjectionContainer
+
 from .utils import UrwidMarkupHelper
 
 

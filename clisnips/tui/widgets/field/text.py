@@ -2,6 +2,7 @@ import urwid
 
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.edit import EmacsEdit
+
 from .field import Entry, SimpleField
 
 

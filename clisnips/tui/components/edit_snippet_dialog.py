@@ -4,14 +4,14 @@ import logging
 from collections.abc import Callable
 from typing import Generic, Self, TypeVar
 
-import urwid
 import observ
+import urwid
 
 from clisnips.database import NewSnippet, Snippet
 from clisnips.exceptions import ParseError
 from clisnips.syntax import parse_command, parse_documentation
-from clisnips.tui.loop import debounced
 from clisnips.tui.highlighters import highlight_command, highlight_documentation
+from clisnips.tui.loop import debounced
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 from clisnips.tui.widgets.divider import HorizontalDivider

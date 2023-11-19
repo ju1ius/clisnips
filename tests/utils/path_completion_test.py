@@ -1,11 +1,13 @@
 import pytest
 
 from clisnips.utils.path_completion import (
-    PathCompletionEntry,
-    PathCompletion,
-    PathCompletionProvider,
-    FileSystemPathCompletionProvider,
     FileAttributes as FA,
+)
+from clisnips.utils.path_completion import (
+    FileSystemPathCompletionProvider,
+    PathCompletion,
+    PathCompletionEntry,
+    PathCompletionProvider,
 )
 
 

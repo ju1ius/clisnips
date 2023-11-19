@@ -1,5 +1,5 @@
-from math import ceil
 import sqlite3
+from math import ceil
 
 from .pager import Pager
 

@@ -1,8 +1,9 @@
 import atexit
 from collections.abc import Hashable
-from clisnips.config.state import save_persistent_state
 
+from clisnips.config.state import save_persistent_state
 from clisnips.dic import DependencyInjectionContainer
+
 from .tui import TUI
 from .views.snippets_list import SnippetListView
 

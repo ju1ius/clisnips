@@ -1,12 +1,11 @@
-
 import argparse
 import asyncio
 import logging
-from logging import LogRecord
-from pathlib import Path
 import pickle
 import struct
 import sys
+from logging import LogRecord
+from pathlib import Path
 
 from .command import Command
 from .utils import UrwidMarkupHelper

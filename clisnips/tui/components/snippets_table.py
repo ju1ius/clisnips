@@ -5,10 +5,8 @@ from urwid.widget.constants import WrapMode
 
 from clisnips.database import Snippet
 from clisnips.stores.snippets import SnippetsStore, State
-from clisnips.tui.layouts.table import TableLayout
+from clisnips.tui.layouts.table import LayoutColumn, LayoutRow, TableLayout
 from clisnips.tui.widgets.list_box import CyclingFocusListBox
-from clisnips.tui.layouts.table import LayoutColumn
-from clisnips.tui.layouts.table import LayoutRow
 
 ATTR_MAP = {
     None: 'snippets-list',

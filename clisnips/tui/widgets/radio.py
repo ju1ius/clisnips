@@ -1,5 +1,5 @@
 import enum
-from collections.abc import Iterator, Hashable
+from collections.abc import Hashable, Iterator
 from typing import Generic, Literal, Optional, Self, TypeVar
 
 import urwid

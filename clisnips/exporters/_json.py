@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 import time
+from pathlib import Path
 
 from clisnips.exporters.base import Exporter
 

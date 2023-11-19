@@ -2,11 +2,11 @@ import math
 import os
 import sqlite3
 import stat
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from pathlib import Path
-from collections.abc import Iterable
 
 from clisnips.ty import AnyPath
+
 from . import NewSnippet, Snippet
 
 __DIR__ = Path(__file__).absolute().parent

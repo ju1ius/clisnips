@@ -1,7 +1,7 @@
-from abc import abstractmethod, ABC
-from pathlib import Path
-from collections.abc import Callable
 import time
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from pathlib import Path
 
 from pydantic import BaseModel, Field
 

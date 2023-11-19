@@ -1,6 +1,7 @@
 import urwid
 
 from clisnips.tui.urwid_types import TextMarkup
+
 from .field import Entry, SimpleField
 
 

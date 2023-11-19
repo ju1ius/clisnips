@@ -5,6 +5,7 @@ from typing import TypedDict
 
 from clisnips.database import SortColumn, SortOrder
 from clisnips.stores.snippets import ListLayout, State
+
 from .paths import get_state_path
 
 

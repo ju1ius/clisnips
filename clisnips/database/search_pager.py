@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import sqlite3
-from contextlib import contextmanager
 from collections.abc import Iterable
+from contextlib import contextmanager
 from typing import TypeAlias
 
 from . import SortColumn, SortOrder

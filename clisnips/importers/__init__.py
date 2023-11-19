@@ -1,7 +1,7 @@
 from ._json import JsonImporter
 from .clicompanion import CliCompanionImporter
-from .xml import XmlImporter
 from .toml import TomlImporter
+from .xml import XmlImporter
 
 __all__ = (
     'JsonImporter',

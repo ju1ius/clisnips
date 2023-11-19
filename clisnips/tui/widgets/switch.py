@@ -1,8 +1,8 @@
 import enum
 
+import observ
 import urwid
 from urwid.command_map import Command
-import observ
 
 
 class Switch(urwid.WidgetWrap):

@@ -2,7 +2,7 @@ import contextlib
 import enum
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar, TypedDict
+from typing import Any, TypedDict, TypeVar
 
 from observ import reactive, watch
 

@@ -1,9 +1,10 @@
 import argparse
-from pathlib import Path
 import shutil
+from pathlib import Path
 
-from clisnips.ty import AnyPath
 from clisnips.database.snippets_db import SnippetsDatabase
+from clisnips.ty import AnyPath
+
 from .command import Command
 
 

@@ -1,7 +1,7 @@
 import asyncio
+import functools
 from asyncio import Handle, TimerHandle
 from collections.abc import Callable
-import functools
 from typing import Any
 
 import urwid

@@ -2,9 +2,10 @@ import json
 from pathlib import Path
 
 from clisnips.ty import AnyPath
-from .settings import AppSettings
+
 from .envs import DB_PATH
 from .paths import get_config_path, get_runtime_path
+from .settings import AppSettings
 
 SCHEMA_BASE_URI = 'https://raw.githubusercontent.com/ju1ius/clisnips/master/schemas'
 

@@ -1,8 +1,8 @@
 import pytest
 
 from clisnips.exceptions import ParseError
-from clisnips.syntax.command.parser import parse
 from clisnips.syntax.command.nodes import Field, Text
+from clisnips.syntax.command.parser import parse
 
 
 def test_no_replacement_fields():

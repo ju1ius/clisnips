@@ -1,5 +1,5 @@
-from pathlib import Path
 import time
+from pathlib import Path
 from xml.dom.minidom import Document, Element
 
 from clisnips.database import Snippet

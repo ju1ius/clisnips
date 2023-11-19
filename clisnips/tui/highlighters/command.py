@@ -6,6 +6,7 @@ from pygments.lexer import RegexLexer, bygroups
 from pygments.token import Punctuation, Text, Token
 
 from clisnips.tui.urwid_types import TextMarkup
+
 from .writer import UrwidMarkupWriter
 
 Command = Token.Command

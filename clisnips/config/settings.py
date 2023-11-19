@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from .paths import get_data_path
 from .palette import Palette, default_palette
+from .paths import get_data_path
 
 
 class AppSettings(BaseModel):
