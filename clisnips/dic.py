@@ -1,6 +1,4 @@
-import logging
-from typing import Optional
-
+from clisnips.cli.utils import UrwidMarkupHelper
 from .config import Config
 from .config.state import PersistentState, load_persistent_state
 from .database.search_pager import SearchPager
@@ -12,19 +10,17 @@ from .utils.clock import Clock, SystemClock
 
 class DependencyInjectionContainer:
 
-    def __init__(self, database=None, log_level=None):
+    def __init__(self, database=None):
         self._parameters = {
             'database': database,
-            'log_level': log_level,
         }
-        self._config: Optional[Config] = None
-        self._persitent_state: Optional[PersistentState] = None
-        self._database: Optional[SnippetsDatabase] = None
-        self._pager: Optional[SearchPager] = None
-        self._snippets_store: Optional[SnippetsStore] = None
+        self._config: Config | None = None
+        self._persitent_state: PersistentState | None = None
+        self._database: SnippetsDatabase | None = None
+        self._pager: SearchPager | None = None
+        self._snippets_store: SnippetsStore | None = None
         self._clock: Clock = SystemClock()
-
-        self._configure_logging()
+        self._markup_helper: UrwidMarkupHelper | None = None
 
     @property
     def config(self) -> Config:
@@ -38,7 +34,7 @@ class DependencyInjectionContainer:
             self._database = self.open_database(self._parameters.get('database'))
         return self._database
 
-    def open_database(self, path: Optional[AnyPath] = None) -> SnippetsDatabase:
+    def open_database(self, path: AnyPath | None = None) -> SnippetsDatabase:
         path = path or self.config.database_path
         return SnippetsDatabase.open(path)
 
@@ -62,12 +58,8 @@ class DependencyInjectionContainer:
             self._persitent_state = load_persistent_state()
         return self._persitent_state
 
-    def _configure_logging(self):
-        level = self._parameters.get('log_level')
-        match level:
-            case None | '':
-                logging.basicConfig(handlers=(logging.NullHandler(),))
-            case _:
-                from logging.handlers import SocketHandler
-                handler = SocketHandler(str(self.config.log_file), None)
-                logging.basicConfig(level=level.upper(), handlers=(handler,))
+    @property
+    def markup_helper(self) -> UrwidMarkupHelper:
+        if not self._markup_helper:
+            self._markup_helper = UrwidMarkupHelper()
+        return self._markup_helper

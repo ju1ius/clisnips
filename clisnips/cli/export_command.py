@@ -19,10 +19,10 @@ class ExportCommand(Command):
         match name:
             case 'json':
                 from clisnips.exporters import JsonExporter
-                return JsonExporter(self.container.database, self.print)
+                return JsonExporter(self.container.database)
             case 'toml':
                 from clisnips.exporters import TomlExporter
-                return TomlExporter(self.container.database, self.print)
+                return TomlExporter(self.container.database)
             case 'xml' | _:
                 from clisnips.exporters import XmlExporter
-                return XmlExporter(self.container.database, self.print)
+                return XmlExporter(self.container.database)

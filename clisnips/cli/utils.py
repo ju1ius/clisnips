@@ -26,7 +26,10 @@ class UrwidMarkupHelper:
     }
 
     def __init__(self):
-        self._screen = urwid.raw_display.Screen(input=os.devnull, output=os.devnull)
+        self._screen = urwid.raw_display.Screen(
+            input=os.devnull, # type: ignore
+            output=os.devnull, # type: ignore
+        )
         self._palette_escapes = {}
         for name, attrs in self.palette.items():
             escape = self._convert_attr_spec(urwid.AttrSpec(*attrs))

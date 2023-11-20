@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from pathlib import Path
 from typing_extensions import TypedDict
 
@@ -13,11 +12,9 @@ class Importer(ABC):
     def __init__(
         self,
         db: SnippetsDatabase,
-        log: Callable[..., None] = lambda *_: None,
         dry_run = False
     ):
         self._db = db
-        self._log = log
         self._dry_run = dry_run
 
     @abstractmethod

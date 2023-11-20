@@ -1,3 +1,4 @@
+import logging
 import time
 from collections.abc import Iterable
 from pathlib import Path
@@ -9,24 +10,25 @@ from clisnips.database import ImportableSnippet
 
 from .base import Importer, SnippetAdapter
 
+logger = logging.getLogger(__name__)
 
 class XmlImporter(Importer):
     def import_path(self, path: Path) -> None:
         start_time = time.time()
-        self._log(('info', f'Importing snippets from {path}...'))
+        logger.info(f'Importing snippets from {path}')
 
         with open(path) as fp:
             if self._dry_run:
                 for _ in _parse_snippets(fp): ...
             else:
                 self._db.insert_many(_parse_snippets(fp))
-            self._log(('info', 'Rebuilding & optimizing search index...'))
+            logger.info('Rebuilding & optimizing search index')
             if not self._dry_run:
                 self._db.rebuild_index()
                 self._db.optimize_index()
 
         elapsed_time = time.time() - start_time
-        self._log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
+        logger.info(f'Imported in {elapsed_time:.1f} seconds.', extra={'color': 'success'})
 
 
 def _parse_snippets(file: TextIO) -> Iterable[ImportableSnippet]:

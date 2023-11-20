@@ -56,16 +56,18 @@ class Server:
             await server.serve_forever()
 
     async def _client_connected(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        self._print(('info', '>>> client logger connected'))
+        self._print(('success', '>>> client logger connected'))
         try:
-            while True:
-                record = await self._read_record(reader)
+            while record := await self._read_record(reader):
                 self._handle_record(record)
+            self._print(('info', '>>> client logger disconnected'))
         finally:
             writer.close()
 
-    async def _read_record(self, reader: asyncio.StreamReader) -> logging.LogRecord:
+    async def _read_record(self, reader: asyncio.StreamReader) -> logging.LogRecord | None:
         header = await reader.read(4)
+        if not header:
+            return
         record_len, *_ = struct.unpack('>L', header)
         buf = await reader.readexactly(record_len)
         return logging.makeLogRecord(pickle.loads(buf))
@@ -83,12 +85,12 @@ class LogsCommand(Command):
         log_file = self.container.config.log_file
 
         async def serve():
-            server = Server(log_file, self._markup_helper)
+            server = Server(log_file, self.container.markup_helper)
             task = asyncio.create_task(server.start())
             await asyncio.gather(task)
 
         try:
-            asyncio.run(serve(), debug=True)
+            asyncio.run(serve(), debug=False)
         except (KeyboardInterrupt, SystemExit):
             ...
 

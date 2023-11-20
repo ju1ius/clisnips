@@ -13,6 +13,8 @@ from .install_key_bindings_command import InstallShellKeyBindingsCommand
 from .logs_command import LogsCommand
 from .optimize_command import OptimizeCommand
 
+logger = logging.getLogger(__name__)
+
 
 class Application:
 
@@ -52,37 +54,31 @@ class Application:
         return parser.parse_args()
 
     def _run_command(self, cls: type[Command], argv) -> int:
+        from clisnips.log.cli import configure as configure_logging
+
         dic = self._create_container(argv)
-        logging.getLogger(__name__).info('launching command: %s', argv)
+        configure_logging(dic.markup_helper, argv.log_level or 'info', sys.stderr)
+
+
+        logger.debug('launching command: %s', argv)
         command = cls(dic)
         try:
             return command.run(argv)
         except Exception as err:
-            self._print_exception(err)
+            logger.exception(err)
             return 128
 
     def _run_tui(self, argv) -> int:
+        from clisnips.log.tui import configure as configure_logging
         from clisnips.tui.app import Application
+
         dic = self._create_container(argv)
+        configure_logging(dic.config.log_file, argv.log_level)
+
         logging.getLogger(__name__).info('launching TUI')
         app = Application(dic)
         return app.run()
 
     @staticmethod
     def _create_container(argv) -> DependencyInjectionContainer:
-        return DependencyInjectionContainer(
-            database=argv.database,
-            log_level=argv.log_level,
-        )
-
-    def _print_exception(self, err: Exception):
-        from traceback import format_exc
-
-        from clisnips.cli.utils import UrwidMarkupHelper
-        helper = UrwidMarkupHelper()
-        markup = [
-            ('error', str(err)),
-            ('default', f'\n{format_exc()}'),
-        ]
-        output = helper.convert_markup(markup, tty=sys.stderr.isatty())
-        print(output, file=sys.stderr)
+        return DependencyInjectionContainer(database=argv.database)

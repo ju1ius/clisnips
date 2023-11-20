@@ -1,7 +1,10 @@
 import argparse
+import logging
 import time
 
 from .command import Command
+
+logger = logging.getLogger(__name__)
 
 
 class OptimizeCommand(Command):
@@ -15,11 +18,12 @@ class OptimizeCommand(Command):
 
         db = self.container.database
         if argv.rebuild:
-            self.print(('info', 'Rebuilding search index...'))
+            logger.info('Rebuilding search index')
             db.rebuild_index()
-        self.print(('info', 'Optimizing search index...'))
+
+        logger.info('Optimizing search index')
         db.optimize_index()
 
         elapsed = time.time() - start_time
-        self.print(('success', f'Success: done in {elapsed:.1f} seconds.'))
+        logger.info(f'Done in {elapsed:.1f} seconds.', extra={'color': 'success'})
         return 0

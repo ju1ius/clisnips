@@ -1,8 +1,11 @@
 import argparse
+import logging
 import sys
 import time
 
 from .command import Command
+
+logger = logging.getLogger(__name__)
 
 
 class DumpCommand(Command):
@@ -19,5 +22,5 @@ class DumpCommand(Command):
             argv.file.write(f'{line}\n')
 
         elapsed = time.time() - start_time
-        self.print(('success', f'Success: dumped database to {argv.file.name} in {elapsed:.1f} seconds.'), stderr=True)
+        logger.info(f'Dumped database to {argv.file.name} in {elapsed:.1f} seconds.', extra={'color': 'success'})
         return 0

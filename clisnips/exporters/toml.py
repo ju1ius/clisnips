@@ -1,3 +1,4 @@
+import logging
 import time
 from pathlib import Path
 
@@ -5,12 +6,14 @@ import tomlkit
 
 from .base import Exporter
 
+logger = logging.getLogger(__name__)
+
 
 class TomlExporter(Exporter):
     def export(self, path: Path):
         start_time = time.time()
         num_rows = len(self._db)
-        self._log(('info', f'Converting {num_rows:n} snippets to TOML...'))
+        logger.info(f'Converting {num_rows:n} snippets to TOML')
 
         document = tomlkit.document()
         items = tomlkit.aot()
@@ -28,5 +31,5 @@ class TomlExporter(Exporter):
             fp.write(document.as_string())
 
         elapsed_time = time.time() - start_time
-        self._log(('success', f'Success: exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.'))
+        logger.info(f'Exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.', extra={'color': 'success'})
         return super().export(path)

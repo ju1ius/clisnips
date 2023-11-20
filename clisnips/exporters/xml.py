@@ -1,3 +1,4 @@
+import logging
 import time
 from pathlib import Path
 from xml.dom.minidom import Document, Element
@@ -5,29 +6,29 @@ from xml.dom.minidom import Document, Element
 from clisnips.database import Snippet
 from clisnips.exporters.base import Exporter
 
+logger = logging.getLogger(__name__)
+
 
 class XmlExporter(Exporter):
     def export(self, path: Path):
         start_time = time.time()
         num_rows = len(self._db)
-        msg = f'{{progress:.0%}} Converting {num_rows:n} snippets to XML...'
+        logger.info(f'Converting {num_rows:n} snippets to XML')
 
         doc = Document()
         root = doc.createElement('snippets')
-        for n, row in enumerate(self._db):
+        for row in self._db:
             snip = _create_snippet(doc, row)
             root.appendChild(snip)
-            progress = msg.format(progress=n / num_rows)
-            self._log(('info', progress), end='\r')
         doc.appendChild(root)
-
-        self._log(('info', f'\nWriting {path} ...'))
         xml = doc.toprettyxml(indent='  ')
+
+        logger.debug(f'Writing snippets to {path} ...')
         with open(path, 'w') as fp:
             fp.write(xml)
 
         elapsed_time = time.time() - start_time
-        self._log(('success', f'Success: exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.'))
+        logger.info(f'Exported {num_rows:n} snippets in {elapsed_time:.1f} seconds.', extra={'color': 'success'})
 
 
 def _create_snippet(doc: Document, row: Snippet) -> Element:
