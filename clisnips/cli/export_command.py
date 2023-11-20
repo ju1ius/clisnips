@@ -1,17 +1,35 @@
 import argparse
+import logging
 from pathlib import Path
 
 from .command import Command
+
+logger = logging.getLogger(__name__)
 
 
 class ExportCommand(Command):
     @classmethod
     def configure(cls, action: argparse._SubParsersAction):
         cmd = action.add_parser('export', help='Exports snippets to a file.')
-        cmd.add_argument('-f', '--format', choices=['xml', 'json', 'toml'], default='xml')
+        cmd.add_argument('-f', '--format', choices=('xml', 'json', 'toml'), default=None)
         cmd.add_argument('file', type=Path)
 
     def run(self, argv) -> int:
+        if not argv.format:
+            match argv.file.suffix:
+                case '.json':
+                    argv.format = 'json'
+                case '.toml':
+                    argv.format = 'toml'
+                case '.xml':
+                    argv.format = 'xml'
+                case _:
+                    logger.error(
+                        f'Could not detect export format for {argv.file}.\n'
+                        'Please provide an explicit format with the --format option.'
+                    )
+                    return 1
+
         self._create_exporter(argv.format).export(argv.file)
         return 0
 

@@ -17,12 +17,27 @@ class ImportCommand(Command):
     @classmethod
     def configure(cls, action: argparse._SubParsersAction):
         cmd = action.add_parser('import', help='Imports snippets from a file.')
-        cmd.add_argument('-f', '--format', choices=['xml', 'json', 'toml', 'cli-companion'], default='xml')
+        cmd.add_argument('-f', '--format', choices=('xml', 'json', 'toml', 'cli-companion'), default=None)
         cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
         cmd.add_argument('-D', '--dry-run', action='store_true', help='Just pretend.')
         cmd.add_argument('file', type=Path)
 
     def run(self, argv) -> int:
+        if not argv.format:
+            match argv.file.suffix:
+                case '.json':
+                    argv.format = 'json'
+                case '.toml':
+                    argv.format = 'toml'
+                case '.xml':
+                    argv.format = 'xml'
+                case _:
+                    logger.error(
+                        f'Could not detect import format for {argv.file}.\n'
+                        'Please provide an explicit format with the --format option.'
+                    )
+                    return 1
+
         if argv.replace:
             db_path = argv.database or self.container.config.database_path
             self._backup_and_drop_db(db_path, argv.dry_run)
