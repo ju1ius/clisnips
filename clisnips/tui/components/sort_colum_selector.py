@@ -12,7 +12,7 @@ choices = {
 }
 
 
-class SortColumnSelector(urwid.ListBox):
+class SortColumnSelector(urwid.Pile):
     def __init__(self, store: SnippetsStore):
         group = RadioGroup(choices)
         urwid.connect_signal(group, RadioGroup.Signals.CHANGED, lambda v: store.change_sort_column(v))
@@ -21,4 +21,4 @@ class SortColumnSelector(urwid.ListBox):
             lambda v: group.set_value(v),
             immediate=True,
         )
-        super().__init__(urwid.SimpleListWalker(group))
+        super().__init__(group)

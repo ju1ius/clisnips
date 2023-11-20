@@ -11,7 +11,11 @@ RadioState = bool | Literal['mixed']
 class RadioItem(urwid.RadioButton, Generic[V]):
 
     def __init__(self, group: list[Self], label: str, value: V, selected: bool = False):
-        super().__init__(group, label, state=selected)
+        super().__init__(
+            group, # type: ignore (python type system sucks)
+            label,
+            state=selected,
+        )
         self._value = value
 
     def get_value(self) -> V:

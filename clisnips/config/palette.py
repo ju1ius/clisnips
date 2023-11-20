@@ -8,9 +8,15 @@ default_palette = {
     'success': {'fg': 'dark green', 'bg': 'default'},
     'warning': {'fg': 'brown', 'bg': 'default'},
     'error': {'fg': 'dark red', 'bg': 'default'},
+    'disabled': {'fg': 'dark gray,bold', 'bg': 'black'},
+
     'action:suggested': {'fg': 'dark cyan,bold', 'bg': 'black'},
     'action:destructive': {'fg': 'dark red,bold', 'bg': 'black'},
-    'action:disabled': {'fg': 'dark gray,bold', 'bg': 'black'},
+    'action:disabled': 'disabled',
+
+    'choice:inactive': 'default',
+    'choice:active': {'fg': 'dark cyan', 'bg': 'black'},
+    'choice:disabled': 'disabled',
 
     # key binding
     'help:key': {'fg': 'dark cyan', 'bg': 'black'},

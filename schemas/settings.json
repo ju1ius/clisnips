@@ -92,6 +92,24 @@
           },
           "title": "Error"
         },
+        "disabled": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": {
+            "fg": "dark gray,bold",
+            "bg": "black",
+            "mono": null,
+            "fg_hi": null,
+            "bg_hi": null
+          },
+          "title": "Disabled"
+        },
         "action:suggested": {
           "anyOf": [
             {
@@ -137,14 +155,50 @@
               "type": "string"
             }
           ],
+          "default": "disabled",
+          "title": "Action:Disabled"
+        },
+        "choice:inactive": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "default",
+          "title": "Choice:Inactive"
+        },
+        "choice:active": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
           "default": {
-            "fg": "dark gray,bold",
+            "fg": "dark cyan",
             "bg": "black",
             "mono": null,
             "fg_hi": null,
             "bg_hi": null
           },
-          "title": "Action:Disabled"
+          "title": "Choice:Active"
+        },
+        "choice:disabled": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PaletteEntry"
+            },
+            {
+              "type": "string"
+            }
+          ],
+          "default": "disabled",
+          "title": "Choice:Disabled"
         },
         "help:key": {
           "anyOf": [

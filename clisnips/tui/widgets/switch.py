@@ -1,31 +1,51 @@
 import enum
+from typing import Generic, TypeVar
 
 import observ
 import urwid
 from urwid.command_map import Command
 
+V = TypeVar('V')
 
-class Switch(urwid.WidgetWrap):
+
+class State(enum.StrEnum):
+    OFF = enum.auto()
+    ON = enum.auto()
+
+
+_LABELS = {State.OFF: 'Off', State.ON: 'On'}
+_STATES = {State.OFF: False, State.ON: True}
+
+
+class Switch(urwid.WidgetWrap, Generic[V]):
     class Signals(enum.StrEnum):
         CHANGED = enum.auto()
 
     signals = list(Signals)
 
-    class State(enum.StrEnum):
-        OFF = enum.auto()
-        ON = enum.auto()
+    State = State
 
-    def __init__(self, state: State = State.OFF, caption: str = '', off_label: str = 'Off', on_label: str = 'On'):
-        self._icon = urwid.SelectableIcon('<->', 1)
-        self._off_label = urwid.Text(('label:off', off_label))
-        self._on_label = urwid.Text(('label:on', on_label))
-        # TODO: correctly handle packing
+    def __init__(
+        self,
+        state: State = State.OFF,
+        caption: str = '',
+        states: dict[State, V] | None = None,
+        labels: dict[State, str] | None = None,
+    ):
+        self._icon = urwid.SelectableIcon('<=>', 1)
+        self._states = states or _STATES
+        self._values = {v: s for s, v in self._states.items()}
+
+        labels = labels or _LABELS
+        self._off_label = urwid.AttrMap(urwid.Text(labels[State.OFF]), 'choice:inactive')
+        self._on_label = urwid.AttrMap(urwid.Text(labels[State.ON]), 'choice:inactive')
+
         inner = urwid.Columns(
             [
-                urwid.Text(('caption', caption)),
-                self._off_label,
-                urwid.AttrMap(self._icon, 'icon', 'icon:focused'),
-                self._on_label,
+                ('pack', urwid.Text(('caption', caption))),
+                ('pack', self._off_label),
+                ('pack', urwid.AttrMap(self._icon, 'icon', 'icon:focused')),
+                ('pack', self._on_label),
             ],
             dividechars=1,
             focus_column=2,
@@ -35,6 +55,9 @@ class Switch(urwid.WidgetWrap):
         self._watchers = {
             'state': observ.watch(lambda: self._state['value'], self._handle_state_changed, immediate=True)
         }
+
+    def set_value(self, value: V):
+        self.set_state(self._values[value], emit=False)
 
     def sizing(self):
         return frozenset((urwid.Sizing.FLOW,))
@@ -49,7 +72,7 @@ class Switch(urwid.WidgetWrap):
     def set_state(self, new_state: State, emit=False):
         self._state['value'] = new_state
         if emit:
-            self._emit(self.Signals.CHANGED, new_state)
+            self._emit(self.Signals.CHANGED, self._states[new_state])
 
     def toggle_state(self, emit=False):
         match self._state['value']:
@@ -61,6 +84,10 @@ class Switch(urwid.WidgetWrap):
     def _handle_state_changed(self, new_state, old_state):
         match new_state:
             case self.State.OFF:
-                self._icon.set_text('<--')
+                self._icon.set_text('<==')
+                self._off_label.attr_map = {None: 'choice:active'}
+                self._on_label.attr_map = {None: 'choice:inactive'}
             case self.State.ON:
-                self._icon.set_text('-->')
+                self._icon.set_text('==>')
+                self._off_label.attr_map = {None: 'choice:inactive'}
+                self._on_label.attr_map = {None: 'choice:active'}

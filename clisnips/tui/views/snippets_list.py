@@ -116,7 +116,7 @@ class SnippetListView(View):
 
     def _open_prefs_dialog(self):
         dialog = ListOptionsDialog(self, self._store)
-        self.open_dialog(dialog, title='List Options', width=35, height=20)
+        self.open_dialog(dialog, title='List Options', width=35, height=15)
 
     def _open_show_dialog(self):
         id = self._get_selected_id()

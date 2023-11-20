@@ -11,12 +11,12 @@ from clisnips.tui.widgets.divider import HorizontalDivider
 
 class ListOptionsDialog(Dialog):
     def __init__(self, parent, store: SnippetsStore):
-        super().__init__(parent, urwid.Pile([
-            ('pack', LayoutSelector(store)),
-            ('pack', HorizontalDivider()),
+        contents = (
+            LayoutSelector(store),
+            HorizontalDivider(),
             SortColumnSelector(store),
-            ('pack', HorizontalDivider()),
             SortOrderSelector(store),
-            ('pack', HorizontalDivider()),
-            ('pack', PageSizeInput(store, 'Page size: ')),
-        ]))
+            HorizontalDivider(),
+            PageSizeInput(store, 'Page size: '),
+        )
+        super().__init__(parent, urwid.ListBox(urwid.SimpleListWalker(contents)))
