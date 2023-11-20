@@ -39,5 +39,12 @@ The search input accepts the whole [FTS5 full-text query syntax](https://www.sql
 Please have a look at the docs for getting started on
 [writing your own snippets](./docs/creating-snippets.md).
 
+You may also read the [quick-tour](./snippets/quick-tour.toml),
+a small TOML file containing some example snippets.
+You can import it in your snippets database by running:
+```sh
+clisnips import snippets/quick-tour.toml
+```
+
 In addition to its TUI, clisnips comes with a bunch of other subcommands
 to help you manage your snippets. Please run `clisnips --help` to read the CLI documentation.

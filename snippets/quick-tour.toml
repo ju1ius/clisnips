@@ -1,0 +1,46 @@
+# You can import this file in your snippets database by running:
+# clisnips import snippets/quick-tour.toml
+
+[[snippets]]
+# This is a minimal snippet.
+# Let's give it a nice readable description:
+title = "Daily backup of my documents folder"
+# Only the `title` and `tag` fields are included in the search index.
+# We can use the tag field to provide useful keywords:
+tag = "tar,gz"
+cmd = "tar cvzf /mnt/backups/documents_$(date -I).tar.gz ~/Documents"
+
+
+[[snippets]]
+# Let's make the previous snippet more reusable!
+title = "Daily backup of a folder"
+tag = "tar,gz"
+# Here we add two template fields: {archive} and {directory}.
+# When selecting this snippet in the TUI, we will be prompted
+# to provide a value for each field.
+cmd = "tar cvzf {archive}_$(date -I).tar.gz {directory}"
+
+
+[[snippets]]
+# Now let's improve our snippet by adding some documentation.
+title = "Creates a daily gzipped archive of a directory"
+tag = "tar,gz"
+cmd = "tar cvzf {archive}-$(date -I).tar.gz {directory}"
+# Following is the documentation for our snippet.
+#
+# Each line starting with a `{name}` documents the `name` field.
+# In this case, we add a `(path)` hint to the `{archive}` field,
+# and a `(dir)` hint to the `{directory}` field.
+#
+# The (path) hint is used for filesystem paths.
+# The (dir) hint is used for directories.
+# Both of these hints enable path completion in the UI by pressing <TAB>.
+doc = """\
+This is the documentation for our snippet.
+
+{archive} (path) Path to the archive
+{directory} (dir) Directory to backup
+"""
+
+# And that's about it for our quick tour!
+# For more, please check: https://github.com/ju1ius/clisnips/tree/master/docs/
