@@ -1,16 +1,14 @@
 import time
-from abc import ABC, abstractmethod
+from typing import Protocol
 
 
-class Clock(ABC):
-    @abstractmethod
+class Clock(Protocol):
     def now(self) -> float: ...
 
 
 class MockClock(Clock):
-    def __init__(self, now: float) -> None:
+    def __init__(self, now: float = 0.0) -> None:
         self._now = now
-        super().__init__()
 
     def now(self) -> float:
         return self._now

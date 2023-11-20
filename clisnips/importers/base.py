@@ -1,10 +1,11 @@
-import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from pathlib import Path
+from typing_extensions import TypedDict
 
-from pydantic import BaseModel, Field
+from pydantic import TypeAdapter
 
+from clisnips.database import ImportableSnippet
 from clisnips.database.snippets_db import SnippetsDatabase
 
 
@@ -24,13 +25,10 @@ class Importer(ABC):
         return NotImplemented
 
 
-class ImportableSnippet(BaseModel):
-    id: int | None = None
-    title: str
-    cmd: str
-    tag: str = ''
-    doc: str = ''
-    created_at: int = Field(default_factory=lambda: int(time.time()))
-    last_used_at: int = 0
-    usage_count: int = 0
-    ranking: float = 0.0
+class SnippetDocument(TypedDict):
+    snippets: list[ImportableSnippet]
+
+
+SnippetAdapter = TypeAdapter(ImportableSnippet)
+SnippetListAdapter = TypeAdapter(list[ImportableSnippet])
+SnippetDocumentAdapter = TypeAdapter(SnippetDocument)

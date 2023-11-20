@@ -1,5 +1,9 @@
+import time
 from enum import StrEnum, auto
-from typing import Self, TypedDict
+from typing import Self
+
+from pydantic import Field
+from typing_extensions import Annotated, TypedDict
 
 
 class ScrollDirection(StrEnum):
@@ -72,3 +76,14 @@ class NewSnippet(TypedDict):
     cmd: str
     tag: str
     doc: str
+
+
+class ImportableSnippet(TypedDict):
+    title: Annotated[str, Field(min_length=1)]
+    cmd: Annotated[str, Field(min_length=1)]
+    tag: Annotated[str, Field(default='')]
+    doc: Annotated[str, Field(default='')]
+    created_at: Annotated[int, Field(ge=0, default_factory=lambda: int(time.time()))]
+    last_used_at: Annotated[int, Field(ge=0, default=0)]
+    usage_count: Annotated[int, Field(ge=0, default=0)]
+    ranking: Annotated[float, Field(ge=0.0, default=0.0)]

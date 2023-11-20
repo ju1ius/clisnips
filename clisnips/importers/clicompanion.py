@@ -22,10 +22,10 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import TextIO
 
-from clisnips.database import Snippet
+from clisnips.database import ImportableSnippet
 from clisnips.utils.list import pad_list
 
-from .base import Importer
+from .base import Importer, SnippetAdapter
 
 # Looks for a question-mark that is not escaped
 # (not preceded by an odd number of backslashes)
@@ -51,7 +51,7 @@ class CliCompanionImporter(Importer):
         self._log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
 
 
-def _get_snippets(file: TextIO) -> Iterable[Snippet]:
+def _get_snippets(file: TextIO) -> Iterable[ImportableSnippet]:
     for cmd, ui, desc in _parse(file):
         yield _translate(cmd, ui, desc)
 
@@ -87,19 +87,15 @@ def _parse(file: TextIO) -> list[tuple[str, str, str]]:
     return commands
 
 
-def _translate(cmd: str, ui: str, desc: str) -> Snippet:
+def _translate(cmd: str, ui: str, desc: str) -> ImportableSnippet:
     """
     Since ui is free form text, we have to make an educated guess...
     """
-    result = Snippet(**{
+    result = SnippetAdapter.validate_python({
         'title': desc,
         'cmd': cmd,
         'doc': ui,
         'tag': cmd.split(None, 1)[0],
-        'created_at': int(time.time()),
-        'last_used_at': 0,
-        'usage_count': 0,
-        'ranking': 0.0,
     })
     nargs = len(_ARGS_RE.findall(cmd))
     if not nargs:

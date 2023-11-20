@@ -5,9 +5,9 @@ from textwrap import dedent
 from typing import TextIO
 from xml.etree import ElementTree
 
-from clisnips.database import Snippet
+from clisnips.database import ImportableSnippet
 
-from .base import ImportableSnippet, Importer
+from .base import Importer, SnippetAdapter
 
 
 class XmlImporter(Importer):
@@ -29,19 +29,18 @@ class XmlImporter(Importer):
         self._log(('success', f'Success: imported in {elapsed_time:.1f} seconds.'))
 
 
-def _parse_snippets(file: TextIO) -> Iterable[Snippet]:
+def _parse_snippets(file: TextIO) -> Iterable[ImportableSnippet]:
     now = int(time.time())
     for _, el in ElementTree.iterparse(file):
         if el.tag != 'snippet':
             continue
-        yield ImportableSnippet(
-            id = 0,
-            title = el.findtext('title').strip(),
-            tag = el.findtext('tag').strip(),
-            cmd = dedent(el.findtext('command')),
-            doc = dedent(el.findtext('doc').strip()),
-            created_at = el.attrib.get('created-at', now),
-            last_used_at = el.attrib.get('last-used-at', 0),
-            usage_count = el.attrib.get('usage-count', 0),
-            ranking = el.attrib.get('ranking', 0.0),
-        ).model_dump() # type: ignore
+        yield SnippetAdapter.validate_python({
+            'title': el.findtext('title').strip(),
+            'tag': el.findtext('tag').strip(),
+            'cmd': dedent(el.findtext('command')),
+            'doc': dedent(el.findtext('doc').strip()),
+            'created_at': el.attrib.get('created-at', now),
+            'last_used_at': el.attrib.get('last-used-at', 0),
+            'usage_count': el.attrib.get('usage-count', 0),
+            'ranking': el.attrib.get('ranking', 0.0),
+        })

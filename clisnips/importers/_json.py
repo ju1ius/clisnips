@@ -1,11 +1,7 @@
 import time
 from pathlib import Path
 
-from pydantic import TypeAdapter
-
-from .base import ImportableSnippet, Importer
-
-_SnippetList = TypeAdapter(list[ImportableSnippet])
+from .base import Importer, SnippetListAdapter
 
 
 class JsonImporter(Importer):
@@ -14,8 +10,7 @@ class JsonImporter(Importer):
         self._log(('info', f'Importing snippets from {path}...'))
 
         with open(path) as fp:
-            # data = json.load(fp)
-            data = _SnippetList.validate_json(fp.read())
+            data = SnippetListAdapter.validate_json(fp.read())
             if not self._dry_run:
                 self._db.insert_many(data) # type: ignore
             self._log(('info', 'Rebuilding & optimizing search index...'))

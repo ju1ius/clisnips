@@ -7,7 +7,7 @@ from pathlib import Path
 
 from clisnips.ty import AnyPath
 
-from . import NewSnippet, Snippet
+from . import ImportableSnippet, NewSnippet, Snippet
 
 __DIR__ = Path(__file__).absolute().parent
 
@@ -162,7 +162,7 @@ class SnippetsDatabase:
                 self._num_rows += self.cursor.rowcount
             return self.cursor.lastrowid # type: ignore
 
-    def insert_many(self, data: Iterable[Snippet]):
+    def insert_many(self, data: Iterable[ImportableSnippet]):
         query = '''
             INSERT INTO snippets(
                 title, cmd, doc, tag,
