@@ -400,4 +400,4 @@ zmq = ["zmq"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "024d8e058400dd265f47149db1afbdf9a5801724224d2316718b931d1a9fc6db"
+content-hash = "bef627dabcdbe35c5d6e6f19d5a000735c7bc8635bbb8b36bcfbb23cdc9d39ad"
