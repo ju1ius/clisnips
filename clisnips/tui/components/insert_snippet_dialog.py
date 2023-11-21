@@ -1,9 +1,11 @@
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
+from typing import Any
 
 import urwid
 
 from clisnips.syntax.command.nodes import CommandTemplate
+from clisnips.syntax.command.renderer import Renderer
 from clisnips.syntax.documentation import Documentation
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.dialog import Dialog, ResponseKind
@@ -16,114 +18,102 @@ logger = logging.getLogger(__name__)
 
 class InsertSnippetDialog(Dialog):
     def __init__(self, parent, title: str, cmd: CommandTemplate, doc: Documentation):
-        self._command = cmd
+        self._template = cmd
         self._doc = doc
-        self._fields = self._create_fields(self._command, self._doc)
-
-        doc_text = urwid.Text('')
-        if self._doc.header:
-            doc_text.set_text(self._doc.header.strip())
-        self._output_text = urwid.Text('')
-        self._update_output(silent=True)
+        self._renderer = Renderer()
+        self._fields = self._create_fields(self._template, self._doc)
 
         fields = intersperse(HorizontalDivider(), self._fields.values())
-
-        output_field = urwid.Pile(
-            [
-                HorizontalDivider(),
-                urwid.Text('Output:'),
-                urwid.AttrMap(self._output_text, 'cmd:default'),
-            ]
-        )
+        self._output = OutputField()
 
         body = urwid.ListBox(
             urwid.SimpleFocusListWalker(
-                [
+                (
                     urwid.Pile(
-                        [
+                        (
                             urwid.Text(title),
-                            doc_text,
-                            HorizontalDivider(),
-                        ]
+                            urwid.Text(self._doc.header.strip()),
+                        ),
                     ),
+                    HorizontalDivider(),
                     urwid.Pile(fields),  # type: ignore (yes, fields are widgets...)
-                    output_field,
-                ]
-            )
+                    HorizontalDivider(),
+                    self._output,
+                ),
+            ),
         )
 
         super().__init__(parent, body)
+        self._apply_action = Dialog.Action('Apply', ResponseKind.ACCEPT, kind=Dialog.Action.Kind.SUGGESTED)
         self.set_actions(
-            Dialog.Action('Apply', ResponseKind.ACCEPT, Dialog.Action.Kind.SUGGESTED),
+            self._apply_action,
             Dialog.Action('Cancel', ResponseKind.REJECT),
         )
         self._action_area.focus_position = 1
-        urwid.connect_signal(self, Dialog.Signals.RESPONSE, self._on_response)
+        urwid.connect_signal(self, Dialog.Signals.RESPONSE, lambda *_: self.close())
+        self._update_output()
 
-    def get_output(self):
-        text, attrs = self._output_text.get_text()
-        return text
-
-    def on_accept(self, callback: Callable, *args):
+    def on_accept(self, callback: Callable[[str], None]):
         def handler(dialog, response_type):
             if response_type == ResponseKind.ACCEPT:
-                if self._validate():
-                    callback(self.get_output(), *args)
-                    self.close()
+                callback(self._output.get_text())
 
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
-    def _on_response(self, dialog, response_type, *args):
-        if response_type == ResponseKind.REJECT:
-            self.close()
-
-    def _on_field_changed(self, field):
-        self._update_output(silent=True)
-
-    def _create_fields(self, command: CommandTemplate, documentation: Documentation) -> dict[str, Field]:
+    def _create_fields(self, command: CommandTemplate, documentation: Documentation) -> dict[str, Field[object]]:
         fields = {}
         for name in command.field_names:
             field = field_from_documentation(name, documentation)
-            urwid.connect_signal(field, 'changed', self._on_field_changed)
+            urwid.connect_signal(field, 'changed', lambda *_: self._update_output())
             fields[name] = field
         return fields
 
-    def _update_output(self, silent=False):
-        fields = self._get_field_values(silent)
-        output = self._get_output_markup(fields)
-        self._output_text.set_text(output)
-
-    def _get_field_values(self, silent=False):
-        fields = {n: f.get_value() for n, f in self._fields.items()}
-        return self._apply_code_blocks(fields, silent)
-
-    def _apply_code_blocks(self, field_values, silent=False):
-        context = {'fields': field_values}
+    def _update_output(self):
+        context = {n: f.get_value() for n, f in self._fields.items()}
         try:
-            context = self._doc.execute_code(context)
-        except Exception:
-            if silent:
-                return field_values
-            else:
-                raise
-        return context['fields'] or field_values
-
-    def _validate(self):
-        try:
-            self._update_output(silent=False)
+            context = self._apply_code_blocks(context)
+            self._output.set_error_markup('')
         except Exception as err:
-            logger.error(err)
-            return False
-        return True
+            self._output.set_error_markup(str(err))
+            self._apply_action.disable()
+            return
 
-    def _get_output_markup(self, fields) -> TextMarkup:
-        markup = []
-        for is_field, value in self._command.apply(fields):
-            match is_field, value:
-                case _, '':
-                    continue
-                case True, _:
-                    markup.append(('syn:cmd:field-name', value))
-                case False, _:
-                    markup.append(('syn:cmd:default', value))
-        return markup
+        output, errors = self._renderer.try_render_markup(self._template, context)
+        if errors:
+            self._apply_action.disable()
+            for err in errors:
+                field = self._fields[err.field.name]
+                field.set_validation_markup(('error', str(err)))
+        else:
+            self._apply_action.enable()
+            for field in self._fields.values():
+                field.set_validation_markup('')
+
+        self._output.set_markup(output)
+
+    def _apply_code_blocks(self, field_values: dict[str, Any]):
+        context = self._doc.execute_code({'fields': field_values})
+        return context.get('fields', field_values)
+
+
+class OutputField(urwid.Pile):
+    def __init__(self):
+        self._output = urwid.Text('')
+        self._errors = urwid.Text('')
+        super().__init__(
+            [
+                urwid.Text('Output:'),
+                urwid.AttrMap(self._output, {'text': 'syn:cmd:default', 'field': 'syn:cmd:field-name'}),
+                urwid.AttrMap(self._errors, 'error'),
+            ]
+        )
+
+    def set_markup(self, markup: TextMarkup):
+        self._output.set_text(markup)
+
+    def get_text(self) -> str:
+        text, attrs = self._output.get_text()
+        return str(text)
+
+    def set_error_markup(self, markup: TextMarkup):
+        self._errors.set_text(markup)

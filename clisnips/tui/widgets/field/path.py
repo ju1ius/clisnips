@@ -12,13 +12,13 @@ from clisnips.utils.path_completion import FileSystemPathCompletionProvider, Pat
 from .field import Entry, SimpleField
 
 
-class PathField(SimpleField):
+class PathField(SimpleField[str]):
     def __init__(self, label: TextMarkup, *args, **kwargs):
         entry = PathEntry(*args, **kwargs)
         super().__init__(label, entry)
 
 
-class PathEntry(Entry, urwid.PopUpLauncher):
+class PathEntry(Entry[str], urwid.PopUpLauncher):
     signals = ['changed']
 
     def __init__(self, cwd: AnyPath = '.', mode: str = '', default: str = ''):
@@ -35,7 +35,7 @@ class PathEntry(Entry, urwid.PopUpLauncher):
 
         super().__init__(self._entry)
 
-    def get_value(self):
+    def get_value(self) -> str:
         return self._entry.get_edit_text()
 
     def create_pop_up(self):

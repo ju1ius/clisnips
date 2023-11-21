@@ -60,6 +60,12 @@ def test_conversion():
     assert cmd.nodes == expected
 
 
+def test_invalidconversion():
+    raw = 'i haz {one!z} field'
+    with pytest.raises(ParseError, match='Invalid conversion specifier'):
+        _ = parse(raw)
+
+
 def test_format_spec():
     raw = 'i haz {0:.1f} field'
     cmd = parse(raw)
@@ -67,6 +73,17 @@ def test_format_spec():
         Text('i haz ', 0, 6),
         Field('0', 6, 13, '.1f', None),
         Text(' field', 13, 19),
+    ]
+    assert cmd.nodes == expected
+
+
+def test_wierd_format_spec():
+    raw = 'i haz {wierd:|<!>|:[0]} spec'
+    cmd = parse(raw)
+    expected = [
+        Text('i haz ', 0, 6),
+        Field('wierd', 6, 23, '|<!>|:[0]', None),
+        Text(' spec', 23, 28),
     ]
     assert cmd.nodes == expected
 
@@ -93,25 +110,3 @@ def test_field_getattr():
     raw = 'i haz {foo.bar} field'
     with pytest.raises(ParseError):
         _ = parse(raw)
-
-
-def test_command_apply():
-    raw = 'i haz {} {:.2f} fields'
-    cmd = parse(raw)
-    output = list(
-        cmd.apply(
-            {
-                '0': 'zaroo',
-                '1': 1 / 3,  # type: ignore (we're testing if it handles other types correctly)
-                'foo': {'bar': 42},
-            }
-        )
-    )
-    expected = [
-        (False, 'i haz '),
-        (True, 'zaroo'),
-        (False, ' '),
-        (True, '0.33'),
-        (False, ' fields'),
-    ]
-    assert expected == output

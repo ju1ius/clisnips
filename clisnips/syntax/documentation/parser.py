@@ -87,9 +87,9 @@ class Parser(LLkParser[Tokens]):
             try:
                 block = CodeBlock(code)
             except SyntaxError as err:
-                raise DocumentationParseError(f'Syntax error in code block: {code!r}') from err
+                raise DocumentationParseError(f'Syntax error: {err}') from err
             except TypeError as err:
-                raise DocumentationParseError(f'Null bytes in code block: {code!r}') from err
+                raise DocumentationParseError(f'Type error: {err}') from err
             else:
                 code_blocks.append(block)
             self._match(Tokens.CODE_FENCE)

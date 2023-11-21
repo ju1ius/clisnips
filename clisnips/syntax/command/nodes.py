@@ -1,7 +1,6 @@
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
-from string import Formatter as _StringFormatter
-from typing import Any
+from typing import TypeAlias
 
 
 @dataclass(slots=True, frozen=True)
@@ -28,18 +27,13 @@ class Field:
         return f'{{{self.name}{conv}{spec}}}'
 
 
-class _CommandFormatter(_StringFormatter):
-    def get_value(self, key: int | str, args: Sequence[Any], kwargs: Mapping[str, Any]) -> Any:
-        # we override so that we don't have to convert numeric fields
-        # to integers and split args and kwargs
-        return kwargs[str(key)]
+Node: TypeAlias = Field | Text
 
 
 class CommandTemplate:
-    def __init__(self, raw: str, nodes: list[Text | Field]):
+    def __init__(self, raw: str, nodes: list[Node]):
         self.raw = raw
         self.nodes = nodes
-        self._formatter = _CommandFormatter()
 
     @property
     def text(self) -> str:
@@ -55,21 +49,6 @@ class CommandTemplate:
     @property
     def field_names(self) -> Iterable[str]:
         return (f.name for f in self.fields)
-
-    def render(self, context: Mapping[str, str]) -> str:
-        return ''.join(v for _, v in self.apply(context))
-
-    def apply(self, context: Mapping[str, str]) -> Iterable[tuple[bool, str]]:
-        for node in self.nodes:
-            if isinstance(node, Text):
-                yield (False, node.value)
-                continue
-            value, _ = self._formatter.get_field(node.name, (), context)
-            if node.conversion:
-                value = self._formatter.convert_field(value, node.conversion)
-            if node.format_spec:
-                value = self._formatter.format_field(value, node.format_spec)
-            yield (True, value)
 
     def __eq__(self, other):
         return other.raw == self.raw and other.nodes == self.nodes
