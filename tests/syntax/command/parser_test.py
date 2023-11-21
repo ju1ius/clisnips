@@ -18,7 +18,7 @@ def test_simple_replacement_field():
     expected = [
         Text('i haz ', 0, 6),
         Field('one', 6, 11),
-        Text(' field', 11, 17)
+        Text(' field', 11, 17),
     ]
     assert cmd.nodes == expected
 
@@ -31,7 +31,7 @@ def test_it_supports_flags():
         Field('-1', 6, 10),
         Text(' ', 10, 11),
         Field('--two', 11, 18),
-        Text(' flags', 18, 24)
+        Text(' flags', 18, 24),
     ]
     assert cmd.nodes == expected
 
@@ -44,7 +44,7 @@ def test_automatic_numbering():
         Field('0', 6, 8),
         Text(' ', 8, 9),
         Field('1', 9, 11),
-        Text(' flags', 11, 17)
+        Text(' flags', 11, 17),
     ]
     assert cmd.nodes == expected
 
@@ -55,7 +55,7 @@ def test_conversion():
     expected = [
         Text('i haz ', 0, 6),
         Field('one', 6, 13, '', 'r'),
-        Text(' field', 13, 19)
+        Text(' field', 13, 19),
     ]
     assert cmd.nodes == expected
 
@@ -66,7 +66,7 @@ def test_format_spec():
     expected = [
         Text('i haz ', 0, 6),
         Field('0', 6, 13, '.1f', None),
-        Text(' field', 13, 19)
+        Text(' field', 13, 19),
     ]
     assert cmd.nodes == expected
 
@@ -98,11 +98,15 @@ def test_field_getattr():
 def test_command_apply():
     raw = 'i haz {} {:.2f} fields'
     cmd = parse(raw)
-    output = list(cmd.apply({
-        '0': 'zaroo',
-        '1': 1 / 3, # type: ignore (we're testing if it handles other types correctly)
-        'foo': {'bar': 42}
-    }))
+    output = list(
+        cmd.apply(
+            {
+                '0': 'zaroo',
+                '1': 1 / 3,  # type: ignore (we're testing if it handles other types correctly)
+                'foo': {'bar': 42},
+            }
+        )
+    )
     expected = [
         (False, 'i haz '),
         (True, 'zaroo'),
@@ -111,4 +115,3 @@ def test_command_apply():
         (False, ' fields'),
     ]
     assert expected == output
-

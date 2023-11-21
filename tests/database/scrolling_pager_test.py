@@ -25,10 +25,10 @@ def connection():
     for i in range(4):
         for value, ranking in FIXTURES:
             rowid += 1
-            value = '%s #%s' % (value, rowid)
+            value = f'{value} #{rowid}'
             con.execute(
-                '''INSERT INTO paging_test(rowid, value, ranking) VALUES(?, ?, ?)''',
-                (rowid, value, ranking)
+                'INSERT INTO paging_test(rowid, value, ranking) VALUES(?, ?, ?)',
+                (rowid, value, ranking),
             )
     yield con
     con.close()
@@ -85,15 +85,21 @@ def test_simple_query(connection):
 def test_complex_query(connection):
     pager = ScrollingPager(connection, 5)
     params = {'term': 'foo*'}
-    pager.set_query('''
+    pager.set_query(
+        """
         SELECT i.docid, t.rowid, t.* from paging_test t
         JOIN paging_test_idx i ON i.docid = t.rowid
         WHERE paging_test_idx MATCH :term
-    ''', params)
-    pager.set_count_query('''
+        """,
+        params,
+    )
+    pager.set_count_query(
+        """
         SELECT docid FROM paging_test_idx
         WHERE paging_test_idx MATCH :term
-    ''', params)
+        """,
+        params,
+    )
     pager.set_sort_columns([('ranking', SortOrder.DESC), ('rowid', SortOrder.ASC, True)])
     expected = {
         1: [5, 10, 15, 20, 1],

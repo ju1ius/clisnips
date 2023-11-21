@@ -10,7 +10,7 @@ FIXTURES = [
     ('test bar', 6),
     ('test baz', 3),
     ('test qux', 4),
-    ('test foobar', 8)
+    ('test foobar', 8),
 ]
 
 
@@ -24,11 +24,13 @@ def connection():
     for i in range(4):
         for value, ranking in FIXTURES:
             rowid += 1
-            value = '%s #%s' % (value, rowid)
+            value = f'{value} #{rowid}'
             con.execute(
-                '''insert into paging_test(rowid, value, ranking)
-                values(?, ?, ?)''',
-                (rowid, value, ranking)
+                """
+                insert into paging_test(rowid, value, ranking)
+                values(?, ?, ?)
+                """,
+                (rowid, value, ranking),
             )
     yield con
     con.close()
@@ -78,15 +80,21 @@ def test_complex_query(connection):
         1: [1, 5, 6, 10, 11],
         2: [15, 16, 20],
     }
-    pager.set_query('''
+    pager.set_query(
+        """
         SELECT i.docid, t.rowid, t.* FROM paging_test t
         JOIN paging_test_idx i ON i.docid = t.rowid
         WHERE paging_test_idx MATCH :term
-    ''', params)
-    pager.set_count_query('''
+        """,
+        params,
+    )
+    pager.set_count_query(
+        """
         SELECT docid FROM paging_test_idx
         WHERE paging_test_idx MATCH :term
-    ''', params)
+        """,
+        params,
+    )
     pager.execute()
     assert len(pager) == 2, 'Wrong number of pages.'
     #

@@ -80,9 +80,9 @@ class SnippetsStore:
         self,
         expr: Callable[[State], Watched],
         on_change: Callable[[Watched], Any],
-        sync: bool =False,
-        deep: bool =False,
-        immediate: bool =False,
+        sync: bool = False,
+        deep: bool = False,
+        immediate: bool = False,
     ):
         return watch(
             fn=lambda: expr(self._state),

@@ -1,0 +1,41 @@
+name: Build and test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Test py@${{matrix.python-version}} / ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        python-version:
+          - "3.11"
+    steps:
+      - uses: actions/checkout@v4
+      # https://github.com/actions/setup-python/issues/659
+      - name: Install poetry
+        run: pipx install poetry
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{matrix.python-version}}
+          cache: poetry
+      - name: Install dependencies
+        run: poetry install
+      - name: Check style
+        run: poetry run ruff format --check .
+      - name: Lint
+        run: poetry run ruff check .
+      - name: Test
+        run: poetry run pytest

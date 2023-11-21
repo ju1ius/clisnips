@@ -1,4 +1,3 @@
-
 from clisnips.database import ScrollDirection, SortOrder
 from clisnips.database.scrolling_pager import Cursor
 
@@ -23,10 +22,12 @@ def test_default_columns():
 
 
 def test_single_sort_column():
-    cursor = Cursor.with_columns((
-        ('foo', SortOrder.DESC),
-        ('id', SortOrder.ASC, True),
-    ))
+    cursor = Cursor.with_columns(
+        (
+            ('foo', SortOrder.DESC),
+            ('id', SortOrder.ASC, True),
+        )
+    )
     assert cursor.unique_column == ('id', SortOrder.ASC)
     assert cursor.sort_columns == [('foo', SortOrder.DESC)]
     assert list(cursor.columns()) == [
@@ -48,11 +49,13 @@ def test_single_sort_column():
 
 
 def test_multiple_sort_columns():
-    cursor = Cursor.with_columns((
-        ('foo', SortOrder.DESC),
-        ('id', SortOrder.ASC, True),
-        ('bar', SortOrder.ASC),
-    ))
+    cursor = Cursor.with_columns(
+        (
+            ('foo', SortOrder.DESC),
+            ('id', SortOrder.ASC, True),
+            ('bar', SortOrder.ASC),
+        )
+    )
     assert cursor.unique_column == ('id', SortOrder.ASC)
     assert cursor.sort_columns == [('foo', SortOrder.DESC), ('bar', SortOrder.ASC)]
     assert list(cursor.columns()) == [
@@ -81,11 +84,13 @@ def test_multiple_sort_columns():
 
 
 def test_update():
-    cursor = Cursor.with_columns((
-        ('foo', SortOrder.DESC),
-        ('bar', SortOrder.ASC),
-        ('id', SortOrder.ASC, True),
-    ))
+    cursor = Cursor.with_columns(
+        (
+            ('foo', SortOrder.DESC),
+            ('bar', SortOrder.ASC),
+            ('id', SortOrder.ASC, True),
+        )
+    )
     empty = {'id': None, 'foo': None, 'bar': None}
     assert cursor.first == cursor.last == empty
 

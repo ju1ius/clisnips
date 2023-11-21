@@ -11,7 +11,7 @@ def assert_token_list_equal(actual_tokens, expected_tokens):
             assert expected == actual, 'Expected token.{} to equal {!r}, got {!r}'.format(
                 attr,
                 expected.name if attr == 'type' else expected,
-                actual.name if attr == 'type' else actual
+                actual.name if attr == 'type' else actual,
             )
 
 
@@ -42,7 +42,7 @@ def test_param_only():
         {'kind': Tokens.LEFT_BRACE},
         {'kind': Tokens.IDENTIFIER, 'value': 'par2'},
         {'kind': Tokens.RIGHT_BRACE},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
@@ -58,7 +58,7 @@ def test_flags():
         {'kind': Tokens.LEFT_BRACE},
         {'kind': Tokens.FLAG, 'value': '--some-flag'},
         {'kind': Tokens.RIGHT_BRACE},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
@@ -73,7 +73,7 @@ def test_type_hint_only():
         {'kind': Tokens.LEFT_PAREN},
         {'kind': Tokens.IDENTIFIER, 'value': 'string'},
         {'kind': Tokens.RIGHT_PAREN},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
     # FIXME: test that invalid type_hint is skipped
@@ -93,7 +93,7 @@ def test_value_hint_string_list():
         {'kind': Tokens.DEFAULT_MARKER},
         {'kind': Tokens.STRING, 'value': 'value2'},
         {'kind': Tokens.RIGHT_BRACKET},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
@@ -114,7 +114,7 @@ def test_value_hint_digit_list():
         {'kind': Tokens.COMMA},
         {'kind': Tokens.FLOAT, 'value': '0.3'},
         {'kind': Tokens.RIGHT_BRACKET},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
@@ -132,7 +132,7 @@ def test_value_hint_range():
         {'kind': Tokens.COLON},
         {'kind': Tokens.INTEGER, 'value': '5'},
         {'kind': Tokens.RIGHT_BRACKET},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
     # range with step
@@ -149,7 +149,7 @@ def test_value_hint_range():
         {'kind': Tokens.COLON},
         {'kind': Tokens.INTEGER, 'value': '2'},
         {'kind': Tokens.RIGHT_BRACKET},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
     # range with step and default
@@ -168,7 +168,7 @@ def test_value_hint_range():
         {'kind': Tokens.DEFAULT_MARKER},
         {'kind': Tokens.INTEGER, 'value': '5'},
         {'kind': Tokens.RIGHT_BRACKET},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
@@ -181,14 +181,14 @@ def test_free_text_after_param():
         {'kind': Tokens.IDENTIFIER, 'value': 'par1'},
         {'kind': Tokens.RIGHT_BRACE},
         {'kind': Tokens.TEXT},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
-    text = '''{ par1 } Some free text (wow, [snafu])
+    text = """{ par1 } Some free text (wow, [snafu])
         {par2} (hint) Other text
         {par3} (hint) ["foo"] Yet another doctext
-    '''
+    """
     tokens = tokenize(text)
     expected = [
         {'kind': Tokens.LEFT_BRACE},
@@ -212,34 +212,34 @@ def test_free_text_after_param():
         {'kind': Tokens.STRING, 'value': 'foo'},
         {'kind': Tokens.RIGHT_BRACKET},
         {'kind': Tokens.TEXT},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
 
 def test_code_block():
-    text = '''
+    text = """
 ```
 import foo, bar
 params['foo'] = '{bar}'
-```'''
+```"""
     tokens = tokenize(text)
     expected = [
         {'kind': Tokens.TEXT},
         {'kind': Tokens.CODE_FENCE},
         {'kind': Tokens.TEXT},
         {'kind': Tokens.CODE_FENCE},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
-    text = '''{par1} Some text
+    text = """{par1} Some text
 ```
 import foo, bar
 params['foo'] = '{bar}'
 ```
 {par2} Other text.
-    '''
+    """
     tokens = tokenize(text)
     expected = [
         {'kind': Tokens.LEFT_BRACE},
@@ -254,7 +254,7 @@ params['foo'] = '{bar}'
         {'kind': Tokens.IDENTIFIER, 'value': 'par2'},
         {'kind': Tokens.RIGHT_BRACE},
         {'kind': Tokens.TEXT},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)
 
@@ -275,6 +275,6 @@ codemarks in strings should be skipped !
         {'kind': Tokens.CODE_FENCE},
         {'kind': Tokens.TEXT},
         {'kind': Tokens.CODE_FENCE},
-        {'kind': Tokens.EOF}
+        {'kind': Tokens.EOF},
     ]
     assert_token_list_equal(tokens, expected)

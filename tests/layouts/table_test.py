@@ -1,4 +1,3 @@
-
 from clisnips.tui.layouts.table import LayoutColumn, LayoutRow, TableLayout
 
 
@@ -28,10 +27,10 @@ def test_layout():
         {'a': 'one', 'b': 'two', 'c': 'three'},
         {'a': 'four', 'b': 'five', 'c': 'six'},
     ]
-    expected = '''
+    expected = """
 | one  | two  | three |
 | four | five | six   |
-'''
+"""
     table.layout(rows, 0)
     result = []
     for row in table:

@@ -95,7 +95,7 @@ def test_parse_value_list():
     assert param.text == ''
     values = param.value_hint
     assert isinstance(values, ValueList)
-    assert values.values == ["foo", "bar", "baz"]
+    assert values.values == ['foo', 'bar', 'baz']
     assert values.default == 1
 
 
@@ -142,17 +142,20 @@ def test_parse_value_range():
 
 
 def test_parse_code_block():
-    code_str = '''
+    code_str = """
 import os.path
 if fields['infile'] and not fields['outfile']:
     path, ext = os.path.splitext(fields['infile'])
     fields['outfile'] = path + '.mp4'
-'''
-    text = '''
+"""
+    text = (
+        """
 {infile} (path) The input file
 {outfile} (path) The output file
 ```%s```
-    ''' % code_str
+    """
+        % code_str
+    )
     doc = parse(text)
     #
     assert 'infile' in doc.parameters
@@ -177,8 +180,8 @@ if fields['infile'] and not fields['outfile']:
     _vars = {
         'fields': {
             'infile': '/foo/bar.wav',
-            'outfile': ''
-        }
+            'outfile': '',
+        },
     }
     code.execute(_vars)
     assert _vars['fields']['outfile'] == '/foo/bar.mp4'

@@ -12,7 +12,6 @@ from clisnips.utils.path_completion import (
 
 
 class StubProvider(PathCompletionProvider):
-
     def __init__(self, results):
         self._results = results
 
@@ -21,7 +20,6 @@ class StubProvider(PathCompletionProvider):
 
 
 class TestCompletionEntry:
-
     def test_dirname_ends_with_slash(self):
         entry = PathCompletionEntry('foo', '/usr/share/foo', FA.IS_DIR)
         assert 'foo/' == entry.display_name
@@ -61,15 +59,16 @@ class TestCompletionEntry:
 
 
 class TestPathCompletion:
-
     def test_simple_filename_completion(self):
         path = '/foo/bar/ba'
-        provider = StubProvider([
-            PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
-            PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
-            PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
-            PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
-        ])
+        provider = StubProvider(
+            [
+                PathCompletionEntry('baz', '/foo/bar/baz', FA.IS_FILE),
+                PathCompletionEntry('bazar', '/foo/bar/bazar', FA.IS_FILE),
+                PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
+                PathCompletionEntry('woot', '/foo/bar/woot', FA.IS_FILE),
+            ]
+        )
         completion = PathCompletion(provider)
         expected = [
             PathCompletionEntry('baffle', '/foo/bar/baffle', FA.IS_FILE),
@@ -116,11 +115,13 @@ class TestPathCompletion:
 
     def test_no_directory_completion(self):
         path = 'ba'
-        provider = StubProvider([
-            PathCompletionEntry('bar', '/home/user/bar/', FA.IS_DIR),
-            PathCompletionEntry('baz', '/home/user/baz', FA.IS_FILE),
-            PathCompletionEntry('qux', '/home/user/qux', FA.IS_FILE),
-        ])
+        provider = StubProvider(
+            [
+                PathCompletionEntry('bar', '/home/user/bar/', FA.IS_DIR),
+                PathCompletionEntry('baz', '/home/user/baz', FA.IS_FILE),
+                PathCompletionEntry('qux', '/home/user/qux', FA.IS_FILE),
+            ]
+        )
         completion = PathCompletion(provider)
         expected = [
             PathCompletionEntry('bar', '/home/user/bar/', FA.IS_DIR),
@@ -132,7 +133,6 @@ class TestPathCompletion:
 
 @pytest.mark.usefixtures('fs')
 class TestFileSystemCompletionProvider:
-
     def test_simple_absolute_paths(self, fs):
         expected = []
         for name in ('foo', 'bar', 'baz', 'qux'):
@@ -169,7 +169,7 @@ class TestFileSystemCompletionProvider:
     def test_dot_dot_relative_paths(self, fs):
         base_dir = '/usr/lib/X11'
         expected = [
-            PathCompletionEntry('X11', base_dir, FA.IS_DIR)
+            PathCompletionEntry('X11', base_dir, FA.IS_DIR),
         ]
         fs.create_dir(base_dir)
         for name in ('foo', 'bar', 'baz', 'qux'):
