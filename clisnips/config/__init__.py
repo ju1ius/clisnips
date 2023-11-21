@@ -21,7 +21,6 @@ def _parse_json() -> AppSettings:
 
 
 class Config:
-
     def __init__(self):
         self._cfg = _parse_json()
 

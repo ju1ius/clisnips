@@ -5,13 +5,16 @@ from clisnips.exceptions import CommandParseError
 
 from .nodes import CommandTemplate, Field, Text
 
-_FIELD_NAME_RX = re.compile(r'''
-^
-    (--? [a-zA-Z0-9] [\w-]*)    # cli flag
-    |
-    ( \d+ | [_a-zA-Z]\w* )      # digit or identifier
-$
-''', re.X)
+_FIELD_NAME_RX = re.compile(
+    r"""
+    ^
+        (--? [a-zA-Z0-9] [\w-]*)    # cli flag
+        |
+        ( \d+ | [_a-zA-Z]\w* )      # digit or identifier
+    $
+    """,
+    re.X,
+)
 
 __lexer = Formatter()
 

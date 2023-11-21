@@ -8,8 +8,10 @@ from locale import strxfrm
 from pathlib import Path
 
 __all__ = [
-    'FileAttributes', 'PathCompletionEntry',
-    'PathCompletion', 'PathCompletionProvider',
+    'FileAttributes',
+    'PathCompletionEntry',
+    'PathCompletion',
+    'PathCompletionProvider',
     'FileSystemPathCompletionProvider',
 ]
 
@@ -51,13 +53,11 @@ class PathCompletionEntry:
 
 
 class PathCompletionProvider:
-
     def get_completions(self, path: AnyPath) -> Iterable[PathCompletionEntry]:
         raise NotImplementedError()
 
 
 class PathCompletion:
-
     def __init__(self, provider: PathCompletionProvider, show_files=True, show_hidden=True):
         self._provider = provider
         self._show_files = show_files
@@ -93,7 +93,6 @@ class PathCompletion:
 
 
 class FileSystemPathCompletionProvider(PathCompletionProvider):
-
     def __init__(self, base_directory: AnyPath = '.'):
         self._base_dir = Path(base_directory).expanduser().resolve(strict=True)
         if not self._base_dir.is_dir():

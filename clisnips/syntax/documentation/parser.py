@@ -33,7 +33,6 @@ def _to_number(string: str) -> int | float:
 
 
 class Parser(LLkParser[Tokens]):
-
     def __init__(self, lexer: Lexer):
         super().__init__(lexer, Tokens.EOF, 2)
         self._auto_field_count = -1
@@ -161,10 +160,7 @@ class Parser(LLkParser[Tokens]):
         """
         self._match(Tokens.LEFT_BRACKET)
         token = self._lookahead()
-        if (
-            token.kind in (Tokens.INTEGER, Tokens.FLOAT)
-            and self._lookahead_kind(2) is Tokens.COLON
-        ):
+        if token.kind in (Tokens.INTEGER, Tokens.FLOAT) and self._lookahead_kind(2) is Tokens.COLON:
             valuehint = self._value_range()
         else:
             valuehint = self._value_list()

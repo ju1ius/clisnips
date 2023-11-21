@@ -28,7 +28,9 @@ class RecordFormatter(logging.Formatter):
         spec = self.levels.get(record.levelname, 'default')
         markup = [
             (spec, f'{record.levelname} '),
-            ('default', '['), ('accent', record.name), ('default', ']'),
+            ('default', '['),
+            ('accent', record.name),
+            ('default', ']'),
             *self._call_site(record),
             ('default', f': {record.message}'),
         ]
@@ -42,6 +44,7 @@ class RecordFormatter(logging.Formatter):
             ('debug', str(record.lineno)),
             ('default', ']'),
         )
+
 
 class Server:
     def __init__(self, log_file: Path, printer: UrwidMarkupHelper) -> None:

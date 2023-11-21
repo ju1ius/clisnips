@@ -6,7 +6,6 @@ from .list_box import CyclingFocusListBox
 
 
 class PopupMenu(urwid.WidgetWrap):
-
     class Signals(enum.StrEnum):
         CLOSED = enum.auto()
 
@@ -16,11 +15,12 @@ class PopupMenu(urwid.WidgetWrap):
         self._walker = urwid.SimpleFocusListWalker([])
         lb = urwid.LineBox(
             CyclingFocusListBox(self._walker),
-            title=title, title_align='left',
+            title=title,
+            title_align='left',
             tlcorner='┌', tline='╌', trcorner='┐',
             lline='┆', rline='┆',
-            blcorner='└', bline='╌', brcorner='┘'
-        )
+            blcorner='└', bline='╌', brcorner='┘',
+        )  # fmt: skip
         super().__init__(urwid.AttrMap(lb, 'popup-menu'))
 
     def set_items(self, items):

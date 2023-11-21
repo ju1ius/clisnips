@@ -22,8 +22,8 @@ FOCUS_ATTR_MAP = {
     'cmd': 'snippets-list:cmd:focused',
 }
 
-class SnippetsTable(urwid.WidgetWrap):
 
+class SnippetsTable(urwid.WidgetWrap):
     def __init__(self, store: SnippetsStore):
         self._store = store
         self._walker = urwid.SimpleFocusListWalker([])

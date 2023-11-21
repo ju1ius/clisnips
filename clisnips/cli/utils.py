@@ -8,7 +8,6 @@ from clisnips.tui.urwid_types import TextMarkup
 
 
 class UrwidMarkupHelper:
-
     palette = {
         'default': ('default', 'default'),
         'accent': ('dark magenta', 'default'),
@@ -27,8 +26,8 @@ class UrwidMarkupHelper:
 
     def __init__(self):
         self._screen = urwid.raw_display.Screen(
-            input=os.devnull, # type: ignore
-            output=os.devnull, # type: ignore
+            input=os.devnull,  # type: ignore
+            output=os.devnull,  # type: ignore
         )
         self._palette_escapes = {}
         for name, attrs in self.palette.items():
@@ -53,7 +52,7 @@ class UrwidMarkupHelper:
                 escape = self._palette_escapes[attr]
             except KeyError:
                 escape = self._palette_escapes['default']
-            chunk = text[pos:pos + length]
+            chunk = text[pos : pos + length]
             output.append(f'{escape}{chunk}')
             pos += length
         return ''.join(output)

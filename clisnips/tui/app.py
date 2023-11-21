@@ -9,7 +9,6 @@ from .views.snippets_list import SnippetListView
 
 
 class Application:
-
     def __init__(self, dic: DependencyInjectionContainer):
         self.container = dic
         self.current_view = None

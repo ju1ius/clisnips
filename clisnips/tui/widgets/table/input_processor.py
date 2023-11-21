@@ -17,9 +17,8 @@ class Action(enum.StrEnum):
 
 
 class NavigationCommand:
-
     def __init__(self, action: Action, direction: Direction, offset: int | str):
-        self.action = action,
+        self.action = action
         self.direction = direction
         self.offset = offset
 
@@ -48,19 +47,16 @@ class InputProcessor:
             'up': Direction.UP,
             'k': Direction.UP,
             'page up': Direction.UP,
-
             'end': Direction.DOWN,
             'down': Direction.DOWN,
             'j': Direction.DOWN,
             'ctrl d': Direction.DOWN,
             'G': Direction.DOWN,
             'page down': Direction.DOWN,
-
             'left': Direction.LEFT,
             '0': Direction.LEFT,
             'h': Direction.LEFT,
             'ctrl left': Direction.LEFT,
-
             'right': Direction.RIGHT,
             '$': Direction.RIGHT,
             'l': Direction.RIGHT,

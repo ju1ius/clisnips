@@ -34,7 +34,6 @@ def _prev_line_position(text: str, start_position: int) -> int:
 
 
 class EmacsEdit(urwid.Edit):
-
     def keypress(self, size, key: str):
         match key:
             case 'ctrl left':

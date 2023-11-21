@@ -18,7 +18,6 @@ class SearchSyntaxError(RuntimeError):
 
 
 class SearchPager:
-
     def __init__(
         self,
         db: SnippetsDatabase,
@@ -63,10 +62,12 @@ class SearchPager:
         return self.execute().first()
 
     def set_sort_column(self, column: SortColumn, order: SortOrder = SortOrder.DESC):
-        self.set_sort_columns((
-            (column, order),
-            ('id', SortOrder.ASC, True),
-        ))
+        self.set_sort_columns(
+            (
+                (column, order),
+                ('id', SortOrder.ASC, True),
+            )
+        )
 
     def set_sort_columns(self, columns: Iterable[SortColumnDefinition]):
         self._list_pager.set_sort_columns(columns)

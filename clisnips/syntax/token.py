@@ -5,12 +5,7 @@ Kind = TypeVar('Kind', bound=Enum)
 
 
 class Token(Generic[Kind]):
-
-    __slots__ = (
-        'kind', 'value',
-        'start_line', 'start_col', 'end_line', 'end_col',
-        'start_pos', 'end_pos'
-    )
+    __slots__ = ('kind', 'value', 'start_line', 'start_col', 'end_line', 'end_col', 'start_pos', 'end_pos')
 
     @property
     def name(self) -> str:

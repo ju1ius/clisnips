@@ -15,16 +15,17 @@ def _format_stack_trace(err: Exception) -> str:
 
 
 class ErrorDialog(Dialog):
-
     def __init__(self, parent, err: Exception):
         message = _format_error_message(err)
         details = _format_stack_trace(err)
 
-        body = urwid.Pile([
-            urwid.Text(('error', message)),
-            HorizontalDivider(),
-            urwid.Text(('default', details)),
-        ])
+        body = urwid.Pile(
+            [
+                urwid.Text(('error', message)),
+                HorizontalDivider(),
+                urwid.Text(('default', details)),
+            ]
+        )
 
         super().__init__(parent, body)
         self.set_actions(

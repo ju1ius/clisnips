@@ -14,7 +14,6 @@ V = TypeVar('V')
 
 
 class Select(PopupMenu, Generic[V]):
-
     class Signals(enum.StrEnum):
         CHANGED = enum.auto()
 
@@ -60,7 +59,6 @@ class ComboBoxButton(urwid.Button):
 
 
 class ComboBox(urwid.PopUpLauncher, Generic[V]):
-
     class Signals(enum.StrEnum):
         CHANGED = 'changed'
 
@@ -91,11 +89,7 @@ class ComboBox(urwid.PopUpLauncher, Generic[V]):
         return self._select
 
     def get_pop_up_parameters(self):
-        return {
-            'left': 0, 'top': 0,
-            'overlay_width': 32,
-            'overlay_height': len(self._select) + 2
-        }
+        return {'left': 0, 'top': 0, 'overlay_width': 32, 'overlay_height': len(self._select) + 2}
 
     def get_selected(self) -> V | None:
         item = self._select.get_selected()

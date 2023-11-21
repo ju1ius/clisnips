@@ -30,12 +30,15 @@ class ExportCommand(Command):
         match format, suffix:
             case ('json', _) | (None, '.json'):
                 from clisnips.exporters import JsonExporter
+
                 return JsonExporter
             case ('toml', _) | (None, '.toml'):
                 from clisnips.exporters import TomlExporter
+
                 return TomlExporter
             case ('xml', _) | (None, '.xml'):
                 from clisnips.exporters import XmlExporter
+
                 return XmlExporter
             case _:
                 return None

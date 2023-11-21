@@ -1,4 +1,3 @@
-
 import logging
 import sys
 from typing import IO
@@ -14,7 +13,6 @@ def configure(helper: UrwidMarkupHelper, level: str, stream: IO = sys.stderr):
 
 
 class UrwidRecordFormatter(logging.Formatter):
-
     levels = {
         'DEBUG': 'debug',
         'INFO': 'info',

@@ -4,7 +4,6 @@ from clisnips.tui.animation import AnimationController
 
 
 class Spinner(urwid.Widget):
-
     _frames = ('⣾', '⣽', '⣻', '⢿', '⡿', '⣟', '⣯', '⣷')
 
     _sizing = frozenset([urwid.FIXED])

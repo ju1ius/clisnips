@@ -9,10 +9,9 @@ RadioState = bool | Literal['mixed']
 
 
 class RadioItem(urwid.RadioButton, Generic[V]):
-
     def __init__(self, group: list[Self], label: str, value: V, selected: bool = False):
         super().__init__(
-            group, # type: ignore (python type system sucks)
+            group,  # type: ignore (python type system sucks)
             label,
             state=selected,
         )
@@ -23,7 +22,6 @@ class RadioItem(urwid.RadioButton, Generic[V]):
 
 
 class RadioGroup(Generic[V]):
-
     class Signals(enum.StrEnum):
         CHANGED = 'changed'
 

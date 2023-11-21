@@ -66,7 +66,7 @@ default_palette = {
     'syn:py:string:interp': {'fg': 'light gray', 'bg': 'black'},
     'syn:py:function': {'fg': 'dark cyan', 'bg': 'black'},
     'syn:py:number': {'fg': 'yellow', 'bg': 'black'},
-}
+}  # fmt: skip
 
 
 class PaletteEntry(BaseModel):
@@ -93,6 +93,6 @@ _palette_field_defs = {
         Field(default=v if isinstance(v, str) else PaletteEntry(**v)),
     )
     for k, v in default_palette.items()
-}
+}  # fmt: skip
 
-Palette = create_model('Palette', **_palette_field_defs) # type: ignore
+Palette = create_model('Palette', **_palette_field_defs)  # type: ignore

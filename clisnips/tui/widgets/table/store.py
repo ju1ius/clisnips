@@ -6,7 +6,6 @@ import urwid
 
 
 class TableStore:
-
     class Signals(enum.StrEnum):
         ROWS_LOADED = 'rows-loaded'
         ROW_UPDATED = 'row-updated'

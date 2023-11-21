@@ -5,7 +5,6 @@ from .pager import Pager
 
 
 class OffsetPager(Pager):
-
     def __init__(self, connection: sqlite3.Connection, page_size: int = 100):
         self._con = connection
         self._current_page: int = 1
@@ -90,7 +89,7 @@ class OffsetPager(Pager):
         query = 'SELECT * FROM ({query}) LIMIT {page_size} {offset}'.format(
             query=self._query,
             page_size=self._page_size,
-            offset='' if page == 1 else f'OFFSET {offset}'
+            offset='' if page == 1 else f'OFFSET {offset}',
         )
         cursor = self._con.execute(query, self._query_params)
         return cursor.fetchall()

@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class Cell(urwid.Text):
-
     def __init__(self, row: Row, column: LayoutColumn, content):
         self._row = row
         self._column = column

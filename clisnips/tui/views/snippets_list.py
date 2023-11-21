@@ -24,8 +24,8 @@ from clisnips.tui.view import View
 
 logger = logging.getLogger(__name__)
 
-class SnippetListView(View):
 
+class SnippetListView(View):
     class Signals(enum.StrEnum):
         APPLY_SNIPPET_REQUESTED = enum.auto()
 

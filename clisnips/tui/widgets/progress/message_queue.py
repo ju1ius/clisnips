@@ -20,7 +20,6 @@ class MessageType(enum.Enum):
 
 
 class MessageQueue(multiprocessing.queues.Queue):
-
     def __init__(self):
         super().__init__(0, ctx=multiprocessing)
 
@@ -47,7 +46,6 @@ class MessageQueue(multiprocessing.queues.Queue):
 
 
 class MessageQueueListener:
-
     def __init__(self, message_queue: MessageQueue):
         self._message_queue = message_queue
         self._stop_event = multiprocessing.Event()
@@ -91,7 +89,6 @@ class MessageQueueListener:
 
 
 class IndeterminateMessageQueueListener(MessageQueueListener):
-
     def _poll_queue(self):
         try:
             return self._message_queue.get(True, 0.1)

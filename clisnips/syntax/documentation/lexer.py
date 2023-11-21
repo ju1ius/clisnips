@@ -33,7 +33,7 @@ WSP_RX = re.compile(r'[\t\f ]*')
 PARAM_START_RX = re.compile(r'^[\t\f ]*(?={)', re.MULTILINE)
 CODE_BLOCK_START_RX = re.compile(r'^[\t\f ]*(?=```$)', re.MULTILINE)
 FREE_TEXT_BOUNDS_RX = re.compile(
-    r'''
+    r"""
         ^               # start of string or line
         [\x20\t\f]*     # any whitespace except newline
         (?=             # followed by
@@ -41,8 +41,8 @@ FREE_TEXT_BOUNDS_RX = re.compile(
             |           # or
             ```$        # code block start marker
         )
-    ''',
-    re.MULTILINE | re.X
+    """,
+    re.MULTILINE | re.X,
 )
 
 IDENTIFIER_RX = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
@@ -52,7 +52,7 @@ INTEGER_RX = re.compile(r'\d+')
 FLOAT_RX = re.compile(r'\d*\.\d+')
 TYPE_HINT_RX = re.compile(rf'\(\s*({IDENTIFIER_RX.pattern})\s*\)')
 DIGIT_RX = re.compile(rf'-?(?:({FLOAT_RX.pattern})|({INTEGER_RX.pattern}))')
-STRING_RX = re.compile(r'''(["']) ( (?: \\. | (?!\1) . )* ) \1''', re.X)
+STRING_RX = re.compile(r"""(["']) ( (?: \\. | (?!\1) . )* ) \1""", re.X)
 DQ_STR_RX = re.compile(r'"(?:\\.|[^"])*"')
 SQ_STR_RX = re.compile(r"'(?:\\.|[^'])*'")
 TQ_STR_RX = re.compile(r'(\'\'\'|""")(?:\\.|[^\\])*\1')
@@ -307,7 +307,7 @@ class Lexer(StringLexer[Tokens]):
         if not m:
             return ''
         end = m.end()
-        text = self.text[self.pos:end]
+        text = self.text[self.pos : end]
         self.advance(end - self.pos - 1)
         return text
 

@@ -13,14 +13,12 @@ from .field import Entry, SimpleField
 
 
 class PathField(SimpleField):
-
     def __init__(self, label: TextMarkup, *args, **kwargs):
         entry = PathEntry(*args, **kwargs)
         super().__init__(label, entry)
 
 
 class PathEntry(Entry, urwid.PopUpLauncher):
-
     signals = ['changed']
 
     def __init__(self, cwd: AnyPath = '.', mode: str = '', default: str = ''):
@@ -77,7 +75,6 @@ class PathEntry(Entry, urwid.PopUpLauncher):
 
 
 class PathCompletionMenu(PopupMenu):
-
     class Signals(enum.StrEnum):
         COMPLETION_SELECTED = enum.auto()
 

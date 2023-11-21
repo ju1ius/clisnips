@@ -6,7 +6,6 @@ from clisnips.syntax.token import Kind, Token
 
 
 class LLkParser(Generic[Kind]):
-
     def __init__(self, lexer: StringLexer[Kind], eof: Kind, k: int = 2):
         self._K = k
         self._eof_marker = Token(eof, 0, 0)

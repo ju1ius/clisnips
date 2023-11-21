@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 class InstallShellKeyBindingsCommand(Command):
-
     shell_rcs = {
         'bash': '~/.bashrc',
         'zsh': '~/.zshrc',
@@ -33,10 +32,12 @@ class InstallShellKeyBindingsCommand(Command):
         rc_file = Path(self.shell_rcs[shell]).expanduser()
         with open(rc_file, mode='a') as fp:
             logger.info(f'Updating {rc_file}')
-            fp.writelines([
-                '# clisnips key bindings\n',
-                f'[ -f {dest} ] && source {dest}\n',
-            ])
+            fp.writelines(
+                [
+                    '# clisnips key bindings\n',
+                    f'[ -f {dest} ] && source {dest}\n',
+                ]
+            )
 
         logger.info('OK', extra={'color': 'success'})
         self.print(

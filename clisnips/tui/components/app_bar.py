@@ -5,10 +5,12 @@ from clisnips.stores.snippets import SnippetsStore
 
 class KeyBinding(urwid.Text):
     def __init__(self, key: str, label: str) -> None:
-        super().__init__([
-            ('help:key', key),
-            ('view:default', f': {label}'),
-        ])
+        super().__init__(
+            [
+                ('help:key', key),
+                ('view:default', f': {label}'),
+            ]
+        )
 
 
 class AppBar(urwid.WidgetWrap):

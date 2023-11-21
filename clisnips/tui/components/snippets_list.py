@@ -18,8 +18,8 @@ FOCUS_ATTR_MAP = {
     'cmd': 'snippets-list:cmd:focused',
 }
 
-class SnippetsList(urwid.WidgetWrap):
 
+class SnippetsList(urwid.WidgetWrap):
     def __init__(self, store: SnippetsStore):
         self._store = store
         self._walker = urwid.SimpleFocusListWalker([])
@@ -31,11 +31,13 @@ class SnippetsList(urwid.WidgetWrap):
         def on_snippets_changed(snippets: list[Snippet]):
             self._walker.clear()
             for snippet in snippets:
-                self._walker.append(urwid.AttrMap(
-                    ListItem(snippet),
-                    attr_map=ATTR_MAP,
-                    focus_map=FOCUS_ATTR_MAP,
-                ))
+                self._walker.append(
+                    urwid.AttrMap(
+                        ListItem(snippet),
+                        attr_map=ATTR_MAP,
+                        focus_map=FOCUS_ATTR_MAP,
+                    )
+                )
 
         self._watcher = store.watch(watch_snippets, on_snippets_changed, immediate=True)
 
@@ -56,10 +58,12 @@ class ListItem(urwid.Pile):
             ],
             dividechars=1,
         )
-        super().__init__([
-            ('pack', header),
-            ('pack', urwid.Text(('cmd', snippet['cmd']))),
-        ])
+        super().__init__(
+            [
+                ('pack', header),
+                ('pack', urwid.Text(('cmd', snippet['cmd']))),
+            ]
+        )
 
     def selectable(self) -> bool:
         return True

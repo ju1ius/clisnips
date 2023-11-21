@@ -11,7 +11,6 @@ from .view import View, ViewBuilder
 
 
 class TUI:
-
     def __init__(self, palette):
         self.root_widget = urwid.WidgetPlaceholder(urwid.SolidFill(''))
         self.builder = ViewBuilder(self.root_widget)
@@ -21,7 +20,9 @@ class TUI:
         for name, entry in palette.items():
             if isinstance(entry, str):
                 entry = palette[entry]
-            screen.register_palette_entry(name, entry['fg'], entry['bg'], entry.get('mono'), entry.get('fg_hi'), entry.get('bg_hi'))
+            screen.register_palette_entry(
+                name, entry['fg'], entry['bg'], entry.get('mono'), entry.get('fg_hi'), entry.get('bg_hi')
+            )
             # screen.register_palette_entry(name, entry.fg, entry.bg, entry.mono, entry.fg_hi, entry.bg_hi)
 
         observ.scheduler.register_asyncio()
@@ -46,8 +47,7 @@ class TUI:
             self.main_loop.draw_screen()
 
     @staticmethod
-    def connect(obj: object, name: Hashable, callback: Callable,
-                weak_args: Iterable = (), user_args: Iterable = ()):
+    def connect(obj: object, name: Hashable, callback: Callable, weak_args: Iterable = (), user_args: Iterable = ()):
         urwid.connect_signal(obj, name, callback, weak_args=weak_args, user_args=user_args)
 
     def main(self):

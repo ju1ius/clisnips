@@ -4,8 +4,8 @@ Very simple text table layout algorithm.
 TODO: https://drafts.csswg.org/css-tables-3
 """
 
-import math
 import re
+import sys
 import textwrap
 from collections.abc import Hashable, Iterable, Mapping
 from math import floor
@@ -15,7 +15,6 @@ T = TypeVar('T', bound=Mapping)
 
 
 class InlinePadding:
-
     def __init__(self, start: int = 0, end: int = 0):
         self.start = start
         self.end = end
@@ -35,14 +34,14 @@ class LayoutColumn:
         key: Hashable,
         width: int | None = None,
         min_width: int = 0,
-        max_width: int | float = math.inf,
+        max_width: int = sys.maxsize,
         padding: tuple[int, int] = (0, 0),
         wrap: bool = False,
     ):
         self.key = key
         self.width = width
         self.min_width = min_width
-        self.max_width = max_width if max_width is math.inf else int(max_width)
+        self.max_width = max_width
         self.word_wrap = wrap
         self.padding = InlinePadding(*padding)
         #
@@ -75,7 +74,6 @@ class LayoutColumn:
 
 
 class LayoutRow(Generic[T]):
-
     def __init__(self, columns: list[LayoutColumn], data: T):
         self._columns = columns
         self._data = dict(data)
@@ -110,7 +108,6 @@ _WORD_SPLIT_RX = re.compile(r'\W+', re.UNICODE)
 
 
 class TableLayout(Generic[T]):
-
     def __init__(self):
         self._columns: list[LayoutColumn] = []
         self._rows: list[LayoutRow[T]] = []
@@ -123,11 +120,8 @@ class TableLayout(Generic[T]):
 
     @property
     def row_focus_attr_map(self):
-        attr_map: dict[str|None, str] = {None: 'table-row:focused'}
-        attr_map.update({
-            f'table-column:{col.key}': f'table-column:{col.key}:focused'
-            for col in self._columns
-        })
+        attr_map: dict[str | None, str] = {None: 'table-row:focused'}
+        attr_map.update({f'table-column:{col.key}': f'table-column:{col.key}:focused' for col in self._columns})
         return attr_map
 
     def append_column(self, column: LayoutColumn):
@@ -139,7 +133,7 @@ class TableLayout(Generic[T]):
 
     def layout(self, rows: Iterable[T], available_width: int):
         if not available_width:
-            available_width = math.inf
+            available_width = sys.maxsize
         self._compute_content_sizes(rows)
         self._distribute_width(available_width)
         self._distribute_height(rows)
@@ -233,4 +227,3 @@ class TableLayout(Generic[T]):
         words = _WORD_SPLIT_RX.split(value)
         longest_word = max(words, key=len)
         return len(longest_word)
-

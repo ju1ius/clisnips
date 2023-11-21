@@ -49,15 +49,19 @@ class ImportCommand(Command):
         match format, suffix:
             case ('json', _) | (None, '.json'):
                 from clisnips.importers import JsonImporter
+
                 return JsonImporter
-            case  ('toml', _) | (None, '.toml'):
+            case ('toml', _) | (None, '.toml'):
                 from clisnips.importers import TomlImporter
+
                 return TomlImporter
-            case  ('xml', _) | (None, '.xml'):
+            case ('xml', _) | (None, '.xml'):
                 from clisnips.importers import XmlImporter
+
                 return XmlImporter
             case ('cli-companion', _):
                 from clisnips.importers import CliCompanionImporter
+
                 return CliCompanionImporter
             case _:
                 return None

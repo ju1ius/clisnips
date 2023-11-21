@@ -29,12 +29,7 @@ class Action(urwid.WidgetWrap):
         SUGGESTED = enum.auto()
         DESTRUCTIVE = enum.auto()
 
-    def __init__(
-        self,
-        label: str,
-        response_kind: ResponseKind,
-        kind: Kind = Kind.DEFAULT
-    ):
+    def __init__(self, label: str, response_kind: ResponseKind, kind: Kind = Kind.DEFAULT):
         self._response_kind = response_kind
         self._kind = kind
         self._enabled = True
@@ -67,7 +62,6 @@ class Action(urwid.WidgetWrap):
 
 
 class DialogFrame(urwid.WidgetWrap):
-
     def __init__(self, parent: urwid.Widget, body: Dialog, title: str):
         self.parent = parent
         self.line_box = urwid.LineBox(body, title=title)
@@ -75,14 +69,12 @@ class DialogFrame(urwid.WidgetWrap):
 
 
 class DialogOverlay(urwid.Overlay):
-
     def __init__(self, parent: urwid.Widget, *args, **kwargs):
         self.parent = parent
         super().__init__(*args, **kwargs)
 
 
 class Dialog(urwid.WidgetWrap):
-
     class Signals(enum.StrEnum):
         RESPONSE = 'response'
 
@@ -93,12 +85,12 @@ class Dialog(urwid.WidgetWrap):
     def __init__(self, view: View, body: urwid.Widget):
         self._parent_view = view
         self._body = body
-        self._action_area: urwid.GridFlow | None = None
+        self._action_area = urwid.GridFlow((), 1, 3, 1, 'center')
         self._frame = urwid.Pile([self._body])
         w = self._frame
         # pad area around listbox
         w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=(WHSettings.RELATIVE, 100))
-        w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=(WHSettings.RELATIVE, 100))
+        w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=('relative', 100))
         w = urwid.AttrMap(w, 'body')
         super().__init__(w)
 

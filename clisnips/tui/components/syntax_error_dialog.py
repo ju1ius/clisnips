@@ -5,16 +5,17 @@ import urwid
 
 from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 
-
-class SyntaxErrorDialog(Dialog):
-
-    message = dedent('''
+_MESSAGE = dedent(
+    """
     There seems to be a syntax error in your snippet...
     You should probably edit it.
-    ''')
+    """
+)
 
+
+class SyntaxErrorDialog(Dialog):
     def __init__(self, parent):
-        text = urwid.Text(('warning', self.message))
+        text = urwid.Text(('warning', _MESSAGE))
         body = urwid.Filler(urwid.Padding(text, width='pack', align='center'), valign='middle')
 
         super().__init__(parent, body)
@@ -29,4 +30,5 @@ class SyntaxErrorDialog(Dialog):
         def handler(dialog, response_type):
             if response_type == ResponseKind.ACCEPT:
                 callback(*args)
+
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)

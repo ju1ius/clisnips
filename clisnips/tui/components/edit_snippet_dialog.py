@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 
 class EditSnippetDialog(Dialog, Generic[S]):
-
     def __init__(self, parent, snippet: S):
         self._snippet = snippet
         logger.debug('snippet: %r', snippet)
@@ -60,11 +59,12 @@ class EditSnippetDialog(Dialog, Generic[S]):
                 snippet = self._collect_values()
                 logger.debug('accept: %r', snippet)
                 callback(snippet)
+
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _collect_values(self) -> S:
         values = {name: entry.get_edit_text() for name, entry in self._fields.items()}
-        return {**self._snippet, **values} # type: ignore
+        return {**self._snippet, **values}  # type: ignore
 
     def _highlight_cmd_on_changed(self, entry: ComplexField, text: str):
         markup = highlight_command(text)
@@ -108,10 +108,12 @@ class SimpleField(urwid.Pile):
     def __init__(self, label: str, value: str):
         self._label = urwid.Text(label)
         self._entry = EmacsEdit(edit_text=value)
-        super().__init__([
-            self._label,
-            self._entry,
-        ])
+        super().__init__(
+            [
+                self._label,
+                self._entry,
+            ]
+        )
 
     def get_entry(self) -> urwid.Edit:
         return self._entry
@@ -130,11 +132,13 @@ class ComplexField(urwid.Pile):
         self._entry = SourceEdit(edit_text='', multiline=True)
         self._entry.set_edit_markup(markup)
         self._errors = urwid.AttrMap(urwid.Text(''), 'error')
-        super().__init__([
-            self._label,
-            self._entry,
-            self._errors,
-        ])
+        super().__init__(
+            [
+                self._label,
+                self._entry,
+                self._errors,
+            ]
+        )
 
     def get_entry(self) -> urwid.Edit:
         return self._entry
@@ -146,7 +150,7 @@ class ComplexField(urwid.Pile):
         self._entry.set_edit_markup(markup)
 
     def set_error_text(self, err: str):
-        self._errors.original_widget.set_text(err) # type: ignore (original_widget is a Text widget)
+        self._errors.original_widget.set_text(err)  # type: ignore (original_widget is a Text widget)
         try:
             self.contents.remove((self._errors, ('weight', 1)))
         except ValueError:

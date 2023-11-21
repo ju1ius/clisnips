@@ -11,7 +11,7 @@ from clisnips.database.search_pager import SearchPager, SearchSyntaxError
 from clisnips.database.snippets_db import SnippetsDatabase
 from clisnips.utils.clock import Clock
 
-Watched = TypeVar("Watched")
+Watched = TypeVar('Watched')
 
 
 class ListLayout(enum.StrEnum):
@@ -40,7 +40,6 @@ class State(TypedDict):
 
 
 class SnippetsStore:
-
     def __init__(
         self,
         initial_state: State,
@@ -83,7 +82,7 @@ class SnippetsStore:
         on_change: Callable[[Watched], Any],
         sync=False,
         deep=False,
-        immediate=False
+        immediate=False,
     ):
         return watch(
             fn=lambda: expr(self._state),

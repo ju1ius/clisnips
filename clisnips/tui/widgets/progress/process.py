@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class Process(multiprocessing.Process):
-
     # protected props of multiprocessing.Process
     _target: Callable
     _args: tuple[Any]
@@ -74,6 +73,5 @@ class Process(multiprocessing.Process):
 
 
 class BlockingProcess(Process):
-
     def _do_run_task(self):
         self._target(*self._args, **self._kwargs)

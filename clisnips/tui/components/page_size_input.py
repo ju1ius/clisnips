@@ -1,4 +1,3 @@
-
 import urwid
 from urwid.numedit import IntegerEdit
 

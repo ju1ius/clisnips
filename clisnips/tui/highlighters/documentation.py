@@ -22,11 +22,10 @@ Code.End = Code.End
 
 INTEGER_RX = r'0 | [1-9] \d*'
 FLOAT_RX = r'\d* \. \d+'
-NUMBER_RX = fr'({FLOAT_RX}) | ({INTEGER_RX})'
+NUMBER_RX = rf'({FLOAT_RX}) | ({INTEGER_RX})'
 
 
 class DocLexer(RegexLexer):
-
     name = 'ClisnipsDoc'
     aliases = 'doc'
     flags = re.X
@@ -63,7 +62,6 @@ class DocLexer(RegexLexer):
 
 
 class DocFormatter(Formatter):
-
     doc_scheme = {
         Text: 'syn:doc:default',
         Whitespace: 'syn:doc:default',
@@ -139,7 +137,7 @@ class DocFormatter(Formatter):
             outfile.write((style, value))
 
 
-_lexer = DocLexer(encoding="utf8", stripall=True, ensurenl=True)
+_lexer = DocLexer(encoding='utf8', stripall=True, ensurenl=True)
 _formatter = DocFormatter()
 _writer = UrwidMarkupWriter()
 

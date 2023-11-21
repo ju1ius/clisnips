@@ -19,7 +19,6 @@ ELEMENT_INDEX = rf'\[ {DIGIT} | {INDEX_STR} \]'
 
 
 class CommandLexer(RegexLexer):
-
     name = 'ClisnipsCommand'
     aliases = 'cmd'
     flags = re.X | re.I
@@ -42,7 +41,6 @@ class CommandLexer(RegexLexer):
 
 
 class CommandFormatter(Formatter):
-
     color_scheme = {
         Text: 'syn:cmd:default',
         Punctuation: 'syn:cmd:punctuation',

@@ -9,11 +9,7 @@ from clisnips.database.snippets_db import SnippetsDatabase
 
 
 class Importer(ABC):
-    def __init__(
-        self,
-        db: SnippetsDatabase,
-        dry_run = False
-    ):
+    def __init__(self, db: SnippetsDatabase, dry_run=False):
         self._db = db
         self._dry_run = dry_run
 

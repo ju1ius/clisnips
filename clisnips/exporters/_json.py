@@ -7,6 +7,7 @@ from clisnips.exporters.base import Exporter
 
 logger = logging.getLogger(__name__)
 
+
 class JsonExporter(Exporter):
     def export(self, path: Path):
         start_time = time.time()

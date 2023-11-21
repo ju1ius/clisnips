@@ -2,13 +2,16 @@ import re
 from typing import Any
 
 # We rely on the fact that str(float(n)) will always normalize the number representation
-FLOAT_RE = re.compile(r'''
-^
-    [-]? \d+
-    (?:\. (?P<decimals> \d+ ))?
-    (?:e- (?P<exponent> \d+ ))?
-$
-''', re.X)
+FLOAT_RE = re.compile(
+    r"""
+    ^
+        [-]? \d+
+        (?:\. (?P<decimals> \d+ ))?
+        (?:e- (?P<exponent> \d+ ))?
+    $
+    """,
+    re.X,
+)
 
 
 def get_num_decimals(n: Any) -> int:
@@ -21,9 +24,8 @@ def get_num_decimals(n: Any) -> int:
     d = 0
     match = FLOAT_RE.match(str(n))
     assert match
-    if match['decimals']:
-        d += len(match['decimals'])
-    if match['exponent']:
-        d += int(match['exponent'])
+    if n := match['decimals']:
+        d += len(n)
+    if n := match['exponent']:
+        d += int(n)
     return d
-

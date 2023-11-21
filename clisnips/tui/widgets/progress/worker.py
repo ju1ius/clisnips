@@ -5,7 +5,6 @@ from .process import BlockingProcess, Process
 
 
 class Worker:
-
     @classmethod
     def from_job(cls, job, args=(), kwargs=None):
         queue = MessageQueue()

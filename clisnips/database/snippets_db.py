@@ -54,7 +54,6 @@ class SnippetNotFound(RuntimeError):
 
 
 class SnippetsDatabase:
-
     def __init__(self, connection: sqlite3.Connection):
         self.connection = connection
         self.cursor = connection.cursor()
@@ -135,13 +134,13 @@ class SnippetsDatabase:
 
     @staticmethod
     def get_search_query() -> str:
-        return '''
+        return """
             SELECT i.rowid as docid, s.rowid AS id,
             s.title, s.cmd, s.tag,
             s.created_at, s.last_used_at, s.usage_count, s.ranking
             FROM snippets s JOIN snippets_index i ON i.rowid = s.rowid
             WHERE snippets_index MATCH :term
-        '''
+        """
 
     @staticmethod
     def get_search_count_query() -> str:
@@ -160,10 +159,10 @@ class SnippetsDatabase:
             self.cursor.execute(query, data)
             if self.cursor.rowcount > 0:
                 self._num_rows += self.cursor.rowcount
-            return self.cursor.lastrowid # type: ignore
+            return self.cursor.lastrowid  # type: ignore
 
     def insert_many(self, data: Iterable[ImportableSnippet]):
-        query = '''
+        query = """
             INSERT INTO snippets(
                 title, cmd, doc, tag,
                 created_at, last_used_at, usage_count, ranking
@@ -172,7 +171,7 @@ class SnippetsDatabase:
                 :title, :cmd, :doc, :tag,
                 :created_at, :last_used_at, :usage_count, :ranking
             )
-        '''
+        """
         with self.connection:
             self.cursor.executemany(query, data)
             if self.cursor.rowcount > 0:
@@ -195,8 +194,10 @@ class SnippetsDatabase:
         snippet = self.get(rowid)
         ranking = compute_ranking(snippet['created_at'], snippet['last_used_at'], snippet['usage_count'] + 1, now)
         # ranking = compute_frecency(now, snippet['ranking'])
-        query = ('UPDATE snippets '
-                 'SET last_used_at = :now, usage_count = usage_count + 1, ranking = :ranking '
-                 'WHERE rowid = :id')
+        query = (
+            'UPDATE snippets '
+            'SET last_used_at = :now, usage_count = usage_count + 1, ranking = :ranking '
+            'WHERE rowid = :id'
+        )
         with self.connection:
             self.cursor.execute(query, {'id': rowid, 'now': int(now), 'ranking': ranking})

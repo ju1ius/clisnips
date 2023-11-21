@@ -5,7 +5,6 @@ from clisnips.tui.widgets.utils import original_widget
 
 
 class Body(CyclingFocusListBox):
-
     KEYPRESS = 'keypress'
 
     def __init__(self):

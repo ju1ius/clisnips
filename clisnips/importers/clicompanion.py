@@ -42,7 +42,8 @@ class CliCompanionImporter(Importer):
 
         with open(path) as fp:
             if self._dry_run:
-                for _ in _get_snippets(fp): ...
+                for _ in _get_snippets(fp):
+                    ...
             else:
                 self._db.insert_many(_get_snippets(fp))
             logger.info('Rebuilding & optimizing search index')
@@ -94,12 +95,14 @@ def _translate(cmd: str, ui: str, desc: str) -> ImportableSnippet:
     """
     Since ui is free form text, we have to make an educated guess...
     """
-    result = SnippetAdapter.validate_python({
-        'title': desc,
-        'cmd': cmd,
-        'doc': ui,
-        'tag': cmd.split(None, 1)[0],
-    })
+    result = SnippetAdapter.validate_python(
+        {
+            'title': desc,
+            'cmd': cmd,
+            'doc': ui,
+            'tag': cmd.split(None, 1)[0],
+        }
+    )
     nargs = len(_ARGS_RE.findall(cmd))
     if not nargs:
         # no user arguments

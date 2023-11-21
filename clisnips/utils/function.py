@@ -1,7 +1,7 @@
 from collections.abc import Callable
 from typing import Any, Concatenate, TypeVar
 
-T = TypeVar("T")
+T = TypeVar('T')
 
 
 def bind(fn: Callable[Concatenate[T, ...], Any], obj: T, name: str | None = None):

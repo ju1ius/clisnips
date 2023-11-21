@@ -8,14 +8,12 @@ from .field import Entry, SimpleField
 
 
 class RangeField(SimpleField):
-
     def __init__(self, label: TextMarkup, *args, **kwargs):
         entry = RangeEntry(*args, **kwargs)
         super().__init__(label, entry)
 
 
 class RangeEntry(Entry, EmacsEdit):
-
     def __init__(self, start, end, step, default=None):
         self._model = RangeModel(start, end, step, default)
         super().__init__('', str(self._model.get_value()))
@@ -55,7 +53,6 @@ class RangeEntry(Entry, EmacsEdit):
 
 
 class RangeModel:
-
     def __init__(self, start, end, step, default=None):
         self._start = start
         self._end = end

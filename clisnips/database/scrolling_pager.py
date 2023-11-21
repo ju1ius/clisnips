@@ -151,6 +151,7 @@ class Cursor:
     The `first` member represents the first row of a page.
     The `last` member represents the last row of a page.
     """
+
     def __init__(
         self,
         unique_column: CursorColumn = ('rowid', SortOrder.ASC),
@@ -223,7 +224,7 @@ class Cursor:
         # value format, i.e. `{cursor.first[%s]!r}`
         value_fmt = '{%s.%s[%%s]!r}' % (  # noqa: UP031 (No, this is more readable!)
             cursor_name,
-            'last' if direction is ScrollDirection.FWD else 'first'
+            'last' if direction is ScrollDirection.FWD else 'first',
         )
         # comparison format, i.e. `rowid >= {cursor.first['rowid']!r}`
         cmp_fmt = '{column} {op} {value}'
@@ -249,5 +250,5 @@ class Cursor:
 
         return '({left}) AND ({right})'.format(
             left=' AND '.join(left),
-            right=' OR '.join(right)
+            right=' OR '.join(right),
         )

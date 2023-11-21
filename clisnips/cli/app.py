@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class Application:
-
     commands: dict[str, type[Command]] = {
         'import': ImportCommand,
         'export': ExportCommand,
@@ -49,7 +48,7 @@ class Application:
             description='The following commands are available outside the GUI.',
         )
         for _, cmd in cls.commands.items():
-            cmd.configure(sub_parsers) # type: ignore
+            cmd.configure(sub_parsers)  # type: ignore
 
         return parser.parse_args()
 
@@ -58,7 +57,6 @@ class Application:
 
         dic = self._create_container(argv)
         configure_logging(dic.markup_helper, argv.log_level or 'info', sys.stderr)
-
 
         logger.debug('launching command: %s', argv)
         command = cls(dic)

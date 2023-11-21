@@ -36,7 +36,6 @@ class _CommandFormatter(_StringFormatter):
 
 
 class CommandTemplate:
-
     def __init__(self, raw: str, nodes: list[Text | Field]):
         self.raw = raw
         self.nodes = nodes

@@ -6,12 +6,11 @@ from clisnips.tui.widgets.utils import suspend_emitter
 
 
 class SearchInput(EmacsEdit):
-
     def __init__(self, store: SnippetsStore):
         super().__init__(multiline=False)
         self._watchers = {
             'value': store.watch(lambda s: s['search_query'], self._on_query_changed, immediate=True),
-            'state': store.watch(lambda s: s['query_state'], self._on_query_state_changed, immediate=True)
+            'state': store.watch(lambda s: s['query_state'], self._on_query_state_changed, immediate=True),
         }
         urwid.connect_signal(self, 'postchange', self._on_input_changed, weak_args=(store,))
 

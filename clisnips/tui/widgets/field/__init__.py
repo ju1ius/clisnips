@@ -30,7 +30,7 @@ def _field_from_param(param: Parameter) -> Field:
             start=value_hint.start,
             end=value_hint.end,
             step=value_hint.step,
-            default=value_hint.default
+            default=value_hint.default,
         )
     if isinstance(value_hint, ValueList):
         if len(value_hint) > 1:

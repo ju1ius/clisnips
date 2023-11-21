@@ -12,6 +12,7 @@ from .base import Importer, SnippetAdapter
 
 logger = logging.getLogger(__name__)
 
+
 class XmlImporter(Importer):
     def import_path(self, path: Path) -> None:
         start_time = time.time()
@@ -19,7 +20,8 @@ class XmlImporter(Importer):
 
         with open(path) as fp:
             if self._dry_run:
-                for _ in _parse_snippets(fp): ...
+                for _ in _parse_snippets(fp):
+                    ...
             else:
                 self._db.insert_many(_parse_snippets(fp))
             logger.info('Rebuilding & optimizing search index')
@@ -36,13 +38,15 @@ def _parse_snippets(file: TextIO) -> Iterable[ImportableSnippet]:
     for _, el in ElementTree.iterparse(file):
         if el.tag != 'snippet':
             continue
-        yield SnippetAdapter.validate_python({
-            'title': el.findtext('title').strip(),
-            'tag': el.findtext('tag').strip(),
-            'cmd': dedent(el.findtext('command')),
-            'doc': dedent(el.findtext('doc').strip()),
-            'created_at': el.attrib.get('created-at', now),
-            'last_used_at': el.attrib.get('last-used-at', 0),
-            'usage_count': el.attrib.get('usage-count', 0),
-            'ranking': el.attrib.get('ranking', 0.0),
-        })
+        yield SnippetAdapter.validate_python(
+            {
+                'title': el.findtext('title').strip(),
+                'tag': el.findtext('tag').strip(),
+                'cmd': dedent(el.findtext('command')),
+                'doc': dedent(el.findtext('doc').strip()),
+                'created_at': el.attrib.get('created-at', now),
+                'last_used_at': el.attrib.get('last-used-at', 0),
+                'usage_count': el.attrib.get('usage-count', 0),
+                'ranking': el.attrib.get('ranking', 0.0),
+            }
+        )

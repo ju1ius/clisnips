@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 
 
 class InsertSnippetDialog(Dialog):
-
     def __init__(self, parent, title: str, cmd: CommandTemplate, doc: Documentation):
         self._command = cmd
         self._doc = doc
@@ -29,21 +28,29 @@ class InsertSnippetDialog(Dialog):
 
         fields = intersperse(HorizontalDivider(), self._fields.values())
 
-        output_field = urwid.Pile([
-            HorizontalDivider(),
-            urwid.Text('Output:'),
-            urwid.AttrMap(self._output_text, 'cmd:default'),
-        ])
-
-        body = urwid.ListBox(urwid.SimpleFocusListWalker([
-            urwid.Pile([
-                urwid.Text(title),
-                doc_text,
+        output_field = urwid.Pile(
+            [
                 HorizontalDivider(),
-            ]),
-            urwid.Pile(fields),
-            output_field,
-        ]))
+                urwid.Text('Output:'),
+                urwid.AttrMap(self._output_text, 'cmd:default'),
+            ]
+        )
+
+        body = urwid.ListBox(
+            urwid.SimpleFocusListWalker(
+                [
+                    urwid.Pile(
+                        [
+                            urwid.Text(title),
+                            doc_text,
+                            HorizontalDivider(),
+                        ]
+                    ),
+                    urwid.Pile(fields),  # type: ignore (yes, fields are widgets...)
+                    output_field,
+                ]
+            )
+        )
 
         super().__init__(parent, body)
         self.set_actions(
@@ -63,6 +70,7 @@ class InsertSnippetDialog(Dialog):
                 if self._validate():
                     callback(self.get_output(), *args)
                     self.close()
+
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)
 
     def _on_response(self, dialog, response_type, *args):

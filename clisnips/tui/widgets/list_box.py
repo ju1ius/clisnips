@@ -2,7 +2,6 @@ import urwid
 
 
 class CyclingFocusListBox(urwid.ListBox):
-
     def keypress(self, size: tuple[int, int], key: str):
         match (key, self.focus_position):
             case ('up' | 'k', 0):

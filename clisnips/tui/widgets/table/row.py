@@ -4,7 +4,6 @@ from .cell import Cell
 
 
 class Row(urwid.Columns):
-
     def __init__(self, layout_row):
         cols = []
         for column, value in layout_row:

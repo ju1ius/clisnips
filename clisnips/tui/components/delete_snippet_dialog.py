@@ -7,7 +7,6 @@ from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 
 
 class DeleteSnippetDialog(Dialog):
-
     def __init__(self, parent):
         text = urwid.Text('Are you sure you want to delete this snippet ?')
         body = urwid.Filler(urwid.Padding(text, width=WHSettings.PACK, align=Align.CENTER), valign=VAlign.MIDDLE)
@@ -24,4 +23,5 @@ class DeleteSnippetDialog(Dialog):
         def handler(dialog, response_type):
             if response_type == ResponseKind.ACCEPT:
                 callback(*args)
+
         urwid.connect_signal(self, Dialog.Signals.RESPONSE, handler)

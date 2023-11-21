@@ -22,8 +22,9 @@ class DumpCommand(Command):
 
         if argv.compress:
             import gzip
+
             with gzip.open(argv.file, 'wt') as fp:
-                self._dump(fp) # type: ignore (the `wt` mode implies TextIO)
+                self._dump(fp)  # type: ignore (the `wt` mode implies TextIO)
         else:
             with open(argv.file, 'w') as fp:
                 self._dump(fp)

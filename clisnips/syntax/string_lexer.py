@@ -13,6 +13,7 @@ class StringLexer(ABC, Generic[Kind]):
     """
     A simple String lexer
     """
+
     def __init__(self, text: str = ''):
         self.text = text
         self.length: int = 0
@@ -25,7 +26,8 @@ class StringLexer(ABC, Generic[Kind]):
             self.set_text(text)
 
     @abstractmethod
-    def __iter__(self) -> Iterator[Token[Kind]]: ...
+    def __iter__(self) -> Iterator[Token[Kind]]:
+        ...
 
     def set_text(self, text: str):
         self.text = text
@@ -43,20 +45,20 @@ class StringLexer(ABC, Generic[Kind]):
         pos = self.pos + n
         if pos < self.length:
             if accumulate:
-                return self.text[self.pos + 1:pos + 1]
+                return self.text[self.pos + 1 : pos + 1]
             return self.text[pos]
         if accumulate:
-            return self.text[self.pos + 1:]
+            return self.text[self.pos + 1 :]
         return EMPTY
 
     def lookbehind(self, n: int = 1, accumulate: bool = False) -> str:
         pos = self.pos - n
         if pos >= 0:
             if accumulate:
-                return self.text[pos:self.pos]
+                return self.text[pos : self.pos]
             return self.text[pos]
         if accumulate:
-            return self.text[:self.pos]
+            return self.text[: self.pos]
         return EMPTY
 
     def advance(self, n: int = 1) -> str:
@@ -121,14 +123,14 @@ class StringLexer(ABC, Generic[Kind]):
         la = self.advance(n)
         if la is EMPTY:
             return EMPTY
-        return self.text[start_pos:self.pos + 1]
+        return self.text[start_pos : self.pos + 1]
 
     def unread(self, n: int = 1) -> str:
         end_pos = self.pos
         la = self.recede(n)
         if la is EMPTY:
             return EMPTY
-        return self.text[self.pos:end_pos + 1]
+        return self.text[self.pos : end_pos + 1]
 
     def consume(self, string: str):
         self.advance(len(string))
@@ -144,7 +146,7 @@ class StringLexer(ABC, Generic[Kind]):
             cache_key: tuple[str, bool] = (pattern, negate)
             if cache_key not in _RE_CACHE:
                 neg = '^' if negate else ''
-                _RE_CACHE[cache_key] = re.compile(fr'[{neg}{pattern}]+')
+                _RE_CACHE[cache_key] = re.compile(rf'[{neg}{pattern}]+')
             pattern = _RE_CACHE[cache_key]
         m = pattern.match(self.text, self.pos)
         if m:

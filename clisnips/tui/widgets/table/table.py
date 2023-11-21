@@ -114,6 +114,7 @@ class Table(urwid.Frame):
             new_index = len(self._columns) - 1
 
         self._focused_col_index = new_index
+
     #
     # def _increment_row_index(self, offset, absolute=False):
     #     if absolute is False:

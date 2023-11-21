@@ -6,7 +6,6 @@ from clisnips.utils.number import get_num_decimals
 
 
 class Documentation:
-
     def __init__(self):
         self.header: str = ''
         self.parameters: dict[str, Parameter] = dict()
@@ -30,7 +29,6 @@ class Documentation:
 
 
 class Parameter:
-
     def __init__(
         self,
         name: str,
@@ -51,7 +49,6 @@ class Parameter:
 
 
 class ValueRange:
-
     def __init__(self, start, end, step=None, default=None):
         self.start = start
         self.end = end
@@ -78,7 +75,6 @@ class ValueRange:
 
 
 class ValueList:
-
     def __init__(self, values, default=0):
         self.values = values
         self.default = default
@@ -103,7 +99,6 @@ class ValueList:
 
 
 class CodeBlock:
-
     def __init__(self, code):
         self.code = code
         self._bytecode = compile(code, '<codeblock>', 'exec')

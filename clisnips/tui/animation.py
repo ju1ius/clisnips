@@ -5,7 +5,6 @@ from .loop import clear_timeout, set_timeout
 
 
 class AnimationController:
-
     def __init__(self, callback: Callable, frame_rate: int = 60):
         self._callback = callback
         self._frame_duration = 1000 / frame_rate

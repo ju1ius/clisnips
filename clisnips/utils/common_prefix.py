@@ -1,5 +1,3 @@
-
-
 def common_prefix(*args: str) -> str:
     s1 = min(args)
     s2 = max(args)

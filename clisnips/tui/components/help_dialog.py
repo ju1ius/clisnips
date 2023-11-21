@@ -28,15 +28,17 @@ def _get_key_column_width():
 
 
 class HelpDialog(Dialog):
-
     def __init__(self, parent):
         body = []
         key_width = _get_key_column_width()
         for key, desc in SHORTCUTS:
-            cols = urwid.Columns([
-                (key_width, urwid.Text(('help:key', key))),
-                ('pack', urwid.Text(desc)),
-            ], 1)
+            cols = urwid.Columns(
+                [
+                    (key_width, urwid.Text(('help:key', key))),
+                    ('pack', urwid.Text(desc)),
+                ],
+                1,
+            )
             body.append(('pack', cols))
 
         body = urwid.Pile(body, 0)

@@ -4,7 +4,6 @@ from clisnips.tui.urwid_types import TextMarkup
 
 
 class Field:
-
     signals = ['changed']
 
     def get_value(self):
@@ -12,7 +11,6 @@ class Field:
 
 
 class Entry:
-
     signals = ['changed']
 
     def get_value(self):
@@ -20,13 +18,12 @@ class Entry:
 
 
 class SimpleField(Field, urwid.Pile):
-
     def __init__(self, label: TextMarkup, entry: Entry):
         self._entry = entry
         urwid.connect_signal(self._entry, 'changed', lambda *w: self._emit('changed'))
         super().__init__([
             urwid.Text(label),
-            self._entry
+            self._entry,  # type: ignore
         ])
 
     def get_value(self):

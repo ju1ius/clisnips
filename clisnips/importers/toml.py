@@ -8,6 +8,7 @@ from .base import Importer, SnippetDocumentAdapter
 
 logger = logging.getLogger(__name__)
 
+
 class TomlImporter(Importer):
     def import_path(self, path: Path) -> None:
         start_time = time.time()
