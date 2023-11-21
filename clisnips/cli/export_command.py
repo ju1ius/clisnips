@@ -15,32 +15,27 @@ class ExportCommand(Command):
         cmd.add_argument('file', type=Path)
 
     def run(self, argv) -> int:
-        if not argv.format:
-            match argv.file.suffix:
-                case '.json':
-                    argv.format = 'json'
-                case '.toml':
-                    argv.format = 'toml'
-                case '.xml':
-                    argv.format = 'xml'
-                case _:
-                    logger.error(
-                        f'Could not detect export format for {argv.file}.\n'
-                        'Please provide an explicit format with the --format option.'
-                    )
-                    return 1
+        cls = self._get_exporter_class(argv.format, argv.file.suffix)
+        if not cls:
+            logger.error(
+                f'Could not detect export format for {argv.file}.\n'
+                'Please provide an explicit format with the --format option.'
+            )
+            return 1
 
-        self._create_exporter(argv.format).export(argv.file)
+        cls(self.container.database).export(argv.file)
         return 0
 
-    def _create_exporter(self, name: str):
-        match name:
-            case 'json':
+    def _get_exporter_class(self, format: str | None, suffix: str):
+        match format, suffix:
+            case ('json', _) | (None, '.json'):
                 from clisnips.exporters import JsonExporter
-                return JsonExporter(self.container.database)
-            case 'toml':
+                return JsonExporter
+            case ('toml', _) | (None, '.toml'):
                 from clisnips.exporters import TomlExporter
-                return TomlExporter(self.container.database)
-            case 'xml' | _:
+                return TomlExporter
+            case ('xml', _) | (None, '.xml'):
                 from clisnips.exporters import XmlExporter
-                return XmlExporter(self.container.database)
+                return XmlExporter
+            case _:
+                return None

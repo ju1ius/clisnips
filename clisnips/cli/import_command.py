@@ -5,7 +5,6 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from clisnips.database.snippets_db import SnippetsDatabase
 from clisnips.ty import AnyPath
 
 from .command import Command
@@ -23,52 +22,45 @@ class ImportCommand(Command):
         cmd.add_argument('file', type=Path)
 
     def run(self, argv) -> int:
-        if not argv.format:
-            match argv.file.suffix:
-                case '.json':
-                    argv.format = 'json'
-                case '.toml':
-                    argv.format = 'toml'
-                case '.xml':
-                    argv.format = 'xml'
-                case _:
-                    logger.error(
-                        f'Could not detect import format for {argv.file}.\n'
-                        'Please provide an explicit format with the --format option.'
-                    )
-                    return 1
+        cls = self._get_importer_class(argv.format, argv.file.suffix)
+        if not cls:
+            logger.error(
+                f'Could not detect import format for {argv.file}.\n'
+                'Please provide an explicit format with the --format option.'
+            )
+            return 1
 
         if argv.replace:
             db_path = argv.database or self.container.config.database_path
             self._backup_and_drop_db(db_path, argv.dry_run)
             db = self.container.open_database(db_path)
-            importer = self._create_importer(argv.format, db, argv.dry_run)
         else:
-            importer = self._create_importer(argv.format, self.container.database, argv.dry_run)
+            db = self.container.database
 
         try:
-            importer.import_path(argv.file)
+            cls(db, dry_run=argv.dry_run).import_path(argv.file)
         except ValidationError as err:
             logger.error(err)
             return 128
 
         return 0
 
-    def _create_importer(self, name: str, db: SnippetsDatabase, dry_run: bool):
-        match name:
-            case 'json':
+    def _get_importer_class(self, format: str | None, suffix: str):
+        match format, suffix:
+            case ('json', _) | (None, '.json'):
                 from clisnips.importers import JsonImporter
-                return JsonImporter(db, dry_run=dry_run)
-            case 'toml':
+                return JsonImporter
+            case  ('toml', _) | (None, '.toml'):
                 from clisnips.importers import TomlImporter
-                return TomlImporter(db, dry_run=dry_run)
-            case 'cli-companion':
-                from clisnips.importers import CliCompanionImporter
-                return CliCompanionImporter(db, dry_run=dry_run)
-            case 'xml' | _:
+                return TomlImporter
+            case  ('xml', _) | (None, '.xml'):
                 from clisnips.importers import XmlImporter
-                return XmlImporter(db, dry_run=dry_run)
-
+                return XmlImporter
+            case ('cli-companion', _):
+                from clisnips.importers import CliCompanionImporter
+                return CliCompanionImporter
+            case _:
+                return None
 
     def _backup_and_drop_db(self, db_path: AnyPath, dry_run: bool):
         backup_path = self._get_backup_path(db_path)
