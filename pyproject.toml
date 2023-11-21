@@ -56,6 +56,7 @@ line-length = 120
 
 [tool.ruff.format]
 quote-style = "single"
+
 [tool.ruff.lint]
 extend-select = [
   'UP', # pyupgrade

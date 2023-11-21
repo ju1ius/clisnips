@@ -8,25 +8,34 @@ _APP = 'clisnips'
 
 def xdg_config_home() -> Path:
     match os.environ.get('XDG_CONFIG_HOME'):
-        case None | '': return Path('~/.config').expanduser()
-        case v: return Path(v)
+        case None | '':
+            return Path('~/.config').expanduser()
+        case v:
+            return Path(v)
 
 
 def xdg_data_home() -> Path:
     match os.environ.get('XDG_DATA_HOME'):
-        case None | '': return Path('~/.local/share').expanduser()
-        case v: return Path(v)
+        case None | '':
+            return Path('~/.local/share').expanduser()
+        case v:
+            return Path(v)
 
 
 def xdg_state_home() -> Path:
     match os.environ.get('XDG_STATE_HOME'):
-        case None | '': return Path('~/.local/state').expanduser()
-        case v: return Path(v)
+        case None | '':
+            return Path('~/.local/state').expanduser()
+        case v:
+            return Path(v)
+
 
 def xdg_runtime_dir() -> Path:
     match os.environ.get('XDG_RUNTIME_DIR'):
-        case None | '': return xdg_state_home()
-        case v: return Path(v)
+        case None | '':
+            return xdg_state_home()
+        case v:
+            return Path(v)
 
 
 def get_config_path(sub: AnyPath) -> Path:

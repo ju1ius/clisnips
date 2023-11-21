@@ -54,7 +54,7 @@ class TableStore:
         urwid.connect_signal(self, signal, callback)
 
     def __getitem__(self, key: int | slice):
-        if isinstance(key, (int, slice)):
+        if isinstance(key, int | slice):
             return self._rows[key]
         raise TypeError(f'Table store indices must be int or slice, not {type(key).__name__}')
 

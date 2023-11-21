@@ -1,6 +1,6 @@
 import enum
 from collections.abc import Iterable
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 import urwid
 
@@ -22,7 +22,7 @@ class Select(PopupMenu, Generic[V]):
 
     def __init__(self):
         self._group: list[RadioItem[V]] = []
-        self._selected_item: Optional[V] = None
+        self._selected_item: RadioItem[V] | None = None
         super().__init__()
 
     def set_choices(self, choices: Iterable[tuple[str, V, bool]]):
@@ -37,10 +37,10 @@ class Select(PopupMenu, Generic[V]):
             self._selected_item = item
         super().append(item)
 
-    def get_selected(self) -> Optional[RadioItem[V]]:
+    def get_selected(self) -> RadioItem[V] | None:
         return self._selected_item
 
-    def get_default(self) -> Optional[RadioItem[V]]:
+    def get_default(self) -> RadioItem[V] | None:
         if not len(self):
             return None
         for item, _ in self._walker:
@@ -97,7 +97,7 @@ class ComboBox(urwid.PopUpLauncher, Generic[V]):
             'overlay_height': len(self._select) + 2
         }
 
-    def get_selected(self) -> Optional[V]:
+    def get_selected(self) -> V | None:
         item = self._select.get_selected()
         if item is not None:
             return item.get_value()

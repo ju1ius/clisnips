@@ -1,11 +1,10 @@
 import os
 from pathlib import Path
-from typing import Optional
 
 from clisnips.ty import AnyPath
 
 
-def _db_path_from_env() -> Optional[AnyPath]:
+def _db_path_from_env() -> AnyPath | None:
     match os.environ.get('CLISNIPS_DB'):
         case '' | None:
             return None

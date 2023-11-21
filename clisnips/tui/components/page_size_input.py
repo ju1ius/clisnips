@@ -2,7 +2,7 @@
 import urwid
 from urwid.numedit import IntegerEdit
 
-from clisnips.stores import SnippetsStore
+from clisnips.stores.snippets import SnippetsStore
 from clisnips.tui.widgets.utils import suspend_emitter
 
 

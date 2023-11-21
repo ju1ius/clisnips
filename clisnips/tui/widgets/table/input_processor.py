@@ -1,19 +1,19 @@
+import enum
+import math
 import sys
 import time
-from enum import Enum
-from typing import Optional
 
 
-class Direction(Enum):
-    UP = 'up'
-    DOWN = 'down'
-    LEFT = 'left'
-    RIGHT = 'right'
+class Direction(enum.StrEnum):
+    UP = enum.auto()
+    DOWN = enum.auto()
+    LEFT = enum.auto()
+    RIGHT = enum.auto()
 
 
-class Action(Enum):
-    MOVE = 'move'
-    SCROLL = 'scroll'
+class Action(enum.StrEnum):
+    MOVE = enum.auto()
+    SCROLL = enum.auto()
 
 
 class NavigationCommand:
@@ -40,8 +40,8 @@ class InputProcessor:
     """
 
     def __init__(self):
-        self._last_key_press = None
-        self._pending_command = None
+        self._last_key_press = -math.inf
+        self._pending_command = ''
         self._key_directions = {
             'home': Direction.UP,
             'ctrl u': Direction.UP,
@@ -71,7 +71,7 @@ class InputProcessor:
         self._page_offset_keys = {'page up', 'page down', 'ctrl u', 'ctrl d'}
         self._command_keys = {'g'} | {str(i) for i in range(1, 10)}
 
-    def process_key(self, key: str) -> Optional[NavigationCommand]:
+    def process_key(self, key: str) -> NavigationCommand | None:
         if not self._pending_command:
             if key in self._single_offset_keys:
                 return NavigationCommand(Action.MOVE, self._key_directions[key], 1)
@@ -98,10 +98,10 @@ class InputProcessor:
         return 0.25
 
     def _clear_pending_command(self):
-        self._pending_command = None
-        self._last_key_press = None
+        self._pending_command = ''
+        self._last_key_press = -math.inf
 
-    def _process_command(self, key: str) -> Optional[NavigationCommand]:
+    def _process_command(self, key: str) -> NavigationCommand | None:
         if key == 'esc':
             self._clear_pending_command()
             return

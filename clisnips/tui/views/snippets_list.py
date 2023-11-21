@@ -6,8 +6,7 @@ from urwid.canvas import CompositeCanvas
 
 from clisnips.database import NewSnippet, Snippet
 from clisnips.exceptions import ParseError
-from clisnips.stores import SnippetsStore
-from clisnips.stores.snippets import ListLayout
+from clisnips.stores.snippets import ListLayout, SnippetsStore
 from clisnips.syntax import parse_command, parse_documentation
 from clisnips.tui.components.app_bar import AppBar
 from clisnips.tui.components.delete_snippet_dialog import DeleteSnippetDialog

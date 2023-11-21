@@ -1,6 +1,6 @@
 import enum
 from collections.abc import Hashable, Iterator
-from typing import Generic, Literal, Optional, Self, TypeVar
+from typing import Generic, Literal, Self, TypeVar
 
 import urwid
 
@@ -33,7 +33,7 @@ class RadioGroup(Generic[V]):
             item = RadioItem(self._group, label, value)
             urwid.connect_signal(item, 'change', self._on_item_clicked)
 
-    def get_value(self) -> Optional[V]:
+    def get_value(self) -> V | None:
         for item in self._group:
             if item.get_state() is True:
                 return item.get_value()

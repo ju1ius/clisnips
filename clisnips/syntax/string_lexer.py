@@ -1,12 +1,12 @@
 import re
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
-from typing import Generic, Pattern
+from typing import Generic
 
 from .token import Kind, Token
 
 EMPTY = ''
-_RE_CACHE: dict[tuple[str, bool], Pattern[str]] = {}
+_RE_CACHE: dict[tuple[str, bool], re.Pattern[str]] = {}
 
 
 class StringLexer(ABC, Generic[Kind]):
@@ -136,11 +136,11 @@ class StringLexer(ABC, Generic[Kind]):
     def unconsume(self, string: str):
         self.recede(len(string))
 
-    def read_until(self, pattern: str | Pattern, negate: bool = True, accumulate: bool = True) -> str:
+    def read_until(self, pattern: str | re.Pattern, negate: bool = True, accumulate: bool = True) -> str:
         """
         Consumes the input string until we find a match for pattern
         """
-        if not isinstance(pattern, Pattern):
+        if not isinstance(pattern, re.Pattern):
             cache_key: tuple[str, bool] = (pattern, negate)
             if cache_key not in _RE_CACHE:
                 neg = '^' if negate else ''

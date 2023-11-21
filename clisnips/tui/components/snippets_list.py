@@ -1,5 +1,3 @@
-from typing import Optional
-
 import urwid
 
 from clisnips.database import Snippet
@@ -41,7 +39,7 @@ class SnippetsList(urwid.WidgetWrap):
 
         self._watcher = store.watch(watch_snippets, on_snippets_changed, immediate=True)
 
-    def get_selected_index(self) -> Optional[int]:
+    def get_selected_index(self) -> int | None:
         _, index = self._walker.get_focus()
         return index
 

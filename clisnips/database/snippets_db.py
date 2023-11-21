@@ -17,7 +17,7 @@ SECONDS_TO_DAYS = float(60 * 60 * 24)
 # when gravity is increased
 GRAVITY = 1.2
 
-with open(__DIR__ / 'schema.sql', 'r') as fp:
+with open(__DIR__ / 'schema.sql') as fp:
     SCHEMA_QUERY = fp.read()
 
 

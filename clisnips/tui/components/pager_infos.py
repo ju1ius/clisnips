@@ -1,7 +1,6 @@
 import urwid
 
-from clisnips.stores import SnippetsStore
-from clisnips.stores.snippets import State
+from clisnips.stores.snippets import SnippetsStore, State
 
 
 class PagerInfos(urwid.Text):

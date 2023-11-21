@@ -71,7 +71,7 @@ class ValueRange:
         return float('0.' + '0' * (n - 1) + '1')
 
     def __str__(self):
-        return '[%s..%s:%s*%s]' % (self.start, self.end, self.step, self.default)
+        return '[%s..%s:%s*%s]' % (self.start, self.end, self.step, self.default)  # noqa: UP031 (this is more readable)
 
     def __repr__(self):
         return str(self)

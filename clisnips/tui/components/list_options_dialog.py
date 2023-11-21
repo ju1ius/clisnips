@@ -1,6 +1,6 @@
 import urwid
 
-from clisnips.stores import SnippetsStore
+from clisnips.stores.snippets import SnippetsStore
 from clisnips.tui.components.layout_selector import LayoutSelector
 from clisnips.tui.components.page_size_input import PageSizeInput
 from clisnips.tui.components.sort_colum_selector import SortColumnSelector

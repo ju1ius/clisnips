@@ -221,7 +221,7 @@ class Cursor:
 
     def as_where_clause(self, direction: ScrollDirection, cursor_name: str = 'cursor') -> str:
         # value format, i.e. `{cursor.first[%s]!r}`
-        value_fmt = '{%s.%s[%%s]!r}' % (
+        value_fmt = '{%s.%s[%%s]!r}' % (  # noqa: UP031 (No, this is more readable!)
             cursor_name,
             'last' if direction is ScrollDirection.FWD else 'first'
         )

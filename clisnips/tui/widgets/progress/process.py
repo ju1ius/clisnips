@@ -2,6 +2,8 @@ import logging
 import multiprocessing
 import os
 import signal
+from collections.abc import Callable
+from typing import Any
 
 from .message_queue import MessageQueue
 
@@ -9,6 +11,11 @@ logger = logging.getLogger(__name__)
 
 
 class Process(multiprocessing.Process):
+
+    # protected props of multiprocessing.Process
+    _target: Callable
+    _args: tuple[Any]
+    _kwargs: dict[str, Any]
 
     def __init__(self, message_queue: MessageQueue, target, args=(), kwargs=None):
         super().__init__(target=target, args=args, kwargs=kwargs or {})
@@ -28,20 +35,22 @@ class Process(multiprocessing.Process):
         self.stop()
         if self.is_alive():
             logger.debug('Killing process %s', self.pid)
+            assert self.pid, 'Cannot kill a process without a pid'
             try:
                 os.killpg(self.pid, signal.SIGKILL)
-            except OSError as err:
+            except OSError:
                 os.kill(self.pid, signal.SIGKILL)
 
     def run(self):
         logger.debug('Starting process %s', self.pid)
+        assert self._message_queue, 'Process was already stopped'
         # pass the queue object to the function object
         self._target.message_queue = self._message_queue
         self._message_queue.start()
         self._message_queue.progress(0.0)
         try:
             self._do_run_task()
-        except KeyboardInterrupt as e:
+        except (KeyboardInterrupt, SystemExit):
             logger.debug('Process %s catched KeyboardInterrupt', self.pid)
             self._message_queue.cancel()
         except Exception as err:
@@ -52,6 +61,7 @@ class Process(multiprocessing.Process):
             self._message_queue.close()
 
     def _do_run_task(self):
+        assert self._message_queue, 'Process was already stopped'
         for msg in self._target(*self._args, **self._kwargs):
             if isinstance(msg, float):
                 self._message_queue.progress(msg)

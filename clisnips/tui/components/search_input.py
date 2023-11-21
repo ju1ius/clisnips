@@ -1,7 +1,6 @@
 import urwid
 
-from clisnips.stores import SnippetsStore
-from clisnips.stores.snippets import QueryState
+from clisnips.stores.snippets import QueryState, SnippetsStore
 from clisnips.tui.widgets.edit import EmacsEdit
 from clisnips.tui.widgets.utils import suspend_emitter
 

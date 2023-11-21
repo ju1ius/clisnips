@@ -1,7 +1,7 @@
 import urwid
 
 from clisnips.database import SortColumn
-from clisnips.stores import SnippetsStore
+from clisnips.stores.snippets import SnippetsStore
 from clisnips.tui.widgets.radio import RadioGroup
 
 choices = {

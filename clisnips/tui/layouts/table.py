@@ -9,7 +9,7 @@ import re
 import textwrap
 from collections.abc import Hashable, Iterable, Mapping
 from math import floor
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 T = TypeVar('T', bound=Mapping)
 
@@ -33,7 +33,7 @@ class LayoutColumn:
     def __init__(
         self,
         key: Hashable,
-        width: Optional[int] = None,
+        width: int | None = None,
         min_width: int = 0,
         max_width: int | float = math.inf,
         padding: tuple[int, int] = (0, 0),

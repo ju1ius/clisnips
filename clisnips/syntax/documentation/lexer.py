@@ -2,7 +2,6 @@ import enum
 import re
 from collections import deque
 from collections.abc import Callable
-from typing import Match
 
 from clisnips.syntax.string_lexer import StringLexer
 from clisnips.syntax.token import Token
@@ -48,11 +47,11 @@ FREE_TEXT_BOUNDS_RX = re.compile(
 
 IDENTIFIER_RX = re.compile(r'[_a-zA-Z][_a-zA-Z0-9]*')
 FLAG_RX = re.compile(r'--?[a-zA-Z0-9][\w-]*')
-PARAM_RX = re.compile(r'(\d+)|({ident})'.format(ident=IDENTIFIER_RX.pattern))
+PARAM_RX = re.compile(rf'(\d+)|({IDENTIFIER_RX.pattern})')
 INTEGER_RX = re.compile(r'\d+')
 FLOAT_RX = re.compile(r'\d*\.\d+')
-TYPE_HINT_RX = re.compile(r'\(\s*({ident})\s*\)'.format(ident=IDENTIFIER_RX.pattern))
-DIGIT_RX = re.compile(r'-?(?:({float})|({int}))'.format(float=FLOAT_RX.pattern, int=INTEGER_RX.pattern))
+TYPE_HINT_RX = re.compile(rf'\(\s*({IDENTIFIER_RX.pattern})\s*\)')
+DIGIT_RX = re.compile(rf'-?(?:({FLOAT_RX.pattern})|({INTEGER_RX.pattern}))')
 STRING_RX = re.compile(r'''(["']) ( (?: \\. | (?!\1) . )* ) \1''', re.X)
 DQ_STR_RX = re.compile(r'"(?:\\.|[^"])*"')
 SQ_STR_RX = re.compile(r"'(?:\\.|[^'])*'")
@@ -319,7 +318,7 @@ class Lexer(StringLexer[Tokens]):
             char = self.advance()
         return char
 
-    def _consume_match(self, match: Match, group: int | str = 0) -> str:
+    def _consume_match(self, match: re.Match, group: int | str = 0) -> str:
         if not match:
             return ''
         self.advance(match.end(group) - 1 - match.start(group))

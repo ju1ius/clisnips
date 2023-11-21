@@ -113,7 +113,7 @@ def _translate(cmd: str, ui: str, desc: str) -> ImportableSnippet:
     if len(by_comma) == nargs:
         doc = []
         for i, arg in enumerate(by_comma):
-            doc.append('{%s} (string) %s' % (i, arg))
+            doc.append('{%s} (string) %s' % (i, arg))  # noqa: UP031
         result['doc'] = '\n'.join(doc)
         return result
     # try to find a space separated list
@@ -121,7 +121,7 @@ def _translate(cmd: str, ui: str, desc: str) -> ImportableSnippet:
     if len(by_space) == nargs:
         doc = []
         for i, arg in enumerate(by_space):
-            doc.append('{%s} (string) %s' % (i, arg))
+            doc.append('{%s} (string) %s' % (i, arg))  # noqa: UP031
         result['doc'] = '\n'.join(doc)
         return result
     # else let ui be free form doc

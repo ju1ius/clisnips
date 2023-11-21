@@ -3,7 +3,7 @@ from enum import StrEnum, auto
 from typing import Self
 
 from pydantic import Field
-from typing_extensions import Annotated, TypedDict
+from typing_extensions import Annotated, TypedDict  # noqa: UP035 (pydantic needs this)
 
 
 class ScrollDirection(StrEnum):
