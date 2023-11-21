@@ -23,18 +23,19 @@ class InstallShellKeyBindingsCommand(Command):
 
     def run(self, argv) -> int:
         shell = argv.shell
-        bindings_src = __dir__ / 'shell' / f'key-bindings.{shell}'
-        bindings_dst = Path(f'~/.clisnips.{shell}').expanduser()
+        src_path = __dir__ / 'shell' / f'key-bindings.{shell}'
+        dest = f'~/.clisnips.{shell}'
+        dest_path = Path(dest).expanduser()
 
-        logger.info(f'Installing key bindings for {shell} in {bindings_dst}')
-        shutil.copy(bindings_src, bindings_dst)
+        logger.info(f'Installing key bindings for {shell} in {dest_path}')
+        shutil.copy(src_path, dest_path)
 
         rc_file = Path(self.shell_rcs[shell]).expanduser()
         with open(rc_file, mode='a') as fp:
             logger.info(f'Updating {rc_file}')
             fp.writelines([
                 '# clisnips key bindings\n',
-                f'source {bindings_dst}\n',
+                f'[ -f {dest} ] && source {dest}\n',
             ])
 
         logger.info('OK', extra={'color': 'success'})
