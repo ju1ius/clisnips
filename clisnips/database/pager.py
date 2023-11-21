@@ -1,10 +1,14 @@
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Generic, Self, TypeVar
 
-from .snippets_db import QueryParameters, ResultSet
+from .snippets_db import QueryParameters
 
 
-class Pager(ABC):
+Row = TypeVar('Row')
+Page = list[Row]
+
+
+class Pager(ABC, Generic[Row]):
     @property
     @abstractmethod
     def page_size(self) -> int:
@@ -61,23 +65,23 @@ class Pager(ABC):
         ...
 
     @abstractmethod
-    def get_page(self, page: int) -> ResultSet:
+    def get_page(self, page: int) -> Page[Row]:
         ...
 
     @abstractmethod
-    def first(self) -> ResultSet:
+    def first(self) -> Page[Row]:
         ...
 
     @abstractmethod
-    def last(self) -> ResultSet:
+    def last(self) -> Page[Row]:
         ...
 
     @abstractmethod
-    def next(self) -> ResultSet:
+    def next(self) -> Page[Row]:
         ...
 
     @abstractmethod
-    def previous(self) -> ResultSet:
+    def previous(self) -> Page[Row]:
         ...
 
     def __len__(self) -> int:

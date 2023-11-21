@@ -23,7 +23,7 @@ from clisnips.exceptions import DocumentationParseError
 from clisnips.syntax.llk_parser import LLkParser
 
 from .lexer import Lexer, Tokens
-from .nodes import CodeBlock, Documentation, Parameter, ValueList, ValueRange
+from .nodes import CodeBlock, Documentation, Parameter, Value, ValueList, ValueRange
 
 
 def _to_number(string: str) -> int | float:
@@ -55,7 +55,7 @@ class Parser(LLkParser[Tokens]):
         """
         TEXT*
         """
-        text = []
+        text: list[str] = []
         while True:
             t = self._lookahead()
             if t.kind is Tokens.TEXT:
@@ -80,7 +80,7 @@ class Parser(LLkParser[Tokens]):
         """
         CODEBLOCK*
         """
-        code_blocks = []
+        code_blocks: list[CodeBlock] = []
         while self._lookahead_kind() is Tokens.CODE_FENCE:
             self._match(Tokens.CODE_FENCE)
             code = self._match(Tokens.TEXT).value
@@ -171,24 +171,24 @@ class Parser(LLkParser[Tokens]):
         """
         value (COMMA value)*
         """
-        values = []
+        values: list[Value] = []
         default, count = 0, 0
-        initial = self._value()
-        values.append(initial['value'])
+        initial, _ = self._value()
+        values.append(initial)
         while True:
             count += 1
             t = self._lookahead()
             if t.kind is Tokens.COMMA:
                 self._consume()
-                value = self._value()
-                values.append(value['value'])
-                if value['default']:
+                value, is_default = self._value()
+                values.append(value)
+                if is_default:
                     default = count
             else:
                 break
         return ValueList(values, default)
 
-    def _value(self):
+    def _value(self) -> tuple[Value, bool]:
         """
         STAR? (STRING | digit)
         """
@@ -198,9 +198,9 @@ class Parser(LLkParser[Tokens]):
             is_default = True
             token = self._match(Tokens.STRING, Tokens.INTEGER, Tokens.FLOAT)
         if token.kind is Tokens.STRING:
-            return {'value': token.value, 'default': is_default}
+            return token.value, is_default
         else:
-            return {'value': _to_number(token.value), 'default': is_default}
+            return _to_number(token.value), is_default
 
     def _value_range(self) -> ValueRange:
         """

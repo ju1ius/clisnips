@@ -9,7 +9,7 @@ from .utils.clock import Clock, SystemClock
 
 
 class DependencyInjectionContainer:
-    def __init__(self, database=None):
+    def __init__(self, database: AnyPath | None = None):
         self._parameters = {
             'database': database,
         }

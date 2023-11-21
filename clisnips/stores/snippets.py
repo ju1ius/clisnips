@@ -80,9 +80,9 @@ class SnippetsStore:
         self,
         expr: Callable[[State], Watched],
         on_change: Callable[[Watched], Any],
-        sync=False,
-        deep=False,
-        immediate=False,
+        sync: bool =False,
+        deep: bool =False,
+        immediate: bool =False,
     ):
         return watch(
             fn=lambda: expr(self._state),
@@ -173,7 +173,7 @@ class SnippetsStore:
             rows = self._pager.list() if not search_query else self._pager.search(search_query)
             self._load_result_set(rows)
 
-    def _load_result_set(self, rows: list):
+    def _load_result_set(self, rows: list[Snippet]):
         by_id = {r['id']: r for r in rows}
         ids = list(by_id.keys())
         self._state['snippets_by_id'] = by_id

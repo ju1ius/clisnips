@@ -2,12 +2,13 @@ import math
 import os
 import sqlite3
 import stat
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
+from typing import Any, Literal, Self, TypeAlias
 
 from clisnips.ty import AnyPath
 
-from . import ImportableSnippet, NewSnippet, Snippet
+from . import Column, ImportableSnippet, NewSnippet, Snippet
 
 __DIR__ = Path(__file__).absolute().parent
 
@@ -21,8 +22,8 @@ with open(__DIR__ / 'schema.sql') as fp:
     SCHEMA_QUERY = fp.read()
 
 
-ResultSet = Iterable[sqlite3.Row]
-QueryParameters = tuple | dict
+QueryParameter: TypeAlias = str | int | float
+QueryParameters: TypeAlias = Sequence[QueryParameter] | Mapping[str, QueryParameter]
 
 
 def compute_ranking(created: int, last_used: int, num_used: int, now: float) -> float:
@@ -49,7 +50,7 @@ def compute_frecency(now: float, previous: float) -> float:
 
 
 class SnippetNotFound(RuntimeError):
-    def __init__(self, *args):
+    def __init__(self, *args: Any):
         super().__init__('Snippet not found.', *args)
 
 
@@ -62,7 +63,7 @@ class SnippetsDatabase:
         self._num_rows = 0
 
     @classmethod
-    def open(cls, db_file: AnyPath = ':memory:'):
+    def open(cls, db_file: AnyPath = ':memory:') -> Self:
         db_file = Path(db_file)
         if db_file.name != ':memory:' and not db_file.is_file():
             db_file.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
@@ -108,7 +109,7 @@ class SnippetsDatabase:
     def __iter__(self) -> Iterator[Snippet]:
         return self.iter('*')
 
-    def iter(self, *columns) -> Iterator[Snippet]:
+    def iter(self, *columns: Column | Literal['*']) -> Iterator[Snippet]:
         query = 'SELECT rowid AS id, %s from snippets' % ','.join(columns)
         with self.connection:
             self.cursor.execute(query)
@@ -146,7 +147,7 @@ class SnippetsDatabase:
     def get_search_count_query() -> str:
         return 'SELECT rowid FROM snippets_index WHERE snippets_index MATCH :term'
 
-    def search(self, term: str) -> ResultSet:
+    def search(self, term: str) -> list[Snippet]:
         query = 'SELECT rowid AS id FROM snippets_index WHERE snippets_index MATCH :term'
         try:
             return self.cursor.execute(query, {'term': term}).fetchall()

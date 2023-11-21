@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from clisnips.database import SortColumn, SortOrder
 from clisnips.stores.snippets import ListLayout, State
@@ -34,12 +34,17 @@ def load_persistent_state() -> PersistentState:
 
 
 def save_persistent_state(state: State):
-    s = {k: state[k] for k in DEFAULTS.keys()}
+    s: PersistentState = {
+        'page_size': state['page_size'],
+        'sort_by': state['sort_by'],
+        'sort_order': state['sort_order'],
+        'list_layout': state['list_layout'],
+    }
     with open(get_state_path('state.json'), 'w') as fp:
         json.dump(s, fp, indent=2)
 
 
-def _merge_defaults(data: dict) -> PersistentState:
+def _merge_defaults(data: dict[Any, Any]) -> PersistentState:
     result = DEFAULTS.copy()
     if v := data.get('page_size'):
         result['page_size'] = int(v)

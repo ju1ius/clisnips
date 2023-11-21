@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from typing import Any
 
 from clisnips.utils.number import get_num_decimals
 
@@ -11,7 +12,7 @@ class Documentation:
         self.parameters: dict[str, Parameter] = dict()
         self.code_blocks: list[CodeBlock] = []
 
-    def execute_code(self, context: dict):
+    def execute_code(self, context: dict[str, Any]) -> dict[str, Any]:
         if not self.code_blocks:
             return context
         ctx = deepcopy(context)
@@ -49,7 +50,13 @@ class Parameter:
 
 
 class ValueRange:
-    def __init__(self, start, end, step=None, default=None):
+    def __init__(
+        self,
+        start: int | float,
+        end: int | float,
+        step: int | float | None = None,
+        default: int | float | None = None,
+    ):
         self.start = start
         self.end = end
         self.step = self._get_default_step() if step is None else step
@@ -59,7 +66,7 @@ class ValueRange:
             default = end
         self.default = default
 
-    def _get_default_step(self):
+    def _get_default_step(self) -> int | float:
         start_decimals = get_num_decimals(self.start)
         end_decimals = get_num_decimals(self.end)
         if start_decimals == 0 and end_decimals == 0:
@@ -74,19 +81,22 @@ class ValueRange:
         return str(self)
 
 
+Value = str | int | float
+
+
 class ValueList:
-    def __init__(self, values, default=0):
+    def __init__(self, values: list[Value], default: int = 0):
         self.values = values
         self.default = default
 
-    def get_default_value(self):
+    def get_default_value(self) -> Value:
         return self.values[self.default]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.values)
 
-    def __str__(self):
-        values = []
+    def __str__(self) -> str:
+        values: list[str] = []
         for i, value in enumerate(self.values):
             value = repr(value)
             if i == self.default:
@@ -99,11 +109,11 @@ class ValueList:
 
 
 class CodeBlock:
-    def __init__(self, code):
+    def __init__(self, code: str):
         self.code = code
         self._bytecode = compile(code, '<codeblock>', 'exec')
 
-    def execute(self, context: dict):
+    def execute(self, context: dict[str, Any]):
         exec(self._bytecode, context)
 
     def __str__(self):

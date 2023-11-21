@@ -1,18 +1,22 @@
 from collections.abc import Iterable, Mapping, Sequence
+import sqlite3
 from typing import Any, Literal, Self, TypeAlias
+
+from clisnips.database.snippets_db import QueryParameters
 
 from . import ScrollDirection, SortOrder
 from .offset_pager import OffsetPager
+from .pager import Page, Row
 
 CursorColumn: TypeAlias = tuple[str, SortOrder]
 # column: (name: str, order: SortOrder[, unique: bool])
 SortColumnDefinition: TypeAlias = CursorColumn | tuple[str, SortOrder, bool]
 
 
-class ScrollingPager(OffsetPager):
+class ScrollingPager(OffsetPager[Row]):
     def __init__(
         self,
-        connection,
+        connection: sqlite3.Connection,
         page_size: int = 100,
         sort_columns: Iterable[SortColumnDefinition] | None = None,
     ):
@@ -26,11 +30,11 @@ class ScrollingPager(OffsetPager):
     def set_sort_columns(self, columns: Iterable[SortColumnDefinition]):
         self._cursor = Cursor.with_columns(columns)
 
-    def execute(self, params=(), count_params=()):
+    def execute(self, params: QueryParameters = (), count_params: QueryParameters = ()) -> Self:
         super().execute(params, count_params)
         return self
 
-    def get_page(self, page: int):
+    def get_page(self, page: int) -> Page[Row]:
         self._check_executed()
         if page <= 1:
             self._current_page = 1
@@ -45,7 +49,7 @@ class ScrollingPager(OffsetPager):
         self._cursor.update(rs)
         return rs
 
-    def first(self):
+    def first(self) -> Page[Row]:
         self._check_executed()
         self._current_page = 1
         query, params = self._first_query, self._query_params
@@ -53,7 +57,7 @@ class ScrollingPager(OffsetPager):
         self._cursor.update(rs)
         return rs
 
-    def last(self):
+    def last(self) -> Page[Row]:
         self._check_executed()
         self._current_page = self._page_count
         query, params = self._last_query, self._query_params
@@ -63,7 +67,7 @@ class ScrollingPager(OffsetPager):
         self._cursor.update(rs)
         return rs
 
-    def next(self):
+    def next(self) -> Page[Row]:
         self._check_executed()
         if self._current_page >= self._page_count:
             return self.last()
@@ -73,7 +77,7 @@ class ScrollingPager(OffsetPager):
         self._cursor.update(rs)
         return rs
 
-    def previous(self):
+    def previous(self) -> Page[Row]:
         self._check_executed()
         if self._current_page <= 2:
             return self.first()
@@ -136,7 +140,7 @@ _WHERE_OP: dict[tuple[ScrollDirection, SortOrder], Literal['<', '>']] = {
 }
 
 
-def _get_operator(direction: ScrollDirection, order: SortOrder, unique=False) -> Literal['<', '>', '<=', '>=']:
+def _get_operator(direction: ScrollDirection, order: SortOrder, unique: bool = False) -> Literal['<', '>', '<=', '>=']:
     operator = _WHERE_OP[(direction, order)]
     if not unique:
         operator += '='
@@ -182,7 +186,7 @@ class Cursor:
     @classmethod
     def with_columns(cls, columns: Iterable[SortColumnDefinition]) -> Self:
         unique_column = None
-        sort_columns = []
+        sort_columns: list[CursorColumn] = []
         for name, order, *rest in columns:
             unique = bool(rest and rest[0])
             if unique:
@@ -238,7 +242,8 @@ class Cursor:
             return unique_expr
 
         # add non-unique columns
-        left, right = [], []
+        left: list[str] = []
+        right: list[str] = []
         for name, order in self._sort_columns:
             op1 = _get_operator(direction, order, unique=False)
             op2 = _get_operator(direction, order, unique=True)

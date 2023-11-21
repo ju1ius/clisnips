@@ -7,6 +7,8 @@ from clisnips.tui.widgets.utils import original_widget
 class Body(CyclingFocusListBox):
     KEYPRESS = 'keypress'
 
+    _body: urwid.SimpleFocusListWalker
+
     def __init__(self):
         self._rows = []
         urwid.register_signal(self.__class__, self.KEYPRESS)
