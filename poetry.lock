@@ -35,13 +35,13 @@ files = [
 
 [[package]]
 name = "observ"
-version = "0.13.1"
+version = "0.14.0"
 description = "Reactive state management for Python"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "observ-0.13.1-py3-none-any.whl", hash = "sha256:2badaa459204e48e477fb2a1df8041890e9de095d54948d8beeb594d2ccfbc50"},
-    {file = "observ-0.13.1.tar.gz", hash = "sha256:b50390c72452234518f92ab22851360210a09ea4a6f95e1dba4968de8ab2baa2"},
+    {file = "observ-0.14.0-py3-none-any.whl", hash = "sha256:cf9df4c222cd798104dcd626d306a35a9a6a0ea25415a1f56715f415f044e59e"},
+    {file = "observ-0.14.0.tar.gz", hash = "sha256:0803f81c38d5bfb2f51cc2010ce8e785f5d4b7f5f7ac8b357e542f9188329912"},
 ]
 
 [package.dependencies]
@@ -370,4 +370,4 @@ zmq = ["zmq"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "bdfb4759049f3dc747a4a0ccb77ae0af2126d878ae58735ed85970dc48eb10f2"
+content-hash = "a2e5e63a35945bed1ffc17993c05e52eced0a018c4436674efb931183499c2eb"
