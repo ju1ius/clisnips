@@ -47,7 +47,7 @@ Congratulations, you just created your first parametrized snippet !
 
 There is more you can do with parametrized snippets,
 but before going further you may want to read about
-[a snippet's anatomy](./snippet-anatomy.md).
+[a snippet's anatomy][snippet-anatomy].
 
 #### Field naming
 
@@ -83,4 +83,8 @@ By default, template fields are treated as simple strings (or boolean flags as w
 There are other special field types you can use like numbers, filesystem paths, ranges, choice lists...
 To use these special types, you'll have to write proper documentation for your snippet.
 
-These are documented in the following section: [Snippet documentation](./snippet-documentation.md)
+These are documented in the following section: [Snippet documentation][snippet-documentation].
+
+
+[snippet-anatomy]: https://github.com/ju1ius/clisnips/blob/master/doc/snippet-anatomy.md
+[snippet-documentation]: https://github.com/ju1ius/clisnips/blob/master/doc/snippet-documentation.md
