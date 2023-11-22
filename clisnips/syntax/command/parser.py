@@ -81,10 +81,10 @@ def _check_format_spec(format_spec: str, subject: str):
 
 def _check_conversion_spec(spec: str, subject: str):
     match spec:
-        case 's' | 'r' | 'a':
+        case 's' | 'r' | 'a' | 'q':
             ...
         case _:
             raise CommandParseError(
-                f'Invalid conversion specifier: {spec} (expected s, r or a)',
+                f'Invalid conversion specifier: {spec} (expected s, r, a or q)',
                 subject,
             )

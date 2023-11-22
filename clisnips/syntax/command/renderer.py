@@ -81,3 +81,9 @@ class _CommandFormatter(_StringFormatter):
         # to integers and split args and kwargs
         return kwargs[str(key)]
 
+    def convert_field(self, value: Any, conversion: str) -> Any:
+        match conversion:
+            case 'q':
+                return shlex.quote(str(value))
+            case _:
+                return super().convert_field(value, conversion)
