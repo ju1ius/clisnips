@@ -16,7 +16,7 @@ clisnips requires python 3.11 or higher.
 
 The recommended way is to use [pipx](https://pypa.github.io/pipx/):
 ```sh
-pipx install git+https://github.com/ju1ius/clisnips.git
+pipx install clisnips
 ```
 
 ### 2. Install shell key-bindings
