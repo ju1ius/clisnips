@@ -1,3 +1,4 @@
+from decimal import Decimal
 import pytest
 
 from clisnips.exceptions import ParseError
@@ -82,8 +83,9 @@ def test_parse_value_list():
     assert param.text == ''
     values = param.value_hint
     assert isinstance(values, ValueList)
-    assert values.values == [1, -2, 0.3]
+    assert values.values == [Decimal('1'), Decimal('-2'), Decimal('0.3')]
     assert values.default == 1
+
     # string list
     text = '{par1} ["foo", =>"bar", "baz"]'
     doc = parse(text)
@@ -130,7 +132,7 @@ def test_parse_value_range():
     param = doc.parameters['par1']
     hint = param.value_hint
     assert isinstance(hint, ValueRange)
-    assert hint.step == 0.01
+    assert hint.step == Decimal('0.01')
     # default step
     text = '{par1} [1:1.255]'
     doc = parse(text)
@@ -138,7 +140,7 @@ def test_parse_value_range():
     param = doc.parameters['par1']
     hint = param.value_hint
     assert isinstance(hint, ValueRange)
-    assert hint.step == 0.001
+    assert hint.step == Decimal('0.001')
 
 
 def test_parse_code_block():

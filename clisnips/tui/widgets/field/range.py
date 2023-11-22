@@ -1,3 +1,4 @@
+from decimal import Decimal
 import urwid
 
 from clisnips.tui.urwid_types import TextMarkup
@@ -13,8 +14,8 @@ class RangeField(SimpleField):
         super().__init__(label, entry)
 
 
-class RangeEntry(Entry, EmacsEdit):
-    def __init__(self, start, end, step, default=None):
+class RangeEntry(Entry[Decimal], EmacsEdit):
+    def __init__(self, start: Decimal, end: Decimal, step: Decimal, default: Decimal | None = None):
         self._model = RangeModel(start, end, step, default)
         super().__init__('', str(self._model.get_value()))
         urwid.connect_signal(self, 'change', self._on_change)
@@ -29,14 +30,14 @@ class RangeEntry(Entry, EmacsEdit):
             return
         return super().keypress(size, key)
 
-    def get_value(self):
-        return self.get_edit_text()
+    def get_value(self) -> Decimal:
+        return self._model.get_numeric_value()
 
     def _on_change(self, entry, value):
         self._model.set_value(value)
 
     def _increment(self):
-        value = self.get_value()
+        value = self.get_edit_text()
         if not value:
             return
         self._model.set_value(value)
@@ -44,7 +45,7 @@ class RangeEntry(Entry, EmacsEdit):
         self.set_edit_text(self._model.get_value())
 
     def _decrement(self):
-        value = self.get_value()
+        value = self.get_edit_text()
         if not value:
             return
         self._model.set_value(value)
@@ -53,32 +54,33 @@ class RangeEntry(Entry, EmacsEdit):
 
 
 class RangeModel:
-    def __init__(self, start, end, step, default=None):
+    def __init__(self, start: Decimal, end: Decimal, step: Decimal, default: Decimal | None = None):
         self._start = start
         self._end = end
         self._step = step
         decimals = [get_num_decimals(x) for x in (start, end, step)]
         self._num_decimals = max(decimals)
-        self._is_integer = all(x == 0 for x in decimals)
-        self._value: int | float = 0
-        self.set_value(default if default is not None else start)
+        self._value: Decimal = Decimal('0')
+        self.set_numeric_value(default if default is not None else start)
 
     def get_value(self) -> str:
-        value = round(self._value, self._num_decimals)
-        return str(value)
+        return str(self.get_numeric_value())
 
     def set_value(self, value: str):
         try:
-            v = int(value) if self._is_integer else float(value)
-        except ValueError:
+            v = Decimal(value)
+        except Exception:
             return
-        self._set_numeric_value(v)
+        self.set_numeric_value(v)
+
+    def get_numeric_value(self) -> Decimal:
+        return round(self._value, self._num_decimals)
+
+    def set_numeric_value(self, value: Decimal):
+        self._value = min(self._end, max(self._start, value))
 
     def increment(self):
-        self._set_numeric_value(self._value + self._step)
+        self.set_numeric_value(self._value + self._step)
 
     def decrement(self):
-        self._set_numeric_value(self._value - self._step)
-
-    def _set_numeric_value(self, value: int | float):
-        self._value = min(self._end, max(self._start, value))
+        self.set_numeric_value(self._value - self._step)

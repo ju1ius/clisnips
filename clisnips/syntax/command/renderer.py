@@ -1,12 +1,14 @@
-from collections.abc import Iterable, Mapping, Sequence
 import shlex
+from collections.abc import Iterable, Mapping, Sequence
+from decimal import Decimal
 from string import Formatter as _StringFormatter
 from typing import Any, TypeAlias
 
 from clisnips.tui.urwid_types import TextMarkup
+from clisnips.utils.number import is_integer_decimal
 
 from .err import InterpolationError, InterpolationErrorGroup, InvalidContext
-from .nodes import CommandTemplate, Field, Text, Node
+from .nodes import CommandTemplate, Field, Node, Text
 
 Context: TypeAlias = Mapping[str, object]
 
@@ -87,3 +89,12 @@ class _CommandFormatter(_StringFormatter):
                 return shlex.quote(str(value))
             case _:
                 return super().convert_field(value, conversion)
+
+    def format_field(self, value: Any, format_spec: str) -> Any:
+        try:
+            return super().format_field(value, format_spec)
+        except:
+            # Allow integer-specific format specs (i.e. {:X}) for decimals
+            if isinstance(value, Decimal) and is_integer_decimal(value):
+                return super().format_field(int(value), format_spec)
+            raise

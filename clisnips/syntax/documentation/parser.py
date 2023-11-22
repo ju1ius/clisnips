@@ -18,6 +18,7 @@ digit:          INTEGER | FLOAT
 """
 
 from collections.abc import Iterable
+from decimal import Decimal
 
 from clisnips.exceptions import DocumentationParseError
 from clisnips.syntax.llk_parser import LLkParser
@@ -26,10 +27,8 @@ from .lexer import Lexer, Tokens
 from .nodes import CodeBlock, Documentation, Parameter, Value, ValueList, ValueRange
 
 
-def _to_number(string: str) -> int | float:
-    if '.' in string:
-        return float(string)
-    return int(string)
+def _to_number(string: str) -> Decimal:
+    return Decimal(string)
 
 
 class Parser(LLkParser[Tokens]):

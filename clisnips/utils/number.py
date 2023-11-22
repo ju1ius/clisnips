@@ -1,3 +1,4 @@
+from decimal import Decimal
 import re
 from typing import Any
 
@@ -29,3 +30,7 @@ def get_num_decimals(n: Any) -> int:
     if n := match['exponent']:
         d += int(n)
     return d
+
+
+def is_integer_decimal(value: Decimal) -> bool:
+    return value == value.to_integral_value()

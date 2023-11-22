@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from decimal import Decimal
+from types import CodeType
 from typing import Any
 
 from clisnips.utils.number import get_num_decimals
@@ -52,10 +54,10 @@ class Parameter:
 class ValueRange:
     def __init__(
         self,
-        start: int | float,
-        end: int | float,
-        step: int | float | None = None,
-        default: int | float | None = None,
+        start: Decimal,
+        end: Decimal,
+        step: Decimal | None = None,
+        default: Decimal | None = None,
     ):
         self.start = start
         self.end = end
@@ -66,13 +68,13 @@ class ValueRange:
             default = end
         self.default = default
 
-    def _get_default_step(self) -> int | float:
+    def _get_default_step(self) -> Decimal:
         start_decimals = get_num_decimals(self.start)
         end_decimals = get_num_decimals(self.end)
         if start_decimals == 0 and end_decimals == 0:
-            return 1
+            return Decimal('1')
         n = max(start_decimals, end_decimals)
-        return float('0.' + '0' * (n - 1) + '1')
+        return Decimal('0.{pad}1'.format(pad='0' * (n - 1)))
 
     def __str__(self):
         return '[%s..%s:%s*%s]' % (self.start, self.end, self.step, self.default)  # noqa: UP031 (this is more readable)
@@ -81,7 +83,7 @@ class ValueRange:
         return str(self)
 
 
-Value = str | int | float
+Value = str | Decimal
 
 
 class ValueList:
@@ -111,7 +113,7 @@ class ValueList:
 class CodeBlock:
     def __init__(self, code: str):
         self.code = code
-        self._bytecode = compile(code, '<codeblock>', 'exec')
+        self._bytecode: CodeType = compile(code, '<codeblock>', 'exec')
 
     def execute(self, context: dict[str, Any]):
         exec(self._bytecode, context)
