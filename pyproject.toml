@@ -4,7 +4,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry]
 name = "clisnips"
-version = "0.4.0"
+version = "0.5.0"
 description = "A command-line snippets manager."
 authors = ["ju1ius <jules.bernable@gmail.com>"]
 license = "GPL-3.0+"
