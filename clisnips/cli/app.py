@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 
+from clisnips.cli.version_command import VersionCommand
 from clisnips.dic import DependencyInjectionContainer
 
 from .command import Command
@@ -18,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class Application:
     commands: dict[str, type[Command]] = {
+        'version': VersionCommand,
         'import': ImportCommand,
         'export': ExportCommand,
         'optimize': OptimizeCommand,
