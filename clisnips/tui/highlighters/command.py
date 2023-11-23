@@ -34,7 +34,7 @@ class CommandLexer(RegexLexer):
             (ARG_NAME, Command.ArgName),
             (rf'(\.) ({IDENTIFIER})', bygroups(Punctuation, Command.Identifier)),
             (rf'(\[) ({ELEMENT_INDEX})', bygroups(Punctuation, Command.ElementIndex)),
-            (r'(!) ([rsa])', bygroups(Punctuation, Command.Conversion)),
+            (r'(!) ([rsaq])', bygroups(Punctuation, Command.Conversion)),
             (r'(:) ([^}]+)', bygroups(Punctuation, Command.FormatSpec)),
         ],
     }
