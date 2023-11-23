@@ -1,8 +1,10 @@
+import logging
 import math
 import os
 import sqlite3
 import stat
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from importlib import resources
 from pathlib import Path
 from typing import Any, Literal, Self, TypeAlias
 
@@ -10,20 +12,18 @@ from clisnips.ty import AnyPath
 
 from . import Column, ImportableSnippet, NewSnippet, Snippet
 
-__DIR__ = Path(__file__).absolute().parent
 
+QueryParameter: TypeAlias = str | int | float
+QueryParameters: TypeAlias = Sequence[QueryParameter] | Mapping[str, QueryParameter]
+
+
+with resources.files('clisnips.resources').joinpath('schema.sql').open() as fp:
+    SCHEMA_QUERY = fp.read()
 
 SECONDS_TO_DAYS = float(60 * 60 * 24)
 # ranking decreases much faster for older items
 # when gravity is increased
 GRAVITY = 1.2
-
-with open(__DIR__ / 'schema.sql') as fp:
-    SCHEMA_QUERY = fp.read()
-
-
-QueryParameter: TypeAlias = str | int | float
-QueryParameters: TypeAlias = Sequence[QueryParameter] | Mapping[str, QueryParameter]
 
 
 def compute_ranking(created: int, last_used: int, num_used: int, now: float) -> float:
@@ -70,6 +70,7 @@ class SnippetsDatabase:
             os.mknod(db_file, 0o644 | stat.S_IFREG)
         cx = sqlite3.connect(db_file)
         cx.row_factory = sqlite3.Row
+        logging.getLogger(__name__).debug(SCHEMA_QUERY)
         cx.executescript(SCHEMA_QUERY)
 
         return cls(cx)

@@ -1,11 +1,10 @@
 import argparse
 import logging
-import shutil
+from importlib import resources
 from pathlib import Path
 
 from ..command import Command
 
-__dir__ = Path(__file__).absolute().parent
 logger = logging.getLogger(__name__)
 
 
@@ -23,21 +22,23 @@ class InstallBindingsCommand(Command):
 
     def run(self, argv) -> int:
         shell = argv.shell
-        src_path = __dir__ / 'shell' / f'key-bindings.{shell}'
+        src = resources.files('clisnips.resources').joinpath(f'key-bindings.{shell}')
         dest = f'~/.clisnips.{shell}'
         dest_path = Path(dest).expanduser()
+        rc_file = Path(self.shell_rcs[shell]).expanduser()
 
         logger.info(f'Installing key bindings for {shell} in {dest_path}')
-        shutil.copy(src_path, dest_path)
+        with src.open() as res:
+            with open(dest_path, 'w') as fp:
+                fp.write(res.read())
 
-        rc_file = Path(self.shell_rcs[shell]).expanduser()
+        logger.info(f'Updating {rc_file}')
         with open(rc_file, mode='a') as fp:
-            logger.info(f'Updating {rc_file}')
             fp.writelines(
-                [
-                    '# clisnips key bindings\n',
-                    f'[ -f {dest} ] && source {dest}\n',
-                ]
+                (
+                    '# clisnips key bindings',
+                    f'[ -f {dest} ] && source {dest}',
+                )
             )
 
         logger.info('OK', extra={'color': 'success'})
