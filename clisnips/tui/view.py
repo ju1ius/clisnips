@@ -14,7 +14,7 @@ class View(urwid.WidgetWrap):
 
     def __init__(self, view: urwid.Widget):
         self._view = view
-        self._wrapped_widget = urwid.AttrMap(self._view, 'view:default')
+        self._wrapped_widget = urwid.AttrMap(self._view, 'default')
         super().__init__(self._wrapped_widget)
         self._has_dialog = False
 

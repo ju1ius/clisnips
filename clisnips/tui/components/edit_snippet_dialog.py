@@ -101,7 +101,7 @@ class EditSnippetDialog(Dialog, Generic[S]):
             self._errors.discard('doc')
 
     def _on_errors_changed(self, errors: set[str]):
-        self._save_action.toggle(not errors)
+        self._save_action.toggle(enabled=not errors)
 
 
 class SimpleField(urwid.Pile):

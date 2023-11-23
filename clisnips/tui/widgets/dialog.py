@@ -91,7 +91,7 @@ class Dialog(urwid.WidgetWrap):
         # pad area around listbox
         w = urwid.Padding(w, align=Align.LEFT, left=2, right=2, width=(WHSettings.RELATIVE, 100))
         w = urwid.Filler(w, valign=VAlign.TOP, top=1, bottom=1, height=('relative', 100))
-        w = urwid.AttrMap(w, 'body')
+        w = urwid.AttrMap(w, 'dialog')
         super().__init__(w)
 
     def close(self):

@@ -26,17 +26,11 @@ class UrwidMarkupHelper:
     palette = {
         'default': ('default', 'default'),
         'accent': ('dark magenta', 'default'),
-        'accent:inverse': ('black', 'dark magenta'),
         'success': ('dark green', 'default'),
-        'success:inverse': ('black', 'dark green'),
         'error': ('dark red', 'default'),
-        'error:inverse': ('black', 'dark red'),
         'warning': ('brown', 'default'),
-        'warning:inverse': ('black', 'brown'),
         'info': ('dark blue', 'default'),
-        'info:inverse': ('white', 'dark blue'),
-        'debug': ('light cyan', 'default'),
-        'debug:inverse': ('black', 'light cyan'),
+        'debug': ('dark cyan', 'default'),
     }
 
     def __init__(self):

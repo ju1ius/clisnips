@@ -9,7 +9,31 @@ from clisnips.tui.widgets.dialog import Dialog
 from clisnips.tui.widgets.divider import HorizontalDivider
 
 
-def _create_field(label: TextMarkup, content: TextMarkup):
+class ShowSnippetDialog(Dialog):
+    def __init__(self, parent, snippet: Snippet):
+        body = urwid.ListBox(
+            urwid.SimpleListWalker(
+                (
+                    _field('Title:', ('snip:title', snippet['title'])),
+                    HorizontalDivider(),
+                    _field('Tags:', ('snip:tag', snippet['tag'])),
+                    HorizontalDivider(),
+                    _field('Command:', highlight_command(snippet['cmd'])),
+                    HorizontalDivider(),
+                    _field('Documentation:', highlight_documentation(snippet['doc'])),
+                    HorizontalDivider(),
+                    _info('Created on: ', _date(snippet['created_at'])),
+                    _info('Last used on: ', _date(snippet['last_used_at'])),
+                    _info('Usage count: ', snippet['usage_count']),
+                    _info('Ranking: ', snippet['ranking']),
+                ),
+            ),
+        )
+
+        super().__init__(parent, body)
+
+
+def _field(label: TextMarkup, content: TextMarkup):
     field = urwid.Pile(
         (
             urwid.Text(label),
@@ -19,29 +43,9 @@ def _create_field(label: TextMarkup, content: TextMarkup):
     return field
 
 
-class ShowSnippetDialog(Dialog):
-    def __init__(self, parent, snippet: Snippet):
-        body = urwid.ListBox(
-            urwid.SimpleListWalker(
-                (
-                    _create_field('Title', snippet['title']),
-                    HorizontalDivider(),
-                    _create_field('Tags', snippet['tag']),
-                    HorizontalDivider(),
-                    _create_field('Command', highlight_command(snippet['cmd'])),
-                    HorizontalDivider(),
-                    _create_field('Documentation', highlight_documentation(snippet['doc'])),
-                    HorizontalDivider(),
-                    urwid.Text(f"Created on: {date(snippet['created_at'])}"),
-                    urwid.Text(f"Last used on: {date(snippet['last_used_at'])}"),
-                    urwid.Text(f"Usage count: {snippet['usage_count']}"),
-                    urwid.Text(f"Ranking: {snippet['ranking']}"),
-                ),
-            ),
-        )
-
-        super().__init__(parent, body)
+def _info(label: str, value: str | float):
+    return urwid.Text([label, ('info', str(value))])
 
 
-def date(timestamp: float):
+def _date(timestamp: float) -> str:
     return time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(timestamp))
