@@ -1,37 +1,49 @@
 import argparse
 import logging
 import sys
+from typing import Any
 
-from clisnips.cli.version_command import VersionCommand
 from clisnips.dic import DependencyInjectionContainer
 
 from .command import Command
-from .config_command import ShowConfigCommand
-from .dump_command import DumpCommand
-from .export_command import ExportCommand
-from .import_command import ImportCommand
-from .install_key_bindings_command import InstallShellKeyBindingsCommand
-from .logs_command import LogsCommand
-from .optimize_command import OptimizeCommand
+from .parser import LazySubParser
 
 logger = logging.getLogger(__name__)
 
 
 class Application:
-    commands: dict[str, type[Command]] = {
-        'version': VersionCommand,
-        'import': ImportCommand,
-        'export': ExportCommand,
-        'optimize': OptimizeCommand,
-        'dump': DumpCommand,
-        'config': ShowConfigCommand,
-        'key-bindings': InstallShellKeyBindingsCommand,
-        'logs': LogsCommand,
+    commands: dict[str, dict[str, Any]] = {
+        'version': {
+            'help': 'Outputs the clisnips version number.',
+        },
+        'config': {
+            'help': 'Shows the current configuration.',
+        },
+        'key-bindings': {
+            'help': 'Installs clisnips key bindings for the given shell.',
+            'module': 'install_key_bindings',
+        },
+        'import': {
+            'help': 'Imports snippets from a file.',
+            'module': '_import',
+        },
+        'export': {
+            'help': 'Exports snippets to a file.',
+        },
+        'dump': {
+            'help': 'Runs a SQL dump of the database.',
+        },
+        'optimize': {
+            'help': 'Runs optimization tasks on the database.',
+        },
+        'logs': {
+            'help': 'Watch clisnips TUI logs',
+        },
     }
 
     def run(self) -> int:
         argv = self._parse_arguments()
-        if cls := self.commands.get(argv.command):
+        if cls := getattr(argv, '__command__', None):
             return self._run_command(cls, argv)
         return self._run_tui(argv)
 
@@ -43,14 +55,16 @@ class Application:
         )
         parser.add_argument('--database', help='Path to an alternate SQLite database.')
         parser.add_argument('--log-level', choices=('debug', 'info', 'warning', 'error'), help='')
-
-        sub_parsers = parser.add_subparsers(
+        sub = parser.add_subparsers(
             title='Subcommands',
-            dest='command',
+            metavar='command',
             description='The following commands are available outside the GUI.',
+            parser_class=LazySubParser,
         )
-        for _, cmd in cls.commands.items():
-            cmd.configure(sub_parsers)  # type: ignore
+        for name, kwargs in cls.commands.items():
+            module = kwargs.pop('module', name)
+            p = sub.add_parser(name, **kwargs)
+            p.set_defaults(__module__=module)
 
         return parser.parse_args()
 

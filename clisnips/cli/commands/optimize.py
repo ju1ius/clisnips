@@ -2,17 +2,18 @@ import argparse
 import logging
 import time
 
-from .command import Command
+from ..command import Command
 
 logger = logging.getLogger(__name__)
 
 
-class OptimizeCommand(Command):
-    @classmethod
-    def configure(cls, action: argparse._SubParsersAction):
-        cmd = action.add_parser('optimize', help='Runs optimization tasks on the database.')
-        cmd.add_argument('--rebuild', action='store_true', help='Rebuilds the search index before optimizing.')
+def configure(cmd: argparse.ArgumentParser):
+    cmd.add_argument('--rebuild', action='store_true', help='Rebuilds the search index before optimizing.')
 
+    return OptimizeCommand
+
+
+class OptimizeCommand(Command):
     def run(self, argv) -> int:
         start_time = time.time()
 

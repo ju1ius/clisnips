@@ -7,20 +7,21 @@ from pydantic import ValidationError
 
 from clisnips.ty import AnyPath
 
-from .command import Command
+from ..command import Command
 
 logger = logging.getLogger(__name__)
 
 
-class ImportCommand(Command):
-    @classmethod
-    def configure(cls, action: argparse._SubParsersAction):
-        cmd = action.add_parser('import', help='Imports snippets from a file.')
-        cmd.add_argument('-f', '--format', choices=('xml', 'json', 'toml', 'cli-companion'), default=None)
-        cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
-        cmd.add_argument('-D', '--dry-run', action='store_true', help='Just pretend.')
-        cmd.add_argument('file', type=Path)
+def configure(cmd: argparse.ArgumentParser):
+    cmd.add_argument('-f', '--format', choices=('xml', 'json', 'toml', 'cli-companion'), default=None)
+    cmd.add_argument('--replace', action='store_true', help='Replaces snippets. The default is to append.')
+    cmd.add_argument('-D', '--dry-run', action='store_true', help='Just pretend.')
+    cmd.add_argument('file', type=Path)
 
+    return ImportCommand
+
+
+class ImportCommand(Command):
     def run(self, argv) -> int:
         cls = self._get_importer_class(argv.format, argv.file.suffix)
         if not cls:

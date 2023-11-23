@@ -3,22 +3,23 @@ import logging
 import shutil
 from pathlib import Path
 
-from .command import Command
+from ..command import Command
 
 __dir__ = Path(__file__).absolute().parent
 logger = logging.getLogger(__name__)
 
 
-class InstallShellKeyBindingsCommand(Command):
+def configure(cmd: argparse.ArgumentParser):
+    cmd.add_argument('shell', choices=['bash', 'zsh'])
+
+    return InstallBindingsCommand
+
+
+class InstallBindingsCommand(Command):
     shell_rcs = {
         'bash': '~/.bashrc',
         'zsh': '~/.zshrc',
     }
-
-    @classmethod
-    def configure(cls, action: argparse._SubParsersAction):
-        cmd = action.add_parser('key-bindings', help='Installs clisnips key bindings for the given shell.')
-        cmd.add_argument('shell', choices=['bash', 'zsh'])
 
     def run(self, argv) -> int:
         shell = argv.shell
