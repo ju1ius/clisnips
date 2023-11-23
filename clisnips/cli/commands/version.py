@@ -2,7 +2,7 @@ import argparse
 
 from clisnips import __version__
 
-from ..command import Command
+from clisnips.cli.command import Command
 
 
 def configure(parser: argparse.ArgumentParser):

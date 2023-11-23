@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import TextIO
 
-from ..command import Command
+from clisnips.cli.command import Command
 
 logger = logging.getLogger(__name__)
 

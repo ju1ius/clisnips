@@ -3,7 +3,7 @@ import logging
 from importlib import resources
 from pathlib import Path
 
-from ..command import Command
+from clisnips.cli.command import Command
 
 logger = logging.getLogger(__name__)
 

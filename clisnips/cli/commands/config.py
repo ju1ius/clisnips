@@ -4,7 +4,7 @@ import sys
 
 from clisnips.config.settings import AppSettings
 
-from ..command import Command
+from clisnips.cli.command import Command
 
 
 def configure(cmd: argparse.ArgumentParser):

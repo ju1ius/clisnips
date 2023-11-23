@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from clisnips.ty import AnyPath
 
-from ..command import Command
+from clisnips.cli.command import Command
 
 logger = logging.getLogger(__name__)
 

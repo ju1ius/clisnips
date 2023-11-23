@@ -2,7 +2,7 @@ import argparse
 import logging
 import time
 
-from ..command import Command
+from clisnips.cli.command import Command
 
 logger = logging.getLogger(__name__)
 

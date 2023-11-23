@@ -7,7 +7,7 @@ import sys
 from logging import LogRecord
 from pathlib import Path
 
-from ..command import Command
+from clisnips.cli.command import Command
 from ..utils import UrwidMarkupHelper
 
 
