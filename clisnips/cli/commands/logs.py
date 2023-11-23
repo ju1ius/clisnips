@@ -88,9 +88,12 @@ class RecordFormatter(logging.Formatter):
             (spec, f'{record.levelname} '),
             ('default', '['),
             ('accent', record.name),
-            ('default', ']'),
-            *self._call_site(record),
-            ('default', f': {record.message}'),
+            ('default', ':'),
+            ('debug', record.funcName),
+            ('default', ':'),
+            ('debug', str(record.lineno)),
+            ('default', '] '),
+            ('default', record.message),
         ]
         return self._printer.convert_markup(markup, sys.stdout.isatty())
 

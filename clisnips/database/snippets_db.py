@@ -16,6 +16,7 @@ from . import Column, ImportableSnippet, NewSnippet, Snippet
 QueryParameter: TypeAlias = str | int | float
 QueryParameters: TypeAlias = Sequence[QueryParameter] | Mapping[str, QueryParameter]
 
+logger = logging.getLogger(__name__)
 
 with resources.files('clisnips.resources').joinpath('schema.sql').open() as fp:
     SCHEMA_QUERY = fp.read()
@@ -68,9 +69,9 @@ class SnippetsDatabase:
         if db_file.name != ':memory:' and not db_file.is_file():
             db_file.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
             os.mknod(db_file, 0o644 | stat.S_IFREG)
+        logger.info('db: %s', db_file)
         cx = sqlite3.connect(db_file)
         cx.row_factory = sqlite3.Row
-        logging.getLogger(__name__).debug(SCHEMA_QUERY)
         cx.executescript(SCHEMA_QUERY)
 
         return cls(cx)
