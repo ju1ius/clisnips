@@ -1,3 +1,7 @@
+class InvalidConfiguration(Exception):
+    ...
+
+
 class ParseError(Exception):
     ...
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from .palette import Palette, default_palette
+from .palette import PaletteModel, default_palette
 from .paths import get_data_path
 
 
@@ -10,8 +10,8 @@ class AppSettings(BaseModel):
         title='Path to the snippets SQLite database',
         default_factory=lambda: str(get_data_path('snippets.sqlite')),
     )
-    palette: Palette = Field(  # type: ignore
+    palette: PaletteModel = Field(  # type: ignore
         title='The application color palette',
-        default_factory=lambda: Palette(**default_palette),
+        default_factory=lambda: PaletteModel(**default_palette),
         json_schema_extra={'default': {}},
     )

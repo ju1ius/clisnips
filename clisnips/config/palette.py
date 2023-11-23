@@ -1,6 +1,10 @@
 from __future__ import annotations
+from typing import Any, NotRequired, TypeAlias, cast
+from typing_extensions import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, create_model
+
+from clisnips.exceptions import InvalidConfiguration
 
 default_palette = {
     'default': {'fg': 'light gray', 'bg': 'black'},
@@ -69,7 +73,18 @@ default_palette = {
 }  # fmt: skip
 
 
-class PaletteEntry(BaseModel):
+class PaletteEntry(TypedDict):
+    fg: str
+    bg: str
+    mono: NotRequired[str | None]
+    fg_hi: NotRequired[str | None]
+    bg_hi: NotRequired[str | None]
+
+
+Palette: TypeAlias = dict[str, PaletteEntry]
+
+
+class PaletteEntryModel(BaseModel):
     model_config = ConfigDict(
         title='An Urwid palette entry',
         json_schema_extra={
@@ -87,12 +102,44 @@ class PaletteEntry(BaseModel):
     bg_hi: str | None = Field(title='Background color in high-color mode', default=None)
 
 
-_palette_field_defs = {
+_palette_model_fields = {
     k: (
-        PaletteEntry | str,
-        Field(default=v if isinstance(v, str) else PaletteEntry(**v)),
+        PaletteEntryModel | str,
+        Field(default=v if isinstance(v, str) else PaletteEntryModel(**v)),
     )
     for k, v in default_palette.items()
 }  # fmt: skip
 
-Palette = create_model('Palette', **_palette_field_defs)  # type: ignore
+
+class _BasePalette(BaseModel):
+    def resolved(self) -> Palette:
+        palette = self.model_dump()
+        for name, entry in palette.items():
+            if not isinstance(entry, dict):
+                palette[name] = _revolve_entry(entry, palette)
+        return palette
+
+
+PaletteModel = cast(
+    type[_BasePalette],
+    create_model(
+        'PaletteModel',
+        __base__=_BasePalette,
+        **_palette_model_fields,  # type: ignore
+    ),
+)
+
+
+def _revolve_entry(ref: Any, palette: dict[str, PaletteEntry | str]) -> PaletteEntry:
+    seen = set()
+    while True:
+        if ref in seen:
+            raise InvalidConfiguration(f'Circular color reference: {ref!r}')
+        try:
+            color = palette[ref]
+        except KeyError:
+            raise InvalidConfiguration(f'Invalid color reference: {ref!r}') from None
+        if isinstance(color, dict):
+            return color
+        seen.add(ref)
+        ref = color
