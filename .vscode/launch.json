@@ -11,14 +11,21 @@
   ],
   "configurations": [
     {
+      "name": "Debug current file",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "justMyCode": false,
+    },
+    {
       "name": "Attach to process",
       "type": "python",
       "request": "attach",
       "processId": "${command:pickProcess}",
-      "justMyCode": true,
+      "justMyCode": false,
     },
     {
-      "name": "Launch TUI",
+      "name": "Debug TUI",
       "type": "python",
       "request": "launch",
       "module": "clisnips",
@@ -29,7 +36,7 @@
       "justMyCode": false,
     },
     {
-      "name": "Launch CLI",
+      "name": "Debug CLI",
       "type": "python",
       "request": "launch",
       "module": "clisnips",
