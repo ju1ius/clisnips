@@ -3,6 +3,7 @@ import pytest
 
 from clisnips.exceptions import ParseError
 from clisnips.syntax.documentation import parse
+from clisnips.syntax.documentation.executor import Executor
 from clisnips.syntax.documentation.nodes import CodeBlock, Parameter, ValueList, ValueRange
 
 
@@ -179,37 +180,29 @@ if fields['infile'] and not fields['outfile']:
     assert isinstance(code, CodeBlock)
     assert code.code == code_str
     # execute code
-    _vars = {
+    ctx = {
         'fields': {
             'infile': '/foo/bar.wav',
             'outfile': '',
         },
     }
-    code.execute(_vars)
-    assert _vars['fields']['outfile'] == '/foo/bar.mp4'
+    result = Executor(doc).execute(ctx)
+    assert result['fields']['outfile'] == '/foo/bar.mp4'
 
 
-def test_error_handling():
-    text = '{$$$}'
-    with pytest.raises(ParseError):
-        parse(text)
-    text = '{} ($$$)'
-    with pytest.raises(ParseError):
-        parse(text)
-    text = '{} (string) [$$$]'
-    with pytest.raises(ParseError):
-        parse(text)
-    text = '{}\n{1}'
-    with pytest.raises(ParseError):
-        parse(text)
-    text = '{1}\n{}'
-    with pytest.raises(ParseError):
-        parse(text)
-    # flags cannot have a type_hint
-    text = '{-f} (string)'
-    with pytest.raises(ParseError):
-        parse(text)
-    # flags cannot have a value_hint
-    text = '{-f} ["foo", "bar"]'
-    with pytest.raises(ParseError):
-        parse(text)
+@pytest.mark.parametrize(
+    ('text', 'message'),
+    (
+        ('{$$$}', 'Unexpected token'),
+        ('{} ($$$)', 'Unexpected token'),
+        ('{} (string) [$$$]', 'Unexpected token'),
+        ('{}\n{1}', 'Cannot switch from automatic to manual field numbering'),
+        ('{1}\n{}', 'Cannot switch from manual to automatic field numbering'),
+        ('{-f} (string)', 'flag cannot have a type hint'),
+        ('{-f} ["foo", "bar"]', 'flag cannot have a value hint'),
+        (r'```x = <error!>```', 'Syntax error'),
+    ),
+)
+def test_parse_errors(text: str, message: str):
+    with pytest.raises(ParseError, match=message):
+        _ = parse(text)

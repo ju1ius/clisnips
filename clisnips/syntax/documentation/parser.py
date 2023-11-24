@@ -21,14 +21,11 @@ from collections.abc import Iterable
 from decimal import Decimal
 
 from clisnips.exceptions import DocumentationParseError
+from clisnips.syntax.documentation.executor import Executor
 from clisnips.syntax.llk_parser import LLkParser
 
 from .lexer import Lexer, Tokens
 from .nodes import CodeBlock, Documentation, Parameter, Value, ValueList, ValueRange
-
-
-def _to_number(string: str) -> Decimal:
-    return Decimal(string)
 
 
 class Parser(LLkParser[Tokens]):
@@ -36,19 +33,20 @@ class Parser(LLkParser[Tokens]):
         super().__init__(lexer, Tokens.EOF, 2)
         self._auto_field_count = -1
         self._has_numeric_field = False
-        self._ast = None
 
     def parse(self):
         self.reset()
         self._auto_field_count = -1
         self._has_numeric_field = False
-        self._ast = Documentation()
-        self._ast.header = self._text()
+        header = self._text()
+        parameters = {}
         for param in self._param_list():
-            self._ast.parameters[param.name] = param
+            parameters[param.name] = param
+        code_blocks = []
         for block in self._code():
-            self._ast.code_blocks.append(block)
-        return self._ast
+            code_blocks.append(block)
+
+        return Documentation(header, parameters, code_blocks)
 
     def _text(self) -> str:
         """
@@ -84,13 +82,13 @@ class Parser(LLkParser[Tokens]):
             self._match(Tokens.CODE_FENCE)
             code = self._match(Tokens.TEXT).value
             try:
-                block = CodeBlock(code)
+                Executor.compile_str(code)
             except SyntaxError as err:
                 raise DocumentationParseError(f'Syntax error: {err}') from err
             except TypeError as err:
                 raise DocumentationParseError(f'Type error: {err}') from err
             else:
-                code_blocks.append(block)
+                code_blocks.append(CodeBlock(code))
             self._match(Tokens.CODE_FENCE)
         return code_blocks
 
@@ -127,14 +125,12 @@ class Parser(LLkParser[Tokens]):
             if self._has_numeric_field:
                 raise DocumentationParseError('Cannot switch from manual to automatic field numbering')
             self._auto_field_count += 1
-            return Parameter(str(self._auto_field_count))
+            return Parameter(name=str(self._auto_field_count))
 
         token = self._match(Tokens.IDENTIFIER, Tokens.INTEGER, Tokens.FLAG)
         # it's a flag
         if token.kind is Tokens.FLAG:
-            param = Parameter(token.value)
-            param.type_hint = 'flag'
-            return param
+            return Parameter(name=token.value, type_hint='flag')
 
         # it's an integer, check that numbering is correct
         if token.kind is Tokens.INTEGER:
@@ -142,7 +138,7 @@ class Parser(LLkParser[Tokens]):
                 raise DocumentationParseError('Cannot switch from automatic to manual field numbering')
             self._has_numeric_field = True
 
-        return Parameter(token.value)
+        return Parameter(name=token.value)
 
     def _typehint(self) -> str:
         """
@@ -199,7 +195,7 @@ class Parser(LLkParser[Tokens]):
         if token.kind is Tokens.STRING:
             return token.value, is_default
         else:
-            return _to_number(token.value), is_default
+            return Decimal(token.value), is_default
 
     def _value_range(self) -> ValueRange:
         """
@@ -218,10 +214,10 @@ class Parser(LLkParser[Tokens]):
             self._consume()
             default = self._digit().value
         return ValueRange(
-            _to_number(start),
-            _to_number(end),
-            _to_number(step) if step is not None else None,
-            _to_number(default) if default is not None else None,
+            Decimal(start),
+            Decimal(end),
+            Decimal(step) if step is not None else None,
+            Decimal(default) if default is not None else None,
         )
 
     def _digit(self):

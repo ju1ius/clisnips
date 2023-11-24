@@ -7,6 +7,7 @@ import urwid
 from clisnips.syntax.command.nodes import CommandTemplate
 from clisnips.syntax.command.renderer import Renderer
 from clisnips.syntax.documentation import Documentation
+from clisnips.syntax.documentation.executor import Executor
 from clisnips.tui.urwid_types import TextMarkup
 from clisnips.tui.widgets.dialog import Dialog, ResponseKind
 from clisnips.tui.widgets.divider import HorizontalDivider
@@ -19,9 +20,9 @@ logger = logging.getLogger(__name__)
 class InsertSnippetDialog(Dialog):
     def __init__(self, parent, title: str, cmd: CommandTemplate, doc: Documentation):
         self._template = cmd
-        self._doc = doc
         self._renderer = Renderer()
-        self._fields = self._create_fields(self._template, self._doc)
+        self._executor = Executor(doc)
+        self._fields = self._create_fields(self._template, doc)
 
         fields = intersperse(HorizontalDivider(), self._fields.values())
         self._output = OutputField()
@@ -32,7 +33,7 @@ class InsertSnippetDialog(Dialog):
                     urwid.Pile(
                         (
                             urwid.Text(title),
-                            urwid.Text(self._doc.header.strip()),
+                            urwid.Text(doc.header.strip()),
                         ),
                     ),
                     HorizontalDivider(),
@@ -74,7 +75,7 @@ class InsertSnippetDialog(Dialog):
             context = self._apply_code_blocks(context)
             self._output.set_error_markup('')
         except Exception as err:
-            self._output.set_error_markup(str(err))
+            self._output.set_error_markup(f'{err.__class__.__name__}: {err}')
             self._apply_action.disable()
             return
 
@@ -92,7 +93,7 @@ class InsertSnippetDialog(Dialog):
         self._output.set_markup(output)
 
     def _apply_code_blocks(self, field_values: dict[str, Any]):
-        context = self._doc.execute_code({'fields': field_values})
+        context = self._executor.execute({'fields': field_values})
         return context.get('fields', field_values)
 
 
