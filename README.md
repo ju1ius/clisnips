@@ -28,7 +28,9 @@ clisnips key-bindings bash
 clisnips key-bindings zsh
 ```
 
-Open a *new* shell and type the `Alt+s` keyboard shortcut to open the snippets library.
+Then:
+* Either open a *new* shell or source your shell rc file,
+* and type the `Alt+s` keyboard shortcut to open the snippets library.
 
 ## Usage
 
@@ -36,7 +38,7 @@ Clisnips stores snippets in a local SQLite database,
 using an FTS5 table to enable full-text search.
 The search input accepts the whole [FTS5 full-text query syntax][fts5-ref].
 
-Please have a look at the docs for getting started on
+Please have a look at [the docs][docs-folder] for getting started on
 [writing your own snippets][creating-snippets].
 
 You may also read the [quick-tour][],
@@ -51,5 +53,6 @@ to help you manage your snippets. Please run `clisnips --help` to read the CLI d
 
 
 [quick-tour]: https://github.com/ju1ius/clisnips/blob/master/snippets/quick-tour.toml
+[docs-folder]: https://github.com/ju1ius/clisnips/blob/master/docs/
 [creating-snippets]: https://github.com/ju1ius/clisnips/blob/master/docs/creating-snippets.md
 [fts5-ref]: https://www.sqlite.org/fts5.html#full_text_query_syntax
