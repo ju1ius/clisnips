@@ -41,7 +41,7 @@ tomlkit = "^0.12.3"
 typing-extensions = "^4.8.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.3"
+pytest = ">=7.4.3,<10.0.0"
 pyfakefs = "^5.3.0"
 ruff = "^0.1.6"
 
