@@ -14,6 +14,10 @@ from clisnips.utils.number import clamp_to_range, get_default_range_step, get_nu
         ('1.25e-3', 5),
         (Decimal('0.25'), 2),
         (Decimal('1.25e-3'), 5),
+        (float('nan'), 0),
+        (float('inf'), 0),
+        (float('-inf'), 0),
+        (Decimal('Infinity'), 0),
     ),
 )
 def test_num_decimals(value, expected: int):

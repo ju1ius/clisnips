@@ -1,4 +1,5 @@
 from decimal import Decimal
+import math
 import re
 from typing import Any
 
@@ -20,7 +21,7 @@ def get_num_decimals(n: Any) -> int:
         n = float(n)
     except ValueError:
         return 0
-    if n.is_integer():
+    if not math.isfinite(n) or n.is_integer():
         return 0
     d = 0
     match = FLOAT_RE.match(str(n))
